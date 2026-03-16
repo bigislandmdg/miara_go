@@ -139,6 +139,7 @@ export const resources = {
       arrival: "Arrivée",
       seatingCapacity: "Places",
       luggage: "Bagages",
+      rideRequests: "Demande de trajets",
       messageOptional: "Message (optionnel)",
       publish: "Publier",
       missingFieldsTitle: "Champs manquants",
@@ -351,7 +352,7 @@ export const resources = {
            
       
         // ==== ABOUT ==================
-        
+
          noContent: "Aucun contenu disponible",
          aboutSection: {
         miaraGo: {
@@ -389,8 +390,7 @@ export const resources = {
         whatsappSupport: "Support WhatsApp",
         chooseContact: "Choisir le mode de contact",
         shareApp: "Partager l'application",
-        inviteMessage:
-    "🚗 Télécharge MiaraGo pour partager tes trajets facilement ! https://miarago.app"
+        inviteMessage: "🚗 Télécharge MiaraGo pour partager tes trajets facilement ! https://miarago.app"
         },
         helpSection: {
           faq: { title: "FAQ", description: "Questions fréquemment posées" },
@@ -496,31 +496,31 @@ export const resources = {
       error: "Biometric error",
 
       // ================= NOTIFICATIONS =================
-    notifications: "Notifications",
-    noNotifications: "No notifications available",
-    delete: "Delete",
-    notificationDeleted: "Notification deleted",
-    undoPossible: "You can undo this action",
-    undo: "Undo",
+      notifications: "Notifications",
+      noNotifications: "No notifications available",
+      delete: "Delete",
+      notificationDeleted: "Notification deleted",
+      undoPossible: "You can undo this action",
+      undo: "Undo",
 
-    // ================= PASSENGER HOME =================
-    // ================= PASSENGER HOME =================
-    searchPlaceholder: "Search: city, driver, offer...",
-    availableTrips: "Available Trips",
-    offers: "Offers",
-    seeMore: "See more",
-    book: "Book",
-    offerFor: "Offer for",
-    callDriver: "📞 Call driver",
-    seats: "seats",
-    filterSort: "Filter & Sort",
-    sortByPrice: "Price",
-    sortByDate: "Date",
-    onlyAvailable: "Only available",
-    apply: "Apply",
-    rateTrip: "Rate a trip",
-    tripLabel: "Trip",
-    publishRideTitle: "How to publish a ride?",
+      // ================= PASSENGER HOME =================
+      // ================= PASSENGER HOME =================
+      searchPlaceholder: "Search: city, driver, offer...",
+      availableTrips: "Available Trips",
+      offers: "Offers",
+      seeMore: "See more",
+      book: "Book",
+      offerFor: "Offer for",
+      callDriver: "📞 Call driver",
+      seats: "seats",
+      filterSort: "Filter & Sort",
+      sortByPrice: "Price",
+      sortByDate: "Date",
+      onlyAvailable: "Only available",
+      apply: "Apply",
+      rateTrip: "Rate a trip",
+      tripLabel: "Trip",
+     publishRideTitle: "How to publish a ride?",
     publishRideDesc: "Click here to quickly create a ride request.",
 
     // ================= PASSENGER HISTORY =================
@@ -541,6 +541,7 @@ export const resources = {
     arrival: "Arrival",
     seatingCapacity: "Seats",
     luggage: "Luggage",
+    rideRequests: "Request a ride",
     messageOptional: "Message (optional)",
     publish: "Publish",
     missingFieldsTitle: "Missing Fields",
@@ -785,15 +786,13 @@ export const resources = {
       whatsappSupport: "WhatsApp Support",
       chooseContact: "Choose contact method",
       shareApp: "Share the app",
-      inviteMessage:
-    "🚗 Download MiaraGo to easily share rides! https://miarago.app" 
-},
+      inviteMessage: "🚗 Download MiaraGo to easily share rides! https://miarago.app" 
+      },
       helpSection: {
         faq: { title: "FAQ", description: "Frequently Asked Questions" },
         contactSupport: { title: "Contact Support", description: "Get help from our team" },
         guides: { title: "Guides", description: "Read step-by-step guides" },
       },
-      
     },
   },
 
@@ -939,6 +938,7 @@ export const resources = {
         arrival: "Fahatongavana",
         seatingCapacity: "Seza",
         luggage: "Entana",
+        rideRequests: "Fangatahana",
         messageOptional: "Hafatra (tsy voatery)",
         publish: "Alefaso",
         missingFieldsTitle: "Tsy feno ny saha",
