@@ -1,0 +1,64 @@
+#--------------------------------------------------------------------
+# ENVIRONMENT
+#--------------------------------------------------------------------
+CI_ENVIRONMENT = development
+
+#--------------------------------------------------------------------
+# APP
+#--------------------------------------------------------------------
+app.baseURL = 'http://localhost:8080/'
+app.forceGlobalSecureRequests = false
+app.CSPEnabled = false
+
+#--------------------------------------------------------------------
+# DATABASE (PostgreSQL)
+#--------------------------------------------------------------------
+database.default.DBDriver = Postgre
+database.default.hostname = localhost
+database.default.database = miarago_db
+database.default.username = postgres
+database.default.password = root
+database.default.port = 5432
+database.default.DBPrefix =
+database.default.charset = utf8
+database.default.DBCollat = utf8_general_ci
+database.default.swapPre = ''
+
+# Tests database (optionnel)
+database.tests.DBDriver = Postgre
+database.tests.hostname = localhost
+database.tests.database = miarago_db_test
+database.tests.username = postgres
+database.tests.password = root
+database.tests.port = 5432
+database.tests.DBPrefix =
+database.tests.charset = utf8
+database.tests.DBCollat = utf8_general_ci
+database.tests.swapPre = ''
+
+#--------------------------------------------------------------------
+# ENCRYPTION
+#--------------------------------------------------------------------
+encryption.key = base64:TonCleSuperSecrete1234567890
+
+#--------------------------------------------------------------------
+# JWT
+#--------------------------------------------------------------------
+JWT_SECRET = TonSecretJWTParDefaut123!
+
+#--------------------------------------------------------------------
+# SESSION
+#--------------------------------------------------------------------
+session.driver = 'CodeIgniter\Session\Handlers\FileHandler'
+session.savePath = writable/session
+
+#--------------------------------------------------------------------
+# LOGGER
+#--------------------------------------------------------------------
+logger.threshold = 4
+
+
+#---------------------------------------------------------------------
+# DEFAULT COUNTRY_CODE
+#---------------------------------------------------------------------
+DEFAULT_COUNTRY_CODE=MG
