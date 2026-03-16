@@ -17,6 +17,7 @@ export const resources = {
       acceptedFormat: "Formats acceptés",
       biometricLogin: "Connexion biométrique",
       loginButton: "Se connecter",
+      connecting: "Connexion...",
       selectCountry: " Sélectionner un pays",
       noAccount: "Vous n’avez pas de compte ?",
       createAccount: "Créer un compte",
@@ -226,39 +227,57 @@ export const resources = {
       loadMore: "Charger plus",
       deleteTransaction: "Supprimer cette transaction ?",
       deleteImpossible: "Suppression impossible",
+      withdrawCredits: "Retirer des crédits",
+      confirmWithdraw: "Confirmer le retrait",
+      withdrawError: "Impossible de retirer.",
+      withdrawSuccess: "Retrait effectué",
+      amount: "Montant",
+      buyCredits: "Acheter des crédits",
+      currentBalance: "Solde actuel",
+      bonus: "bonus",
+      pay: "Payer",
+      paymentInitiated: "Paiement initié",
+      reference: "Référence",
+      pendingMobileMoneyConfirmation: "En attente de confirmation Mobile Money",
+      userNotIdentified: "Utilisateur non identifié",
+      invalidServerResponse: "Réponse serveur invalide",
+      transactionCreationError: "Erreur création transaction",
+      missingTransactionReference: "Référence transaction manquante",
+      paymentFailed: "Échec du paiement",
+
 
       // ================= RATING SCREEN =================
       rateRide: "Évaluer le trajet",
       youAreRating: "Vous évaluez",
       commentOptional: "Commentaire (optionnel)",
-    send: "Envoyer",
-    chooseRating: "Veuillez choisir une note",
-    bonusEarned: "👍 +2 crédits pour le conducteur",
-    thanksForRating: "Merci pour votre évaluation",
-    ratingError: "Erreur lors de l’envoi de la note",
-    invalidRideId: "Erreur : identifiant du trajet invalide",
-    driverBonus: "🎁 Le conducteur recevra +2 crédits",
+      send: "Envoyer",
+      chooseRating: "Veuillez choisir une note",
+      bonusEarned: "👍 +2 crédits pour le conducteur",
+      thanksForRating: "Merci pour votre évaluation",
+      ratingError: "Erreur lors de l’envoi de la note",
+      invalidRideId: "Erreur : identifiant du trajet invalide",
+      driverBonus: "🎁 Le conducteur recevra +2 crédits",
 
-    // ================= TRIP SCREEN =================
-    creatingTrip: "Créer un trajet",
-    fillRequiredFields: "Veuillez remplir tous les champs requis.",
-    seatsBetween: "Places entre 1 et {{max}}",
-    invalidPrice: "Prix invalide",
-    tripCreationFailed: "Échec création trajet",
-    tripCreated: "Trajet créé avec succès.",
-    tripCreationError: "Impossible de créer le trajet.",
-    time: "Heure",
-    chooseVehicle: "Choisir le véhicule",
-    availableSeats: "Places",
-    pricePerSeat: "Prix par place",
-    luggageType: "Type de bagages",
-    publicTrip: "Trajet public",
-    boostVisibility: "Boost visibilité",
-    loadMoreVehicles: "Voir plus de véhicules",
-    reloadVehicles: "Recharger la liste des véhicules",
-    meetingPointDeleted: "Point de rencontre supprimé avec succès",
-    meetingPointDeleteError: "Échec de la suppression du point de rencontre",
-    chooseMeetingPoints: "Choisir les point de rencontre",
+      // ================= TRIP SCREEN =================
+      creatingTrip: "Créer un trajet",
+      fillRequiredFields: "Veuillez remplir tous les champs requis.",
+      seatsBetween: "Places entre 1 et {{max}}",
+      invalidPrice: "Prix invalide",
+      tripCreationFailed: "Échec création trajet",
+      tripCreated: "Trajet créé avec succès.",
+      tripCreationError: "Impossible de créer le trajet.",
+      time: "Heure",
+      chooseVehicle: "Choisir le véhicule",
+      availableSeats: "Places",
+      pricePerSeat: "Prix par place",
+      luggageType: "Type de bagages",
+      publicTrip: "Trajet public",
+      boostVisibility: "Boost visibilité",
+      loadMoreVehicles: "Voir plus de véhicules",
+      reloadVehicles: "Recharger la liste des véhicules",
+      meetingPointDeleted: "Point de rencontre supprimé avec succès",
+      meetingPointDeleteError: "Échec de la suppression du point de rencontre",
+      chooseMeetingPoints: "Choisir les point de rencontre",
 
     // ================= PUBLISH SCREEN =================
     publishOffer: "Publier une offre",
@@ -418,6 +437,7 @@ export const resources = {
       acceptedFormat: "Accepted formats",
       biometricLogin: "Biometric login",
       loginButton: "Login",
+      connecting: "Connecting...",
       selectCountry: "Select any country",
       noAccount: "Don't have an account?",
       createAccount: "Create an account",
@@ -520,8 +540,8 @@ export const resources = {
       apply: "Apply",
       rateTrip: "Rate a trip",
       tripLabel: "Trip",
-     publishRideTitle: "How to publish a ride?",
-    publishRideDesc: "Click here to quickly create a ride request.",
+      publishRideTitle: "How to publish a ride?",
+      publishRideDesc: "Click here to quickly create a ride request.",
 
     // ================= PASSENGER HISTORY =================
     passengerHistoryTitle: "My Trips",
@@ -629,6 +649,23 @@ export const resources = {
     loadMore: "Load more",
     deleteTransaction: "Delete this transaction?",
     deleteImpossible: "Deletion failed",
+    withdrawCredits: "Withdraw Credits",
+    confirmWithdraw: "Confirm withdrawal",
+    withdrawError: "Unable to withdraw.",
+    withdrawSuccess: "Withdrawal successful",
+    amount: "Amount",
+    buyCredits: "Buy Credits",
+    currentBalance: "Current balance",
+    bonus: "bonus",
+    pay: "Pay",
+    paymentInitiated: "Payment initiated",
+    reference: "Reference",
+    pendingMobileMoneyConfirmation: "Pending Mobile Money confirmation",
+    userNotIdentified: "User not identified",
+    invalidServerResponse: "Invalid server response",
+    transactionCreationError: "Transaction creation error",
+    missingTransactionReference: "Missing transaction reference",
+    paymentFailed: "Payment failed",
 
     // ================= RATING SCREEN =================
      rateRide: "Rate the ride",
@@ -813,6 +850,7 @@ export const resources = {
       acceptedFormat: "Endrika azo ekena",
       biometricLogin: "Fidirana amin'ny biometrika",
       loginButton: "Hiditra",
+      connecting: "Mampiditra...",
       selectCountry: "Misafidiana firenena iray",
       noAccount: "Tsy manana kaonty ve ianao?",
       createAccount: "Mamorona kaonty",
@@ -899,8 +937,8 @@ export const resources = {
        undoPossible: "Afaka manafoana ity hetsika ity ianao",
        undo: "Avereno",
 
-        // ================= PASSENGER HOME =================
-        // ================= PASSENGER HOME =================
+      // ================= PASSENGER HOME =================
+      // ================= PASSENGER HOME =================
         searchPlaceholder: "Karohy: tanàna, mpamily, tolotra...",
         availableTrips: "Ny Dia misy",
         offers: "Ny Tolotra misy",
@@ -919,8 +957,8 @@ export const resources = {
         publishRideTitle: "Ahoana no hamoahana dia?",
         publishRideDesc: "Tsindrio eto hamoronana fangatahana dia haingana.",
 
-        // ================= PASSENGER HISTORY =================
-        // MG
+      // ================= PASSENGER HISTORY =================
+      // MG
         passengerHistoryTitle: "Ny dia nataoko",
         passengerHistoryDefaultDriver: "Mpamily",
         pending: "Miandry",
@@ -928,11 +966,11 @@ export const resources = {
         noTripsFound: "Tsy misy dia hita",
         seeDetails: "Jereo ny antsipiriany",
 
-        // ================= MESSAGES =================
+      // ================= MESSAGES =================
         typeMessage: "Soraty ny hafatrao…", // MG
         noDriverNumber: "Tsy misy nomeraon'ny mpamily", // MG
 
-        // ================= RIDE REQUEST =================
+      // ================= RIDE REQUEST =================
         newRequest: "Fangatahana fitaterana vaovao",
         departure: "Fiaingana",
         arrival: "Fahatongavana",
@@ -1025,6 +1063,24 @@ export const resources = {
     loadMore: "Hijery bebe kokoa",
     deleteTransaction: "Hamafa ity transaction ity?",
     deleteImpossible: "Tsy afaka fafana",
+    withdrawCredits: "Esorina ny fahana",
+    confirmWithdraw: "Hamafiso ny fanalana",
+    withdrawError: "Tsy afaka nesorina.",
+    withdrawSuccess: "Vita ny fanalana",
+    amount: "Vola",
+    buyCredits: "Hividy fahana",
+    currentBalance: "Volana ankehitriny",
+    bonus: "bonus",
+    pay: "Handoa",
+    paymentInitiated: "Fandoavana natomboka",
+    reference: "Fanondro",
+    pendingMobileMoneyConfirmation: "Miandry fanamarinana Mobile Money",
+    userNotIdentified: "Mpampiasa tsy fantatra",
+    invalidServerResponse: "Valin'ny serveur tsy mety",
+    transactionCreationError: "Hadisoana tamin'ny famoronana transaction",
+    missingTransactionReference: "Tsy hita ny fanondro transaction",
+    paymentFailed: "Tsy nahomby ny fandoavana",
+
 
     // ================= RATING SCREEN =================
     rateRide: "Manome naoty ny dia",

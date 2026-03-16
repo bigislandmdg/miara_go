@@ -13,6 +13,7 @@ import {
   TouchableWithoutFeedback,
   PanResponder,
 } from 'react-native'
+import { useTranslation } from 'react-i18next'
 
 interface WithdrawDialogProps {
   open: boolean
@@ -30,6 +31,7 @@ export function WithdrawDialog({
   maxAmount,
 }: WithdrawDialogProps) {
 
+  const { t } = useTranslation()
   const [amount, setAmount] = useState('')
   const [loading, setLoading] = useState(false)
   const [showTicket, setShowTicket] = useState(false)
@@ -132,7 +134,7 @@ export function WithdrawDialog({
       setAmount('')
 
     } catch {
-      Alert.alert('Erreur', 'Impossible de retirer.')
+      Alert.alert(t('error'), t('withdrawError'))
     } finally {
       setLoading(false)
     }
@@ -161,10 +163,10 @@ export function WithdrawDialog({
         >
           <View style={styles.handle} />
 
-          <Text style={styles.title}>Retirer des crédits</Text>
+          <Text style={styles.title}>{t('withdrawCredits')}</Text>
 
           <Text style={styles.subtitle}>
-            Disponible : {maxAmount.toLocaleString()}
+            {t('available')} : {maxAmount.toLocaleString()}
           </Text>
 
           <TextInput
@@ -191,7 +193,7 @@ export function WithdrawDialog({
                 color: isValid ? '#fff' : '#9CA3AF',
                 fontWeight: '600'
               }}>
-                Confirmer le retrait
+                {t('confirmWithdraw')}
               </Text>
             )}
           </TouchableOpacity>
@@ -200,7 +202,7 @@ export function WithdrawDialog({
             onPress={closeSheet}
             style={{ marginTop: 14, alignItems: 'center' }}
           >
-            <Text style={{ color: '#6B7280' }}>Annuler</Text>
+            <Text style={{ color: '#6B7280' }}>{t('cancel')}</Text>
           </TouchableOpacity>
 
         </Animated.View>
@@ -215,9 +217,9 @@ export function WithdrawDialog({
       <Modal transparent visible={showTicket} animationType="fade">
         <View style={styles.ticketOverlay}>
           <View style={styles.ticketSheet}>
-            <Text style={styles.ticketTitle}>Retrait effectué ✅</Text>
+            <Text style={styles.ticketTitle}>{t('withdrawSuccess')} ✅</Text>
             <Text style={styles.ticketText}>
-              Montant : {numericValue.toLocaleString()}
+              {t('amount')} : {numericValue.toLocaleString()}
             </Text>
 
             <TouchableOpacity
@@ -227,7 +229,7 @@ export function WithdrawDialog({
                 closeSheet()
               }}
             >
-              <Text style={{ color: '#fff' }}>OK</Text>
+              <Text style={{ color: '#fff' }}>{t('ok')}</Text>
             </TouchableOpacity>
           </View>
         </View>

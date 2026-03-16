@@ -75,6 +75,25 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
   const lastSentRef = useRef<string>("");
 
   // =========================================================
+  // 🔹 NOUVEAU : Nettoyer le zéro redondant après le préfixe
+  // Exemple : "+2610341234567" → "+261341234567"
+  // Synchronisé avec la fonction cleanRedundantZero() du AuthController
+  // =========================================================
+  const cleanRedundantZero = (text: string, country: CountryConfig): string => {
+    // Supprimer tous les espaces
+    const digits = text.replace(/\s/g, '');
+    
+    // Si le numéro commence par le préfixe suivi d'un 0
+    if (digits.startsWith(country.prefix + '0')) {
+      // Enlever le 0 après le préfixe
+      const withoutZero = country.prefix + digits.slice(country.prefix.length + 1);
+      return withoutZero;
+    }
+    
+    return text;
+  };
+
+  // =========================================================
   // FORMAT PHONE
   // Gère les deux longueurs : shortLen (sans 0) et localLen (avec 0)
   //
@@ -103,6 +122,17 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
   };
 
   // =========================================================
+  // 🔹 NOUVEAU : Obtenir le placeholder approprié
+  // Affiche le format attendu avec le préfixe
+  // =========================================================
+  const getPlaceholder = (country: CountryConfig): string => {
+    if (country.code === "MG") {
+      return "+261 34 12 345 67";
+    }
+    return `${country.prefix} ${t("phonePlaceholder")}`;
+  };
+
+  // =========================================================
   // DETECT OPERATOR — uniquement Madagascar
   // Fonctionne avec les deux formats (avec ou sans 0 initial)
   //   "34..." ou "034..." → même résultat
@@ -127,15 +157,17 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
   };
 
   // =========================================================
-  // HANDLE PHONE CHANGE
-  //
+  // HANDLE PHONE CHANGE — MIS À JOUR
   // ✅ Accepte shortLen (9) OU localLen (10) chiffres
-  //    Les deux sont envoyés tels quels au AuthController
-  //    qui normalise : "341234567" + "MG"  → "+261341234567"
-  //                    "0341234567" + "MG" → "+261341234567"
+  // ✅ Nettoie automatiquement le zéro redondant après le préfixe
+  //    comme le fait AuthController::normalizePhone()
   // =========================================================
   const handlePhoneChange = (text: string) => {
-    const digits = text.replace(/\D/g, "");
+    // Étape 1 : Nettoyer le zéro redondant si présent
+    const cleanedText = cleanRedundantZero(text, selectedCountry);
+    
+    // Étape 2 : Extraire les chiffres
+    const digits = cleanedText.replace(/\D/g, "");
 
     // Bloquer au-delà du localLen (format le plus long)
     if (digits.length > selectedCountry.localLen) return;
@@ -189,49 +221,46 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
 
   // ------------------- AUTO SEND OTP -------------------
   const fetchRealOtp = async (rawPhone: string) => {
-  try {
-
-    const params = new URLSearchParams({
-      phone: rawPhone,
-      country_code: selectedCountry.code,
-    });
-
-    const res = await fetch(
-      `http://10.0.2.2:8080/auth/get-last-otp?${params}`
-    );
-
-    const rawText = await res.text();
-
-    // ⚠️ réponse vide
-    if (!rawText || rawText.trim().length === 0) {
-      console.log("⚠️ OTP API returned empty response");
-      ToastMessage.show("⚠️ Aucun OTP reçu du serveur");
-      return null;
-    }
-
-    let data;
-
     try {
-      data = JSON.parse(rawText);
-    } catch (parseError) {
-      console.log("❌ Invalid JSON:", rawText);
-      return null;
+      const params = new URLSearchParams({
+        phone: rawPhone,
+        country_code: selectedCountry.code,
+      });
+
+      const res = await fetch(
+        `http://10.0.2.2:8080/auth/get-last-otp?${params}`
+      );
+
+      const rawText = await res.text();
+
+      // ⚠️ réponse vide
+      if (!rawText || rawText.trim().length === 0) {
+        console.log("⚠️ OTP API returned empty response");
+        ToastMessage.show("⚠️ Aucun OTP reçu du serveur");
+        return null;
+      }
+
+      let data;
+
+      try {
+        data = JSON.parse(rawText);
+      } catch (parseError) {
+        console.log("❌ Invalid JSON:", rawText);
+        return null;
+      }
+
+      if (res.ok && data?.otp_code) {
+        ToastMessage.show(t("otpMessage", { otp: data.otp_code }));
+        return data.otp_code.toString();
+      }
+
+      ToastMessage.show("❌ OTP introuvable");
+
+    } catch (err) {
+      console.log("❌ OTP fetch error:", err);
+      ToastMessage.show(t("serverUnavailable"));
     }
-
-    if (res.ok && data?.otp_code) {
-      ToastMessage.show(t("otpMessage", { otp: data.otp_code }));
-      return data.otp_code.toString();
-    }
-
-    ToastMessage.show("❌ OTP introuvable");
-
-  } catch (err) {
-
-    console.log("❌ OTP fetch error:", err);
-    ToastMessage.show(t("serverUnavailable"));
-
-    }
-     return null;
+    return null;
   };
 
   const autoSendOTP = async (rawPhone: string) => {
@@ -251,7 +280,7 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
 
       if (!rawText || rawText.trim().length === 0) {
         ToastMessage.show("❌ Réponse vide du serveur");
-      return;
+        return;
       }
 
       let data;
@@ -261,7 +290,7 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
       } catch {
         console.log("❌ Invalid JSON:", rawText);
         ToastMessage.show("❌ Réponse serveur invalide");
-      return;
+        return;
       }
 
       if (!response.ok) {
@@ -451,11 +480,11 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
             {/* Séparateur */}
             <View style={styles.inputDivider} />
 
-            {/* Champ numéro */}
+            {/* Champ numéro — MIS À JOUR avec nouveau placeholder */}
             <TextInput
               value={formatted}
               onChangeText={handlePhoneChange}
-              placeholder={selectedCountry.code === "MG" ? "034 12 345 67" : t("phonePlaceholder")}
+              placeholder={getPlaceholder(selectedCountry)}
               keyboardType="phone-pad"
               style={styles.phoneInput}
               maxLength={maxDisplayLength}
@@ -502,7 +531,7 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <ActivityIndicator color="#fff" />
                 <Text style={{ color: "white", fontWeight: "700", marginLeft: 10 }}>
-                  Connexion...
+                    {t("connecting")}
                 </Text>
               </View>
             ) : (
@@ -662,3 +691,4 @@ const styles = StyleSheet.create({
   countryLabel: { fontSize: 15, fontWeight: "600", color: "#111827" },
   countryPrefix: { fontSize: 13, color: "#6b7280", marginTop: 2 },
 });
+

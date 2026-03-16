@@ -57,7 +57,6 @@ interface MeetingPoint {
   is_active: boolean;
 }
 
-
 /* ===================== COMPONENT ===================== */
 export function PublishScreen({
   rideRequestId: initialRideRequestId,
@@ -76,8 +75,6 @@ export function PublishScreen({
   userCredits?: number;
   onCreditUpdate?: (newCredits: number) => void;
 }) {
-
-  
   const navigation = useNavigation<PublishScreenNavigationProp>();
   const { t } = useTranslation();
 
@@ -89,8 +86,6 @@ export function PublishScreen({
   }, []);
 
   /* ===================== MODE ===================== */
-  //const [mode, setMode] = useState<"publish" | "search">(userType === "driver" ? "publish" : "search");
-
   const [mode, setMode] = useState<"publish">("publish");
 
   /* ===================== FORM STATES ===================== */
@@ -102,13 +97,14 @@ export function PublishScreen({
   const [message, setMessage] = useState("");
   const [luggages, setLuggages] = useState<Luggage[]>([]);
   const [selectedLuggage, setSelectedLuggage] = useState<string>("");
- const [rideRequestId, setRideRequestId] = useState("");
+  const [rideRequestId, setRideRequestId] = useState("");
 
-useEffect(() => {
-  if (initialRideRequestId) {
-    setRideRequestId(String(initialRideRequestId));
-  }
-}, [initialRideRequestId]);
+  useEffect(() => {
+    if (initialRideRequestId) {
+      setRideRequestId(String(initialRideRequestId));
+    }
+  }, [initialRideRequestId]);
+  
   const [price, setPrice] = useState("");
   const [showLuggageForm, setShowLuggageForm] = useState(false);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -125,14 +121,8 @@ useEffect(() => {
   const VEHICLES_PER_PAGE = 5;
   const [vehiclePage, setVehiclePage] = useState(1);
 
-const vehicleTotalPages = Math.ceil(
-  vehicles.length / VEHICLES_PER_PAGE
-);
-
-const paginatedVehicles = vehicles.slice(
-  0,
-  vehiclePage * VEHICLES_PER_PAGE
-);
+  const vehicleTotalPages = Math.ceil(vehicles.length / VEHICLES_PER_PAGE);
+  const paginatedVehicles = vehicles.slice(0, vehiclePage * VEHICLES_PER_PAGE);
 
   const [luggagePage, setLuggagePage] = useState(1);
   const LUGGAGES_PER_PAGE = 3;
@@ -224,136 +214,86 @@ const paginatedVehicles = vehicles.slice(
   };
 
   useEffect(() => { 
-    if (resolvedUserId)
-       fetchVehicles(); 
-    if (showLuggagePicker) {
-    fetchLuggages();
-    }
-
-     if (showMeetingPointScreen) {
-    fetchMeetingPoints();
-    }
-
-      }, [resolvedUserId, showLuggagePicker, showMeetingPointScreen]);
+    if (resolvedUserId) fetchVehicles(); 
+    if (showLuggagePicker) fetchLuggages();
+    if (showMeetingPointScreen) fetchMeetingPoints();
+  }, [resolvedUserId, showLuggagePicker, showMeetingPointScreen]);
 
   const fetchLuggages = async () => {
-  try {
-    const baseURL =
-      Platform.OS === "android"
-        ? "http://10.0.2.2:8080"
-        : "http://localhost:8080";
-
-    const res = await fetch(`${baseURL}/luggages`);
-
-    const text = await res.text();
-    if (!text || text.trim() === "") {
+    try {
+      const baseURL = Platform.OS === "android" ? "http://10.0.2.2:8080" : "http://localhost:8080";
+      const res = await fetch(`${baseURL}/luggages`);
+      const text = await res.text();
+      if (!text || text.trim() === "") {
+        setLuggages([]);
+        return;
+      }
+      const data = JSON.parse(text);
+      if (!data.status || !Array.isArray(data.luggages)) {
+        setLuggages([]);
+        return;
+      }
+      const formatted: Luggage[] = data.luggages.map((l: any) => ({
+        id: Number(l.id),
+        name: l.name,
+        description: l.description ?? "",
+      }));
+      setLuggages(formatted);
+    } catch (err) {
+      console.log("Luggage fetch failed", err);
       setLuggages([]);
-      return;
     }
+  };
 
-    const data = JSON.parse(text);
-
-    if (!data.status || !Array.isArray(data.luggages)) {
-      setLuggages([]);
-      return;
-    }
-
-    const formatted: Luggage[] = data.luggages.map((l: any) => ({
-      id: Number(l.id),
-      name: l.name,
-      description: l.description ?? "",
-    }));
-
-    setLuggages(formatted);
-
-  } catch (err) {
-    console.log("Luggage fetch failed", err);
-    setLuggages([]);
-  }
-};
-
-const deleteVehicle = async (id: number) => {
-  try {
-    const baseURL =
-      Platform.OS === "android"
-        ? "http://10.0.2.2:8080"
-        : "http://localhost:8080";
-
-    const res = await fetch(`${baseURL}/vehicles/${id}`, {
-      method: "DELETE",
-    });
-
-    if (!res.ok) {
+  const deleteVehicle = async (id: number) => {
+    try {
+      const baseURL = Platform.OS === "android" ? "http://10.0.2.2:8080" : "http://localhost:8080";
+      const res = await fetch(`${baseURL}/vehicles/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        Alert.alert(t("error"), t("vehicleDeleteError"));
+        return;
+      }
+      setVehicles((prev) => prev.filter((v) => v.id !== id));
+      if (vehicle?.id === id) setVehicle(null);
+      Alert.alert(t("success"), t("vehicleDeleted"));
+    } catch (error) {
       Alert.alert(t("error"), t("vehicleDeleteError"));
-      return;
     }
+  };
 
-    setVehicles((prev) => prev.filter((v) => v.id !== id));
-
-    if (vehicle?.id === id) {
-      setVehicle(null);
-    }
-
-    Alert.alert(t("success"), t("vehicleDeleted"));
-  } catch (error) {
-    Alert.alert(t("error"), t("vehicleDeleteError"));
-  }
-};
-
-const deleteLuggage = async (id: number) => {
-  try {
-    const baseURL =
-      Platform.OS === "android"
-        ? "http://10.0.2.2:8080"
-        : "http://localhost:8080";
-
-    const res = await fetch(`${baseURL}/luggages/${id}`, {
-      method: "DELETE",
-    });
-
-    if (!res.ok) {
+  const deleteLuggage = async (id: number) => {
+    try {
+      const baseURL = Platform.OS === "android" ? "http://10.0.2.2:8080" : "http://localhost:8080";
+      const res = await fetch(`${baseURL}/luggages/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        Alert.alert(t("error"), t("luggageDeleteError"));
+        return;
+      }
+      setLuggages((prev) => prev.filter((l) => l.id !== id));
+      if (selectedLuggage === luggages.find(l => l.id === id)?.name) setSelectedLuggage("");
+      Alert.alert(t("success"), t("luggageDeleted"));
+    } catch (error) {
       Alert.alert(t("error"), t("luggageDeleteError"));
-      return;
     }
-
-    setLuggages((prev) => prev.filter((l) => l.id !== id));
-
-    if (selectedLuggage === luggages.find(l => l.id === id)?.name) {
-      setSelectedLuggage("");
-    }
-
-    Alert.alert(t("success"), t("luggageDeleted"));
-  } catch (error) {
-    Alert.alert(t("error"), t("luggageDeleteError"));
-  }
-};
+  };
 
   const luggageTotalPages = Math.ceil(luggages.length / LUGGAGES_PER_PAGE);
-  const paginatedLuggages = luggages.slice(0,luggagePage * LUGGAGES_PER_PAGE);
+  const paginatedLuggages = luggages.slice(0, luggagePage * LUGGAGES_PER_PAGE);
 
-   const fetchMeetingPoints = async () => {
+  const fetchMeetingPoints = async () => {
     try {
-      const baseURL =
-        Platform.OS === "android"
-          ? "http://10.0.2.2:8080"
-          : "http://localhost:8080";
-  
+      const baseURL = Platform.OS === "android" ? "http://10.0.2.2:8080" : "http://localhost:8080";
       const res = await fetch(`${baseURL}/meeting-points`);
-  
       const text = await res.text();
-  
       if (!text || text.trim() === "") {
         setMeetingPoints([]);
         return;
       }
-  
       const data = JSON.parse(text);
-  
       if (!Array.isArray(data.meeting_points)) {
         setMeetingPoints([]);
         return;
       }
-  
       const formatted: MeetingPoint[] = data.meeting_points.map((m: any) => ({
         id: Number(m.id),
         name: m.name,
@@ -364,9 +304,7 @@ const deleteLuggage = async (id: number) => {
         place_type: m.place_type,
         is_active: m.is_active,
       }));
-  
       setMeetingPoints(formatted);
-  
     } catch (error) {
       console.log("MeetingPoints fetch failed", error);
       setMeetingPoints([]);
@@ -375,8 +313,6 @@ const deleteLuggage = async (id: number) => {
   
   const meetingPointTotalPages = Math.ceil(meetingPoints.length / MEETING_POINTS_PER_PAGE);
   const paginatedMeetingPoints = meetingPoints.slice(0, meetingPointPage * MEETING_POINTS_PER_PAGE);
-  
-
 
   /* ===================== DRIVER — OFFER ===================== */
   const publishOffer = async () => {
@@ -414,7 +350,9 @@ const deleteLuggage = async (id: number) => {
       onBack();
     } catch {
       Alert.alert(t("error"), t("serverUnavailable"));
-    } finally { setLoading(false); }
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   /* ===================== PASSENGER — REQUEST ===================== */
@@ -453,7 +391,9 @@ const deleteLuggage = async (id: number) => {
       navigation.replace("PassengerHome");
     } catch {
       Alert.alert(t("error"), t("serverUnavailable"));
-    } finally { setLoading(false); }
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const handlePublish = () => (mode === "publish" ? publishOffer() : publishRequest());
@@ -464,129 +404,25 @@ const deleteLuggage = async (id: number) => {
       <View style={styles.overlay}>
         <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
           <View style={styles.handle} />
+          
           {/* HEADER */}
           <View style={styles.headerRow}>
             <TouchableOpacity onPress={onBack}><ArrowLeft size={22} /></TouchableOpacity>
-            <Text style={styles.headerTitle}>{mode === "publish" ? t("publishOffer") : t("publishSearch")}</Text>
+            <Text style={styles.headerTitle}>{t("publishOffer")}</Text>
             <View style={{ width: 22 }} />
           </View>
 
-          {/* TABS */}
-          <View style={styles.tabs}>
-           {/*}
-            <TouchableOpacity style={[styles.tab, mode === "search" && styles.activeTab]} onPress={() => setMode("search")}>
-              <Search size={16} color={mode === "search" ? "#fff" : "#111"} />
-              <Text style={[styles.tabLabel, mode === "search" && styles.tabOn]}>{t("search")}</Text>
-            </TouchableOpacity>*/}
-            <TouchableOpacity style={[styles.tab, mode === "publish" && styles.activeTab]} onPress={() => setMode("publish")}>
-              <Rocket size={16} color={mode === "publish" ? "#fff" : "#111"} />
-              <Text style={[styles.tabLabel, mode === "publish" && styles.tabOn]}>{t("propose")}</Text>
-            </TouchableOpacity>
+          {/* ========================================================= */}
+          {/* 🔹 MODIFICATION : Remplacer les boutons par un simple texte */}
+          {/* ========================================================= */}
+          <View style={styles.simpleHeader}>
+            <Rocket size={20} color="#059669" />
+            <Text style={styles.simpleHeaderText}>{t("propose")}</Text>
           </View>
 
           {/* CONTENT */}
           <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
             <View style={styles.card}>
-              {/* PASSENGER SEARCH */}
-              {/* 
-                {mode === "search" && (
-              <View style={styles.gridContainer}>
-
-     
-      <View style={styles.gridRow}>
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>{t("departure")}</Text>
-          <TextInput
-            style={styles.inputField}
-            value={departure}
-            onChangeText={setDeparture}
-            placeholder={t("departure")}
-          />
-        </View>
-
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>{t("arrival")}</Text>
-          <TextInput
-            style={styles.inputField}
-            value={arrival}
-            onChangeText={setArrival}
-            placeholder={t("arrival")}
-          />
-        </View>
-      </View>
-
-     
-      <View style={styles.gridRow}>
-        <TouchableOpacity
-          style={styles.inputWrapper}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text style={styles.label}>{t("date")}</Text>
-          <Text style={styles.valueText}>
-            {date ? formatDate(date) : t("date")}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.inputWrapper}
-          onPress={() => setShowTimePicker(true)}
-        >
-          <Text style={styles.label}>{t("time")}</Text>
-          <Text style={styles.valueText}>
-            {time ? formatTime(time) : t("time")}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-     
-      <View style={styles.gridRow}>
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>{t("seats")}</Text>
-          <TextInput
-            style={styles.inputField}
-            keyboardType="number-pad"
-            value={totalSeats}
-            onChangeText={(t) =>
-              setTotalSeats(t.replace(/[^0-9]/g, ""))
-            }
-            placeholder="0"
-          />
-        </View>
-
-        <TouchableOpacity
-          style={styles.inputWrapper}
-          onPress={() => setShowLuggagePicker(true)}
-        >
-          <Text style={styles.label}>{t("luggage")}</Text>
-          <View style={styles.rowBetween}>
-            <Text
-              style={[
-                styles.valueText,
-                !selectedLuggage && styles.placeholderText,
-              ]}
-            >
-              {selectedLuggage || t("luggage")}
-            </Text>
-            <ChevronDown size={18} color="#6B7280" />
-          </View>
-        </TouchableOpacity>
-      </View>
-
-     
-      <View style={styles.fullWidth}>
-        <Text style={styles.label}>{t("messageOptional")}</Text>
-        <TextInput
-          style={styles.textArea}
-          multiline
-          value={message}
-          onChangeText={setMessage}
-          placeholder={t("messageOptional")}
-        />
-      </View>
-    </View>
-  )}
-  */}
-
               {/* DRIVER PUBLISH */}
               {mode === "publish" && (
                 <>
@@ -627,22 +463,28 @@ const deleteLuggage = async (id: number) => {
                     <ChevronDown size={18} />
                   </TouchableOpacity>
 
-                   {/* MEETING POINTS */}
-                                  <TouchableOpacity style={styles.select}
-                                         onPress={() => setShowMeetingPointScreen(true)}>
-                                    <Text>
-                                     {selectedMeetingPoints.length > 0
-                                       ? `${selectedMeetingPoints.length} meeting point(s)`: t("chooseMeetingPoints")}
-                                     </Text>
-                                   <ChevronDown size={18} />
-                                   </TouchableOpacity>
+                  {/* MEETING POINTS */}
+                  <TouchableOpacity style={styles.select} onPress={() => setShowMeetingPointScreen(true)}>
+                    <Text>
+                      {selectedMeetingPoints.length > 0
+                        ? `${selectedMeetingPoints.length} meeting point(s)`
+                        : t("chooseMeetingPoints")}
+                    </Text>
+                    <ChevronDown size={18} />
+                  </TouchableOpacity>
 
-                                  <TextInput style={[styles.input, { height: 80 }]} multiline placeholder={t("message")} value={message} onChangeText={setMessage} />
+                  <TextInput 
+                    style={[styles.input, { height: 80 }]} 
+                    multiline 
+                    placeholder={t("message")} 
+                    value={message} 
+                    onChangeText={setMessage} 
+                  />
 
-                                <View style={styles.switchRow}>
-                                  <Text>{t("publicPublication")}</Text>
-                                  <Switch value={isPublic} onValueChange={setIsPublic} />
-                                </View>
+                  <View style={styles.switchRow}>
+                    <Text>{t("publicPublication")}</Text>
+                    <Switch value={isPublic} onValueChange={setIsPublic} />
+                  </View>
 
                   <View style={styles.switchRow}>
                     <Text>{t("boostVisibility")}</Text>
@@ -659,466 +501,432 @@ const deleteLuggage = async (id: number) => {
 
           {/* SUBMIT */}
           <TouchableOpacity style={styles.submit} disabled={loading} onPress={handlePublish}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitLabel}>{mode === "publish" ? t("publishOfferBtn") : t("publishSearchBtn")}</Text>}
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitLabel}>{t("publishOfferBtn")}</Text>
+            )}
           </TouchableOpacity>
 
           {/* DATE / TIME PICKERS */}
           {showDatePicker && (
-            <DateTimePicker value={date || new Date()} mode="date" display={Platform.OS === "ios" ? "inline" : "calendar"} onChange={(e: DateTimePickerEvent, d?: Date) => { setShowDatePicker(false); if (d) setDate(d); }} />
+            <DateTimePicker 
+              value={date || new Date()} 
+              mode="date" 
+              display={Platform.OS === "ios" ? "inline" : "calendar"} 
+              onChange={(e: DateTimePickerEvent, d?: Date) => { 
+                setShowDatePicker(false); 
+                if (d) setDate(d); 
+              }} 
+            />
           )}
           {showTimePicker && (
-            <DateTimePicker value={time || new Date()} mode="time" is24Hour onChange={(e: DateTimePickerEvent, t?: Date) => { setShowTimePicker(false); if (t) setTime(t); }} />
+            <DateTimePicker 
+              value={time || new Date()} 
+              mode="time" 
+              is24Hour 
+              onChange={(e: DateTimePickerEvent, t?: Date) => { 
+                setShowTimePicker(false); 
+                if (t) setTime(t); 
+              }} 
+            />
           )}
 
-
-{/* VEHICLE PICKER PRO */}
-{showVehiclePicker && (
-  <Modal transparent animationType="fade">
-    <TouchableOpacity
-      style={styles.backdrop}
-      activeOpacity={1}
-      onPress={() => setShowVehiclePicker(false)}
-    >
-      <Animated.View
-        style={[
-          styles.vehicleSheet,
-          {
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
-      >
-        {/* HEADER */}
-        <View style={styles.vehicleHeader}>
-          <View>
-            <Text style={styles.vehicleTitleSheet}>
-            {t("chooseVehicle")}
-          </Text>
-           <Text style={styles.uberSubtitle}>
-              {vehicles.length} {t("available")}
-            </Text>
-          </View>
-          
-
-          <TouchableOpacity
-            onPress={() => {
-              setShowVehiclePicker(false);
-              setShowVehicleForm(true);
-            }}
-          >
-            <Plus size={22} color="#059669" />
-          </TouchableOpacity>
-        </View>
-
-        {/* LIST */}
-        {vehicles.length === 0 ? (
-          <Text style={styles.emptyText}>
-            {t("noVehicle")}
-          </Text>
-        ) : (
-          <ScrollView style={{ maxHeight: 400 }}>
-            {paginatedVehicles.map((v) => {
-              const disabled = v.statut !== "disponible";
-
-              return (
-                <TouchableOpacity
-                  key={v.id}
-                  disabled={disabled}
-                  activeOpacity={0.9}
+          {/* VEHICLE PICKER PRO */}
+          {showVehiclePicker && (
+            <Modal transparent animationType="fade">
+              <TouchableOpacity
+                style={styles.backdrop}
+                activeOpacity={1}
+                onPress={() => setShowVehiclePicker(false)}
+              >
+                <Animated.View
                   style={[
-                    styles.vehicleCard,
-                    disabled && { opacity: 0.5 },
+                    styles.vehicleSheet,
+                    { transform: [{ translateY: slideAnim }] },
                   ]}
-                  onPress={() => {
-                    if (!disabled) {
-                      setVehicle(v);
-                      setTotalSeats(String(v.nombre_places));
-                      setShowVehiclePicker(false);
-                    }
-                  }}
-                  onLongPress={() => {
-                    Alert.alert(
-                      t("deleteVehicle"),
-                      `${v.marque} ${v.modele} ?`,
-                      [
-                        { text: t("cancel"), style: "cancel" },
-                        {
-                          text: t("delete"),
-                          style: "destructive",
-                          onPress: () =>
-                            deleteVehicle(Number(v.id)),
-                        },
-                      ]
-                    );
-                  }}
-                  delayLongPress={400}
                 >
-                  {/* LEFT ICON */}
-                  <View style={styles.vehicleIconBox}>
-                    {getVehicleIcon(v.type_vehicule)}
-                  </View>
-
-                  {/* CENTER INFO */}
-                  <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={styles.vehicleTitle}>
-                      {v.marque} {v.modele}
-                    </Text>
-
-                    <Text style={styles.vehicleSubtitle}>
-                      🚗 {v.immatriculation}
-                    </Text>
-
-                    <Text style={styles.vehicleSubtitle}>
-                      🚪 {v.nombre_portes} • 💺 {v.nombre_places}
-                    </Text>
-                  </View>
-
-                  {/* RIGHT BADGE */}
-                  {getStatusBadge(v.statut)}
-                </TouchableOpacity>
-              );
-            })}
-
-            {/* LOAD MORE */}
-            {vehicles.length > VEHICLES_PER_PAGE &&
-              vehiclePage < vehicleTotalPages && (
-                <TouchableOpacity
-                  style={styles.loadMoreButton}
-                  onPress={() =>
-                    setVehiclePage((prev) => prev + 1)
-                  }
-                >
-                  <Text style={styles.loadMoreText}>
-                    {t("loadMore")}
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-            {/* RELOAD */}
-            <TouchableOpacity
-              style={styles.reloadButton}
-              onPress={() => {
-                setVehiclePage(1);
-                fetchVehicles();
-              }}
-            >
-              <Text style={styles.reloadText}>
-                {t("reload")}
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        )}
-      </Animated.View>
-    </TouchableOpacity>
-  </Modal>
-)}         
-
-
-  {/* ===================== LUGGAGE PICKER — UBER STYLE ===================== */}
-{showLuggagePicker && (
-  <Modal transparent animationType="fade">
-    <TouchableOpacity
-      style={styles.backdrop}
-      activeOpacity={1}
-      onPress={() => setShowLuggagePicker(false)}
-    >
-      <Animated.View
-        style={[
-          styles.uberSheet,
-          {
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
-      >
-        {/* HANDLE */}
-        <View style={styles.sheetHandle} />
-
-        {/* HEADER */}
-        <View style={styles.uberHeader}>
-          <View>
-            <Text style={styles.uberTitle}>{t("luggageType")}</Text>
-            <Text style={styles.uberSubtitle}>
-              {luggages.length} {t("available")}
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            onPress={() => {
-              setShowLuggagePicker(false);
-              setShowLuggageForm(true);
-            }}
-          >
-            <Plus size={22} color="#059669" />
-          </TouchableOpacity>
-        </View>
-
-        {/* LIST */}
-        {luggages.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
-              {t("noLuggageOptions")}
-            </Text>
-          </View>
-        ) : (
-          <ScrollView
-            style={{ maxHeight: 420 }}
-            showsVerticalScrollIndicator={false}
-          >
-            {paginatedLuggages.map((item) => {
-              const isSelected = selectedLuggage === item.name;
-
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  activeOpacity={0.85}
-                  style={[
-                    styles.uberCard,
-                    isSelected && styles.uberCardSelected,
-                  ]}
-                  onPress={() => {
-                    setSelectedLuggage(String(item.name));
-                    setShowLuggagePicker(false);
-                  }}
-                  onLongPress={() => {
-                    Alert.alert(
-                      t("deleteLuggage"),
-                      `${item.name} ?`,
-                      [
-                        { text: t("cancel"), style: "cancel" },
-                        {
-                          text: t("delete"),
-                          style: "destructive",
-                          onPress: () =>
-                            deleteLuggage(Number(item.id)),
-                        },
-                      ]
-                    );
-                  }}
-                >
-                  <View style={styles.uberIconBox}>
-                    <Text style={{ fontSize: 18 }}>🎒</Text>
-                  </View>
-
-                  <View style={{ flex: 1, marginLeft: 14 }}>
-                    <Text style={styles.uberCardTitle}>
-                      {item.name}
-                    </Text>
-
-                    {item.description && (
-                      <Text style={styles.uberCardSubtitle}>
-                        {item.description}
+                  {/* HEADER */}
+                  <View style={styles.vehicleHeader}>
+                    <View>
+                      <Text style={styles.vehicleTitleSheet}>{t("chooseVehicle")}</Text>
+                      <Text style={styles.uberSubtitle}>
+                        {vehicles.length} {t("available")}
                       </Text>
-                    )}
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowVehiclePicker(false);
+                        setShowVehicleForm(true);
+                      }}
+                    >
+                      <Plus size={22} color="#059669" />
+                    </TouchableOpacity>
                   </View>
 
-                  {isSelected && (
-                    <View style={styles.selectedDot} />
+                  {/* LIST */}
+                  {vehicles.length === 0 ? (
+                    <Text style={styles.emptyText}>{t("noVehicle")}</Text>
+                  ) : (
+                    <ScrollView style={{ maxHeight: 400 }}>
+                      {paginatedVehicles.map((v) => {
+                        const disabled = v.statut !== "disponible";
+
+                        return (
+                          <TouchableOpacity
+                            key={v.id}
+                            disabled={disabled}
+                            activeOpacity={0.9}
+                            style={[styles.vehicleCard, disabled && { opacity: 0.5 }]}
+                            onPress={() => {
+                              if (!disabled) {
+                                setVehicle(v);
+                                setTotalSeats(String(v.nombre_places));
+                                setShowVehiclePicker(false);
+                              }
+                            }}
+                            onLongPress={() => {
+                              Alert.alert(
+                                t("deleteVehicle"),
+                                `${v.marque} ${v.modele} ?`,
+                                [
+                                  { text: t("cancel"), style: "cancel" },
+                                  {
+                                    text: t("delete"),
+                                    style: "destructive",
+                                    onPress: () => deleteVehicle(Number(v.id)),
+                                  },
+                                ]
+                              );
+                            }}
+                            delayLongPress={400}
+                          >
+                            {/* LEFT ICON */}
+                            <View style={styles.vehicleIconBox}>
+                              {getVehicleIcon(v.type_vehicule)}
+                            </View>
+
+                            {/* CENTER INFO */}
+                            <View style={{ flex: 1, marginLeft: 12 }}>
+                              <Text style={styles.vehicleTitle}>
+                                {v.marque} {v.modele}
+                              </Text>
+                              <Text style={styles.vehicleSubtitle}>
+                                🚗 {v.immatriculation}
+                              </Text>
+                              <Text style={styles.vehicleSubtitle}>
+                                🚪 {v.nombre_portes} • 💺 {v.nombre_places}
+                              </Text>
+                            </View>
+
+                            {/* RIGHT BADGE */}
+                            {getStatusBadge(v.statut)}
+                          </TouchableOpacity>
+                        );
+                      })}
+
+                      {/* LOAD MORE */}
+                      {vehicles.length > VEHICLES_PER_PAGE && vehiclePage < vehicleTotalPages && (
+                        <TouchableOpacity
+                          style={styles.loadMoreButton}
+                          onPress={() => setVehiclePage((prev) => prev + 1)}
+                        >
+                          <Text style={styles.loadMoreText}>{t("loadMore")}</Text>
+                        </TouchableOpacity>
+                      )}
+
+                      {/* RELOAD */}
+                      <TouchableOpacity
+                        style={styles.reloadButton}
+                        onPress={() => {
+                          setVehiclePage(1);
+                          fetchVehicles();
+                        }}
+                      >
+                        <Text style={styles.reloadText}>{t("reload")}</Text>
+                      </TouchableOpacity>
+                    </ScrollView>
                   )}
-                </TouchableOpacity>
-              );
-            })}
+                </Animated.View>
+              </TouchableOpacity>
+            </Modal>
+          )}
 
-            {/* LOAD MORE */}
-            {luggages.length > LUGGAGES_PER_PAGE &&
-              luggagePage < luggageTotalPages && (
-                <TouchableOpacity
-                  style={styles.loadMoreUber}
-                  onPress={() =>
-                    setLuggagePage((prev) => prev + 1)
-                  }
+          {/* LUGGAGE PICKER — UBER STYLE */}
+          {showLuggagePicker && (
+            <Modal transparent animationType="fade">
+              <TouchableOpacity
+                style={styles.backdrop}
+                activeOpacity={1}
+                onPress={() => setShowLuggagePicker(false)}
+              >
+                <Animated.View
+                  style={[styles.uberSheet, { transform: [{ translateY: slideAnim }] }]}
                 >
-                  <Text style={styles.loadMoreUberText}>
-                    {t("loadMore")}
-                  </Text>
-                </TouchableOpacity>
-              )}
+                  {/* HANDLE */}
+                  <View style={styles.sheetHandle} />
 
-            {/* RELOAD */}
-            <TouchableOpacity
-              style={styles.reloadUber}
-              onPress={() => {
-                setLuggagePage(1);
-                fetchLuggages();
+                  {/* HEADER */}
+                  <View style={styles.uberHeader}>
+                    <View>
+                      <Text style={styles.uberTitle}>{t("luggageType")}</Text>
+                      <Text style={styles.uberSubtitle}>
+                        {luggages.length} {t("available")}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowLuggagePicker(false);
+                        setShowLuggageForm(true);
+                      }}
+                    >
+                      <Plus size={22} color="#059669" />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* LIST */}
+                  {luggages.length === 0 ? (
+                    <View style={styles.emptyContainer}>
+                      <Text style={styles.emptyText}>{t("noLuggageOptions")}</Text>
+                    </View>
+                  ) : (
+                    <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+                      {paginatedLuggages.map((item) => {
+                        const isSelected = selectedLuggage === item.name;
+
+                        return (
+                          <TouchableOpacity
+                            key={item.id}
+                            activeOpacity={0.85}
+                            style={[styles.uberCard, isSelected && styles.uberCardSelected]}
+                            onPress={() => {
+                              setSelectedLuggage(String(item.name));
+                              setShowLuggagePicker(false);
+                            }}
+                            onLongPress={() => {
+                              Alert.alert(
+                                t("deleteLuggage"),
+                                `${item.name} ?`,
+                                [
+                                  { text: t("cancel"), style: "cancel" },
+                                  {
+                                    text: t("delete"),
+                                    style: "destructive",
+                                    onPress: () => deleteLuggage(Number(item.id)),
+                                  },
+                                ]
+                              );
+                            }}
+                          >
+                            <View style={styles.uberIconBox}>
+                              <Text style={{ fontSize: 18 }}>🎒</Text>
+                            </View>
+
+                            <View style={{ flex: 1, marginLeft: 14 }}>
+                              <Text style={styles.uberCardTitle}>{item.name}</Text>
+                              {item.description && (
+                                <Text style={styles.uberCardSubtitle}>{item.description}</Text>
+                              )}
+                            </View>
+
+                            {isSelected && <View style={styles.selectedDot} />}
+                          </TouchableOpacity>
+                        );
+                      })}
+
+                      {/* LOAD MORE */}
+                      {luggages.length > LUGGAGES_PER_PAGE && luggagePage < luggageTotalPages && (
+                        <TouchableOpacity
+                          style={styles.loadMoreUber}
+                          onPress={() => setLuggagePage((prev) => prev + 1)}
+                        >
+                          <Text style={styles.loadMoreUberText}>{t("loadMore")}</Text>
+                        </TouchableOpacity>
+                      )}
+
+                      {/* RELOAD */}
+                      <TouchableOpacity
+                        style={styles.reloadUber}
+                        onPress={() => {
+                          setLuggagePage(1);
+                          fetchLuggages();
+                        }}
+                      >
+                        <Text style={styles.reloadUberText}>{t("reload")}</Text>
+                      </TouchableOpacity>
+                    </ScrollView>
+                  )}
+                </Animated.View>
+              </TouchableOpacity>
+            </Modal>
+          )}
+
+          {/* VEHICLE FORM */}
+          {showVehicleForm && (
+            <VehicleScreen
+              onBack={(newVehicle?: any) => {
+                setShowVehicleForm(false);
+                if (newVehicle) {
+                  const formatted: Vehicle = {
+                    id: newVehicle.id,
+                    marque: newVehicle.marque,
+                    modele: newVehicle.modele,
+                    immatriculation: newVehicle.immatriculation,
+                    nombre_portes: newVehicle.nombre_portes,
+                    nombre_places: newVehicle.nombre_places,
+                    statut: newVehicle.statut,
+                    type_vehicule: newVehicle.type_vehicule,
+                  };
+                  setVehicles((prev) => [formatted, ...prev]);
+                } else {
+                  fetchVehicles();
+                }
               }}
-            >
-              <Text style={styles.reloadUberText}>
-                {t("reload")}
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        )}
-      </Animated.View>
-    </TouchableOpacity>
-  </Modal>
-)}
+            />
+          )}
 
-  {/* VEHICLE FORM */}
-  {showVehicleForm && (
-  <VehicleScreen
-      onBack={(newVehicle?: any) => {
-      setShowVehicleForm(false);
-          
-        if (newVehicle) {
-          const formatted: Vehicle = {
-            id: newVehicle.id,
-            marque: newVehicle.marque,
-            modele: newVehicle.modele,
-            immatriculation: newVehicle.immatriculation,
-            nombre_portes: newVehicle.nombre_portes,
-            nombre_places: newVehicle.nombre_places,
-            statut: newVehicle.statut,
-            type_vehicule: newVehicle.type_vehicule,
-          };
-          
-          setVehicles((prev) => [formatted, ...prev]);
-          } else {
-            // 🔥 sécurité : refetch si nécessaire
-            fetchVehicles();
-          }
-        }}
-        />
-  )}
-
+          {/* LUGGAGE FORM */}
           {showLuggageForm && (
-          <LuggageScreen
-                onBack={(newLuggage?: any) => {
+            <LuggageScreen
+              onBack={(newLuggage?: any) => {
                 setShowLuggageForm(false);
                 if (newLuggage) {
-                const formatted = {
+                  const formatted = {
                     id: newLuggage.id,
                     name: newLuggage.name,
                     description: newLuggage.description ?? "",
-              };
+                  };
+                  setLuggages((prev) => [formatted, ...prev]);
+                  setSelectedLuggage(formatted.name);
+                } else {
+                  fetchLuggages();
+                }
+              }}
+            />
+          )}
 
-                   setLuggages((prev) => [formatted, ...prev]);
-                   setSelectedLuggage(formatted.name); // 🔥 sélection auto
-             } else {
-                fetchLuggages();
-              }
-           }}
-         />
-      )} 
-
-        {/* MEETING POINT PICKER PRO (comme vehicles & luggages) */}
-      {showMeetingPointScreen && (
-        <Modal transparent animationType="fade">
-          <TouchableOpacity
-            style={styles.backdrop}
-            activeOpacity={1}
-            onPress={() => setShowMeetingPointScreen(false)}
-          >
-            <Animated.View
-              style={[styles.vehicleSheet, { transform: [{ translateY: slideAnim }] }]}
-            >
-              {/* HEADER */}
-              <View style={styles.vehicleHeader}>
-                <Text style={styles.vehicleTitleSheet}>{t("chooseMeetingPoints")}</Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    setShowMeetingPointScreen(false);
-                    setShowMeetingPointForm(true);
-                  }}
+          {/* MEETING POINT PICKER PRO */}
+          {showMeetingPointScreen && (
+            <Modal transparent animationType="fade">
+              <TouchableOpacity
+                style={styles.backdrop}
+                activeOpacity={1}
+                onPress={() => setShowMeetingPointScreen(false)}
+              >
+                <Animated.View
+                  style={[styles.vehicleSheet, { transform: [{ translateY: slideAnim }] }]}
                 >
-                  <Plus size={22} color="#059669" />
-                </TouchableOpacity>
-              </View>
-      
-              {/* LISTE DES MEETING POINTS */}
-              {meetingPoints.length === 0 ? (
-                <Text style={styles.emptyText}>{t("noMeetingPoints")}</Text>
-              ) : (
-                <ScrollView style={{ maxHeight: 350 }}>
-                  {paginatedMeetingPoints.map((mp) => {
-                    const isSelected = selectedMeetingPoints.some(p => p.id === mp.id);
-                    return (
-                      <TouchableOpacity
-                        key={mp.id}
-                        style={[styles.vehicleCard, isSelected && { backgroundColor: "#DCFCE7" }]}
-                        onPress={() => {
-                          setSelectedMeetingPoints(prev => {
-                            if (isSelected) return prev.filter(p => p.id !== mp.id);
-                            return [...prev, mp];
-                          });
-                          setShowMeetingPointScreen(false);
-                        }}
-                        onLongPress={() => {
-                          Alert.alert(
-                            t("deleteMeetingPoint"),
-                            `${mp.name} ?`,
-                            [
-                              { text: t("cancel"), style: "cancel" },
-                              {
-                                text: t("delete"),
-                                style: "destructive",
-                                onPress: async () => {
-                                  const baseURL = Platform.OS === "android"
-                                    ? "http://10.0.2.2:8080"
-                                    : "http://localhost:8080";
-                                  const res = await fetch(`${baseURL}/meeting-points/${mp.id}`, { method: "DELETE" });
-                                  if (res.ok) {
-                                    setMeetingPoints(prev => prev.filter(p => p.id !== mp.id));
-                                    setSelectedMeetingPoints(prev => prev.filter(p => p.id !== mp.id));
-                                    Alert.alert(t("success"), t("meetingPointDeleted"));
-                                  } else {
-                                    Alert.alert(t("error"), t("meetingPointDeleteError"));
-                                  }
-                                },
-                              },
-                            ]
-                          );
-                        }}
-                        delayLongPress={400}
-                      >
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.vehicleTitle}>{mp.name}</Text>
-                          <Text style={styles.vehicleSubtitle}>📍 {mp.city}</Text>
-                          <Text style={styles.vehicleSubtitle}>{mp.address}</Text>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-      
-                  {/* PAGINATION */}
-                  {meetingPoints.length > MEETING_POINTS_PER_PAGE &&
-                    meetingPointPage < meetingPointTotalPages && (
-                      <TouchableOpacity
-                        style={styles.loadMoreButton}
-                        onPress={() => setMeetingPointPage(prev => prev + 1)}
-                      >
-                        <Text style={styles.loadMoreText}>{t("loadMore")}</Text>
-                      </TouchableOpacity>
-                    )}
-      
-                  {/* RELOAD */}
-                  {meetingPoints.length > 0 && (
+                  {/* HEADER */}
+                  <View style={styles.vehicleHeader}>
+                    <Text style={styles.vehicleTitleSheet}>{t("chooseMeetingPoints")}</Text>
                     <TouchableOpacity
-                      style={styles.reloadButton}
                       onPress={() => {
-                        setMeetingPointPage(1);
-                        fetchMeetingPoints();
+                        setShowMeetingPointScreen(false);
+                        setShowMeetingPointForm(true);
                       }}
                     >
-                      <Text style={styles.reloadText}>{t("reload")}</Text>
+                      <Plus size={22} color="#059669" />
                     </TouchableOpacity>
-                  )}
-                </ScrollView>
-              )}
-            </Animated.View>
-          </TouchableOpacity>
-        </Modal>
-      )}
-      
-      {/* FORMULAIRE MEETING POINT */}
-      {showMeetingPointForm && (
-        <MeetingPointScreen
-          selectedPoints={selectedMeetingPoints}
-          onBack={(points?: MeetingPoint[]) => {
-            setShowMeetingPointForm(false);
-            if (points) setMeetingPoints(prev => [...points, ...prev]);
-            else fetchMeetingPoints();
-          }}
-        />
-      )}
+                  </View>
 
+                  {/* LISTE DES MEETING POINTS */}
+                  {meetingPoints.length === 0 ? (
+                    <Text style={styles.emptyText}>{t("noMeetingPoints")}</Text>
+                  ) : (
+                    <ScrollView style={{ maxHeight: 350 }}>
+                      {paginatedMeetingPoints.map((mp) => {
+                        const isSelected = selectedMeetingPoints.some(p => p.id === mp.id);
+                        return (
+                          <TouchableOpacity
+                            key={mp.id}
+                            style={[styles.vehicleCard, isSelected && { backgroundColor: "#DCFCE7" }]}
+                            onPress={() => {
+                              setSelectedMeetingPoints(prev => {
+                                if (isSelected) return prev.filter(p => p.id !== mp.id);
+                                return [...prev, mp];
+                              });
+                              setShowMeetingPointScreen(false);
+                            }}
+                            onLongPress={() => {
+                              Alert.alert(
+                                t("deleteMeetingPoint"),
+                                `${mp.name} ?`,
+                                [
+                                  { text: t("cancel"), style: "cancel" },
+                                  {
+                                    text: t("delete"),
+                                    style: "destructive",
+                                    onPress: async () => {
+                                      const baseURL = Platform.OS === "android"
+                                        ? "http://10.0.2.2:8080"
+                                        : "http://localhost:8080";
+                                      const res = await fetch(`${baseURL}/meeting-points/${mp.id}`, { method: "DELETE" });
+                                      if (res.ok) {
+                                        setMeetingPoints(prev => prev.filter(p => p.id !== mp.id));
+                                        setSelectedMeetingPoints(prev => prev.filter(p => p.id !== mp.id));
+                                        Alert.alert(t("success"), t("meetingPointDeleted"));
+                                      } else {
+                                        Alert.alert(t("error"), t("meetingPointDeleteError"));
+                                      }
+                                    },
+                                  },
+                                ]
+                              );
+                            }}
+                            delayLongPress={400}
+                          >
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.vehicleTitle}>{mp.name}</Text>
+                              <Text style={styles.vehicleSubtitle}>📍 {mp.city}</Text>
+                              <Text style={styles.vehicleSubtitle}>{mp.address}</Text>
+                            </View>
+                          </TouchableOpacity>
+                        );
+                      })}
+
+                      {/* PAGINATION */}
+                      {meetingPoints.length > MEETING_POINTS_PER_PAGE &&
+                        meetingPointPage < meetingPointTotalPages && (
+                          <TouchableOpacity
+                            style={styles.loadMoreButton}
+                            onPress={() => setMeetingPointPage(prev => prev + 1)}
+                          >
+                            <Text style={styles.loadMoreText}>{t("loadMore")}</Text>
+                          </TouchableOpacity>
+                        )}
+
+                      {/* RELOAD */}
+                      {meetingPoints.length > 0 && (
+                        <TouchableOpacity
+                          style={styles.reloadButton}
+                          onPress={() => {
+                            setMeetingPointPage(1);
+                            fetchMeetingPoints();
+                          }}
+                        >
+                          <Text style={styles.reloadText}>{t("reload")}</Text>
+                        </TouchableOpacity>
+                      )}
+                    </ScrollView>
+                  )}
+                </Animated.View>
+              </TouchableOpacity>
+            </Modal>
+          )}
+
+          {/* FORMULAIRE MEETING POINT */}
+          {showMeetingPointForm && (
+            <MeetingPointScreen
+              selectedPoints={selectedMeetingPoints}
+              onBack={(points?: MeetingPoint[]) => {
+                setShowMeetingPointForm(false);
+                if (points) setMeetingPoints(prev => [...points, ...prev]);
+                else fetchMeetingPoints();
+              }}
+            />
+          )}
         </Animated.View>
       </View>
     </Modal>
@@ -1132,6 +940,27 @@ const styles = StyleSheet.create({
   handle: { width: 48, height: 5, backgroundColor: "#D1D5DB", borderRadius: 3, alignSelf: "center", marginVertical: 10 },
   headerRow: { flexDirection: "row", paddingHorizontal: 16, alignItems: "center", marginBottom: 8 },
   headerTitle: { flex: 1, textAlign: "center", fontSize: 18, fontWeight: "600" },
+  
+  // =========================================================
+  // 🔹 NOUVEAU STYLE : Simple header avec texte seulement
+  // =========================================================
+  simpleHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: "#ECFDF5",
+    borderRadius: 12,
+    gap: 8,
+  },
+  simpleHeaderText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#059669",
+  },
+  
   tabs: { marginHorizontal: 16, backgroundColor: "#E5E7EB", padding: 4, borderRadius: 999, flexDirection: "row" },
   tab: { flex: 1, paddingVertical: 10, borderRadius: 999, flexDirection: "row", justifyContent: "center", gap: 6 },
   activeTab: { backgroundColor: "#059669" },
@@ -1153,258 +982,258 @@ const styles = StyleSheet.create({
   statusBadge: { position: "absolute", top: 14, right: 14, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 12 },
   emptyText: { textAlign: "center", color: "#6B7280", marginVertical: 20 },
 
-  
   uberSheet: {
-  backgroundColor: "#FFFFFF",
-  borderTopLeftRadius: 28,
-  borderTopRightRadius: 28,
-  paddingHorizontal: 20,
-  paddingBottom: 24,
-  paddingTop: 10,
-  shadowColor: "#000",
-  shadowOpacity: 0.1,
-  shadowRadius: 20,
-  elevation: 20,
-},
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    paddingTop: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 20,
+  },
 
-sheetHandle: {
-  width: 50,
-  height: 5,
-  backgroundColor: "#E5E7EB",
-  borderRadius: 3,
-  alignSelf: "center",
-  marginBottom: 16,
-},
+  sheetHandle: {
+    width: 50,
+    height: 5,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 3,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
 
-uberHeader: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: 18,
-},
+  uberHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 18,
+  },
 
-uberTitle: {
-  fontSize: 18,
-  fontWeight: "700",
-  color: "#111827",
-},
+  uberTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+  },
 
-uberSubtitle: {
-  fontSize: 13,
-  color: "#6B7280",
-  marginTop: 2,
-},
+  uberSubtitle: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginTop: 2,
+  },
 
-addButton: {
-  backgroundColor: "#059669",
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  justifyContent: "center",
-  alignItems: "center",
-},
+  addButton: {
+    backgroundColor: "#059669",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-uberCard: {
-  flexDirection: "row",
-  alignItems: "center",
-  backgroundColor: "#F9FAFB",
-  padding: 14,
-  borderRadius: 16,
-  marginBottom: 12,
-},
+  uberCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    padding: 14,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
 
-uberCardSelected: {
-  borderWidth: 1.5,
-  borderColor: "#059669",
-  backgroundColor: "#ECFDF5",
-},
+  uberCardSelected: {
+    borderWidth: 1.5,
+    borderColor: "#059669",
+    backgroundColor: "#ECFDF5",
+  },
 
-uberIconBox: {
-  width: 42,
-  height: 42,
-  borderRadius: 14,
-  backgroundColor: "#E5E7EB",
-  justifyContent: "center",
-  alignItems: "center",
-},
+  uberIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: "#E5E7EB",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-uberCardTitle: {
-  fontSize: 15,
-  fontWeight: "600",
-  color: "#111827",
-},
+  uberCardTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#111827",
+  },
 
-uberCardSubtitle: {
-  fontSize: 12,
-  color: "#6B7280",
-  marginTop: 3,
-},
+  uberCardSubtitle: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginTop: 3,
+  },
 
-selectedDot: {
-  width: 10,
-  height: 10,
-  borderRadius: 5,
-  backgroundColor: "#059669",
-},
+  selectedDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#059669",
+  },
 
-emptyContainer: {
-  paddingVertical: 40,
-  alignItems: "center",
-},
+  emptyContainer: {
+    paddingVertical: 40,
+    alignItems: "center",
+  },
 
-loadMoreUber: {
-  paddingVertical: 14,
-  alignItems: "center",
-},
+  loadMoreUber: {
+    paddingVertical: 14,
+    alignItems: "center",
+  },
 
-loadMoreUberText: {
-  color: "#059669",
-  fontWeight: "600",
-},
+  loadMoreUberText: {
+    color: "#059669",
+    fontWeight: "600",
+  },
 
-reloadUber: {
-  paddingVertical: 10,
-  alignItems: "center",
-},
+  reloadUber: {
+    paddingVertical: 10,
+    alignItems: "center",
+  },
 
-reloadUberText: {
-  fontSize: 12,
-  color: "#9CA3AF",
-},
+  reloadUberText: {
+    fontSize: 12,
+    color: "#9CA3AF",
+  },
 
-vehicleSheet: {
-  position: "absolute",
-  bottom: 0,
-  width: "100%",
-  backgroundColor: "#fff",
-  borderTopLeftRadius: 24,
-  borderTopRightRadius: 24,
-  padding: 20,
-  elevation: 15,
-},
+  vehicleSheet: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    elevation: 15,
+  },
 
-vehicleHeader: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: 15,
-},
+  vehicleHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
 
-vehicleTitleSheet: {
-  fontSize: 18,
-  fontWeight: "700",
-},
+  vehicleTitleSheet: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
 
-vehicleCard: {
-  flexDirection: "row",
-  alignItems: "center",
-  padding: 14,
-  borderRadius: 14,
-  backgroundColor: "#F9FAFB",
-  marginBottom: 12,
-},
+  vehicleCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: "#F9FAFB",
+    marginBottom: 12,
+  },
 
-vehicleIconBox: {
-  width: 45,
-  height: 45,
-  borderRadius: 12,
-  backgroundColor: "#ECFDF5",
-  justifyContent: "center",
-  alignItems: "center",
-},
+  vehicleIconBox: {
+    width: 45,
+    height: 45,
+    borderRadius: 12,
+    backgroundColor: "#ECFDF5",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-vehicleTitle: {
-  fontSize: 15,
-  fontWeight: "600",
-},
+  vehicleTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
 
-vehicleSubtitle: {
-  fontSize: 13,
-  color: "#6B7280",
-},
+  vehicleSubtitle: {
+    fontSize: 13,
+    color: "#6B7280",
+  },
 
-loadMoreButton: {
-  padding: 12,
-  alignItems: "center",
-},
+  loadMoreButton: {
+    padding: 12,
+    alignItems: "center",
+  },
 
-loadMoreText: {
-  color: "#059669",
-  fontWeight: "600",
-},
+  loadMoreText: {
+    color: "#059669",
+    fontWeight: "600",
+  },
 
-reloadButton: {
-  padding: 12,
-  alignItems: "center",
-},
+  reloadButton: {
+    padding: 12,
+    alignItems: "center",
+  },
 
-reloadText: {
-  color: "#323539",
-  fontWeight: "600",
-},
+  reloadText: {
+    color: "#323539",
+    fontWeight: "600",
+  },
 
-gridContainer: {
-  gap: 10,
-},
+  gridContainer: {
+    gap: 10,
+  },
 
-gridRow: {
-  flexDirection: "row",
-  gap: 12,
-},
+  gridRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
 
-inputWrapper: {
-  flex: 1,
-  backgroundColor: "#F9FAFB",
-  borderRadius: 14,
-  paddingHorizontal: 14,
-  paddingVertical: 12,
-  borderWidth: 1,
-  borderColor: "#E5E7EB",
-  minHeight: 20,
-  justifyContent: "center",
-},
+  inputWrapper: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    minHeight: 20,
+    justifyContent: "center",
+  },
 
-label: {
-  fontSize: 12,
-  color: "#6B7280",
-  marginBottom: 2,
-},
+  label: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 2,
+  },
 
-inputField: {
-  fontSize: 15,
-  fontWeight: "500",
-  color: "#111827",
-},
+  inputField: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#111827",
+  },
 
-valueText: {
-  fontSize: 15,
-  fontWeight: "500",
-  color: "#111827",
-},
+  valueText: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#111827",
+  },
 
-placeholderText: {
-  color: "#9CA3AF",
-},
+  placeholderText: {
+    color: "#9CA3AF",
+  },
 
-rowBetween: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-},
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
 
-fullWidth: {
-  width: "100%",
-},
+  fullWidth: {
+    width: "100%",
+  },
 
-textArea: {
-  backgroundColor: "#F9FAFB",
-  borderRadius: 14,
-  padding: 14,
-  borderWidth: 1,
-  borderColor: "#E5E7EB",
-  minHeight: 90,
-  textAlignVertical: "top",
-  fontSize: 15,
-},
-
+  textArea: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    minHeight: 90,
+    textAlignVertical: "top",
+    fontSize: 15,
+  },
 });
+
+

@@ -29,6 +29,7 @@ export type MainView =
   | "about"
   | "settings"
   | "help"
+  | "rideRequests"
   | "chat";
 
 interface NavigationProps {

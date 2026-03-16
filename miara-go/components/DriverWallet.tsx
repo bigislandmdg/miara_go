@@ -53,7 +53,7 @@ interface Transaction {
 /* ================= CONFIG ================= */
 const API_URL = "http://10.0.2.2:8080"
 const FALLBACK_USER_ID = 1
-const PAGE_SIZE = 5
+const PAGE_SIZE = 3
 
 interface DriverWalletProps {
   onViewChange?: (view: MainView) => void
@@ -433,8 +433,8 @@ const scanQR = async (token: string) => {
       </Pressable>
     </View>
   </View>
-</Modal>
-    </View>
+  </Modal>
+</View>
   )
 }
 

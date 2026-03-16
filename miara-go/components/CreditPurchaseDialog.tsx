@@ -11,6 +11,7 @@ import {
   Dimensions,
 } from 'react-native'
 import { TouchableWithoutFeedback } from 'react-native'
+import { useTranslation } from 'react-i18next'
 
 import { Diamond } from 'lucide-react-native'
 
@@ -38,6 +39,7 @@ export default function CreditPurchaseDialog({
   currentCredits,
   userId,
 }: CreditPurchaseDialogProps) {
+  const { t } = useTranslation()
   const [selected, setSelected] = useState(CREDIT_PACKAGES[0])
   const [loading, setLoading] = useState(false)
 
@@ -82,7 +84,7 @@ export default function CreditPurchaseDialog({
      ===================================================== */
   const handlePurchase = async () => {
     if (!userId || userId <= 0) {
-      Alert.alert('Erreur', 'Utilisateur non identifié')
+      Alert.alert(t('error'), t('userNotIdentified'))
       return
     }
 
@@ -113,15 +115,15 @@ export default function CreditPurchaseDialog({
       try {
         data = text ? JSON.parse(text) : null
       } catch {
-        throw new Error('Réponse serveur invalide')
+        throw new Error(t('invalidServerResponse'))
       }
 
       if (!res.ok) {
-        throw new Error(data?.messages?.error || 'Erreur création transaction')
+        throw new Error(data?.messages?.error || t('transactionCreationError'))
       }
 
       if (!data?.transaction?.reference) {
-        throw new Error('Référence transaction manquante')
+        throw new Error(t('missingTransactionReference'))
       }
 
       // 🎫 Affichage ticket (transaction pending)
@@ -133,7 +135,7 @@ export default function CreditPurchaseDialog({
 
     } catch (e: any) {
       console.error('❌ Achat crédits échoué', e)
-      Alert.alert('Erreur', e.message || 'Échec du paiement')
+      Alert.alert(t('error'), e.message || t('paymentFailed'))
     } finally {
       setLoading(false)
     }
@@ -153,11 +155,11 @@ export default function CreditPurchaseDialog({
 
             <View style={styles.header}>
               <Diamond size={18} color="#f59e0b" />
-              <Text style={styles.title}>Acheter des crédits</Text>
+              <Text style={styles.title}>{t('buyCredits')}</Text>
             </View>
 
             <Text style={styles.subtitle}>
-              Solde actuel :{' '}
+              {t('currentBalance')} :{' '}
               <Text style={{ color: '#047857' }}>{currentCredits}</Text>
             </Text>
 
@@ -176,7 +178,7 @@ export default function CreditPurchaseDialog({
                       <Text style={styles.pkgCredits}>{total}</Text>
                       <Text>{pkg.price.toLocaleString()} Ar</Text>
                       {pkg.bonus && (
-                        <Text style={styles.bonus}>+{pkg.bonus} bonus</Text>
+                        <Text style={styles.bonus}>+{pkg.bonus} {t('bonus')}</Text>
                       )}
                     </TouchableOpacity>
                   )
@@ -186,7 +188,7 @@ export default function CreditPurchaseDialog({
 
             <View style={styles.actions}>
               <TouchableOpacity style={styles.cancel} onPress={onClose}>
-                <Text>Annuler</Text>
+                <Text>{t('cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.pay}
@@ -194,7 +196,7 @@ export default function CreditPurchaseDialog({
                 disabled={loading}
               >
                 <Text style={{ color: '#fff' }}>
-                  {loading ? 'Traitement...' : 'Payer'}
+                  {loading ? t('processing') : t('pay')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -208,15 +210,15 @@ export default function CreditPurchaseDialog({
       <Modal transparent visible={showTicket} animationType="fade">
         <View style={styles.ticketOverlay}>
           <View style={styles.ticketSheet}>
-            <Text style={styles.ticketTitle}>Paiement initié ✅</Text>
+            <Text style={styles.ticketTitle}>{t('paymentInitiated')} ✅</Text>
             <Text style={styles.ticketText}>
-              Référence : {ticketData?.reference}
+              {t('reference')} : {ticketData?.reference}
             </Text>
             <Text style={styles.ticketText}>
-              Montant : {ticketData?.amount.toLocaleString()} Ar
+              {t('amount')} : {ticketData?.amount.toLocaleString()} Ar
             </Text>
             <Text style={styles.ticketHint}>
-              En attente de confirmation Mobile Money
+              {t('pendingMobileMoneyConfirmation')}
             </Text>
 
             <TouchableOpacity
@@ -233,7 +235,7 @@ export default function CreditPurchaseDialog({
                 onClose()   // fermer dialog achat
               }}
             >
-              <Text style={{ color: '#fff' }}>OK</Text>
+              <Text style={{ color: '#fff' }}>{t('ok')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -319,3 +321,4 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
 })
+

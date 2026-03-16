@@ -62,3 +62,5 @@ logger.threshold = 4
 # DEFAULT COUNTRY_CODE
 #---------------------------------------------------------------------
 DEFAULT_COUNTRY_CODE=MG
+
+GOOGLE_MAPS_API_KEY=votre_clé_api_google_maps

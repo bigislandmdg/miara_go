@@ -68,6 +68,7 @@ type MainView =
   | "about"
   | "settings"
   | "help"
+  | "rideRequests"
   | "history";
 
 type SelectedTrip = {

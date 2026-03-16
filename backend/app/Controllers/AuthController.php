@@ -27,20 +27,20 @@ class AuthController extends ResourceController
     // ]
     // =========================================================
     private array $countryCodes = [
-    // Océan Indien
-    'MG' => ['prefix' => '+261', 'local_len' => 10, 'short_len' => 9],
-    'RE' => ['prefix' => '+262', 'local_len' => 10, 'short_len' => 9],
-    'KM' => ['prefix' => '+269', 'local_len' => 7,  'short_len' => 7],
-    'MU' => ['prefix' => '+230', 'local_len' => 8,  'short_len' => 8],
-    // Europe
-    'FR' => ['prefix' => '+33',  'local_len' => 10, 'short_len' => 9],
-    'GB' => ['prefix' => '+44',  'local_len' => 10, 'short_len' => 10],
-    'DE' => ['prefix' => '+49',  'local_len' => 11, 'short_len' => 10],
-    // Amérique du Nord
-    'US' => ['prefix' => '+1',   'local_len' => 10, 'short_len' => 10],
-    'CA' => ['prefix' => '+1',   'local_len' => 10, 'short_len' => 10],
-    // Afrique
-    'ZA' => ['prefix' => '+27',  'local_len' => 9,  'short_len' => 9],
+        // Océan Indien
+        'MG' => ['prefix' => '+261', 'local_len' => 10, 'short_len' => 9],
+        'RE' => ['prefix' => '+262', 'local_len' => 10, 'short_len' => 9],
+        'KM' => ['prefix' => '+269', 'local_len' => 7,  'short_len' => 7],
+        'MU' => ['prefix' => '+230', 'local_len' => 8,  'short_len' => 8],
+        // Europe
+        'FR' => ['prefix' => '+33',  'local_len' => 10, 'short_len' => 9],
+        'GB' => ['prefix' => '+44',  'local_len' => 10, 'short_len' => 10],
+        'DE' => ['prefix' => '+49',  'local_len' => 11, 'short_len' => 10],
+        // Amérique du Nord
+        'US' => ['prefix' => '+1',   'local_len' => 10, 'short_len' => 10],
+        'CA' => ['prefix' => '+1',   'local_len' => 10, 'short_len' => 10],
+        // Afrique
+        'ZA' => ['prefix' => '+27',  'local_len' => 9,  'short_len' => 9],
     ];
 
     // Pays par défaut (peut être surchargé via .env : DEFAULT_COUNTRY_CODE=MG)
@@ -60,22 +60,44 @@ class AuthController extends ResourceController
     }
 
     // =========================================================
+    // 🔹 Nettoyer le zéro redondant après le préfixe
+    // Exemple : "+2610341234567" → "+261341234567"
+    // =========================================================
+    private function cleanRedundantZero(string $phone, string $prefix): string
+    {
+        // Si le numéro commence par le préfixe + suivi d'un 0
+        if (preg_match('/^' . preg_quote($prefix, '/') . '0(\d+)$/', $phone, $matches)) {
+            return $prefix . $matches[1];
+        }
+        
+        // Si le numéro a le format +XXX0XXXXXXXX
+        if (preg_match('/^(\+\d+)0(\d+)$/', $phone, $matches)) {
+            return $matches[1] . $matches[2];
+        }
+        
+        return $phone;
+    }
+
+    // =========================================================
     // 🔹 Normalisation numéro — internationalisation
     //
     // Logique :
     //  1. Si country_code fourni dans la requête → utiliser ce pays
     //  2. Sinon → utiliser $defaultCountry (MG par défaut)
     //  3. Si le numéro a déjà un préfixe international (+XXX) → inchangé
+    //  4. Supprime automatiquement le 0 redondant après le préfixe
     //
     // Exemples avec MG (+261, local_len=10, short_len=9) :
     //   0341234567   →  +261341234567
     //   341234567    →  +261341234567
     //   261341234567 →  +261341234567
+    //   +2610341234567→  +261341234567  (nettoyé)
     //   +261341234567→  +261341234567  (inchangé)
     //
     // Exemples avec FR (+33, local_len=10, short_len=9) :
     //   0612345678   →  +33612345678
     //   612345678    →  +33612345678
+    //   +330612345678→  +33612345678   (nettoyé)
     // =========================================================
     private function normalizePhone(?string $phone, ?string $countryCode = null): ?string
     {
@@ -84,8 +106,14 @@ class AuthController extends ResourceController
         // Nettoyer : supprimer espaces, tirets, points, parenthèses
         $phone = preg_replace('/[\s\-\.\(\)]+/', '', $phone);
 
-        // Déjà au format international complet (+XXXXX...) → retourner tel quel
+        // Déjà au format international complet (+XXXXX...) 
         if (preg_match('/^\+\d{7,15}$/', $phone)) {
+            // Nettoyer le zéro redondant après le préfixe
+            foreach ($this->countryCodes as $code => $cfg) {
+                if (strpos($phone, $cfg['prefix']) === 0) {
+                    return $this->cleanRedundantZero($phone, $cfg['prefix']);
+                }
+            }
             return $phone;
         }
 
@@ -116,6 +144,11 @@ class AuthController extends ResourceController
         // Format court sans 0 (ex: 341234567)
         if (strlen($phone) === $shortLen && $phone[0] !== '0') {
             return $prefix . $phone;
+        }
+
+        // Format avec préfixe + suivi d'un 0 (ex: +2610341234567)
+        if (preg_match('/^' . preg_quote($prefix, '/') . '0(\d{' . $shortLen . '})$/', $phone, $m)) {
+            return $prefix . $m[1];
         }
 
         // Format non reconnu → retourner tel quel (la validation rejettera)
