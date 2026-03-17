@@ -53,14 +53,78 @@ interface MeetingPoint {
   is_active: boolean;
 }
 
+// =========================================================
 const LOCATIONS = [
-  "Antananarivo", "Antsirabe", "Toamasina", "Mahajanga", "Fianarantsoa",
-  "Toliara", "Nosy Be", "Diego Suarez", "Maevatanana", "Sambava",
-  "Antalaha", "Manakara", "Ambositra", "Antsohihy", "Farafangana",
-  "Vangaindrano", "Vohipeno", "Mananjary", "Fenérive-Est", "Ambanja",
-  "Ambatondrazaka", "Ihosy", "Moramanga", "Morondava", "Betafo",
-  "Anjozorobe", "Ankazobe",
-];
+  // Analamanga
+  "Antananarivo", "Antananarivo Centre", "Ambohidratrimo", "Andramasina", "Anjozorobe", 
+  "Ankazobe", "Antananarivo Atsimondrano", "Antananarivo Avaradrano", "Manjakandriana",
+  
+  // Vakinankaratra
+  "Antsirabe I", "Antsirabe II", "Ambatonadrazaka", "Ambatolampy", "Betafo", "Faratsiho",
+  
+  // Itasy
+  "Miarinarivo", "Arivonimamo", "Soavinandriana",
+  
+  // Bongolava
+  "Tsiroanomandidy", "Fenoarivobe",
+  
+  // Haute Matsiatra
+  "Fianarantsoa I", "Fianarantsoa II", "Ambohimahasoa", "Ikalamavony", "Isandra", "Lalangina", "Vohibato",
+  
+  // Amoron'i Mania
+  "Ambositra", "Ambatofinandrahana", "Fandriana", "Manandriana",
+  
+  // Vatovavy
+  "Mananjary", "Ifanadiana", "Nosy Varika",
+  
+  // Fitovinany
+  "Manakara", "Ikongo", "Vohipeno",
+  
+  // Atsimo Atsinanana
+  "Farafangana", "Vangaindrano", "Midongy Sud",
+  
+  // Ihorombe
+  "Ihosy", "Iakora", "Ivohibe",
+  
+  // Menabe
+  "Morondava", "Mahabo", "Manja", "Miandrivazo",
+  
+  // Atsimo Andrefana
+  "Toliara I", "Toliara II", "Ampanihy", "Ankazoabo", "Benenitra", "Beroroha", "Betioky", "Morombe", "Sakaraha",
+  
+  // Androy
+  "Ambovombe", "Bekily", "Beloha", "Tsiombe",
+  
+  // Anosy
+  "Taolagnaro", "Amboasary", "Betroka",
+  
+  // Alaotra Mangoro
+  "Ambatondrazaka", "Amparafaravola", "Andilamena", "Anosibe An'ala", "Moramanga",
+  
+  // Atsinanana
+  "Toamasina I", "Toamasina II", "Antanambao Manampotsy", "Brickaville", "Mahanoro", "Marolambo", "Vatomandry",
+  
+  // Analanjirofo
+  "Fenoarivo Atsinanana", "Fenerive Est", "Mananara Nord", "Maroantsetra", "Nosy Boraha", "Soanierana Ivongo", "Vavatenina",
+  
+  // Sofia
+  "Antsohihy", "Analalava", "Bealanana", "Befandriana Nord", "Boriziny", "Mampikony", "Mandritsara",
+  
+  // Boeny
+  "Mahajanga I", "Mahajanga II", "Ambatoboeny", "Marovoay", "Mitsinjo", "Soalala",
+  
+  // Betsiboka
+  "Maevatanana", "Kandreho", "Tsaratanana",
+  
+  // Melaky
+  "Maintirano", "Ambatomainty", "Antsalova", "Besalampy", "Morafenobe",
+  
+  // Diana
+  "Antsiranana I", "Antsiranana II", "Ambilobe", "Ambanja", "Nosy Be", "Nosy Mitsio",
+  
+  // Sava
+  "Sambava", "Andapa", "Antalaha", "Vohemar",
+].sort(); // Tri alphabétique
 
 /* ===================== TYPES ===================== */
 interface TripScreenProps {

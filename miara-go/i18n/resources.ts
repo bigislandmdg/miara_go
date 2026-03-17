@@ -185,15 +185,6 @@ export const resources = {
       seatsCount: "{{count}} place(s)",
       ariary: "Ar",
 
-      /* ================= VEHICLE LABELS ================= */
-
-      sprinter316: "Mercedes-Benz Sprinter 316 CDI",
-      sprinter519: "Mercedes-Benz Sprinter 519 CDI",
-      hiaceCommuter: "Toyota Hiace Commuter",
-      hiaceGL: "Toyota Hiace GL",
-      nissanCivilian: "Nissan Civilian 4.5L",
-      crafter: "Volkswagen Crafter 2.0 TDI",
-      pickup: "Mitsubishi L200 Double Cab",
 
       // ================= DRIVER HOME =================
       dashboardOverview: "Vue d’ensemble",
@@ -362,11 +353,24 @@ export const resources = {
            city: "Ville",
            address: "Adresse",
            latitude: "Latitude",
-           longitude: "Longitude",                              // FR                                      // FR
-           active: "Actif",                                        // FR
-           inactive: "Inactif",                                    // FR
-           saveMeetingPoint: "Enregistrer le point",              // FR
-           updateMeetingPoint: "Mettre à jour le point",           // FR
+           longitude: "Longitude",
+           searchPlace: "Rechercher un lieu",
+           useCurrentLocation: "Utiliser ma position",
+           currentLocationConfirm: "Voulez-vous utiliser votre position actuelle ?",
+           importFromGoogle: "Importer depuis Google Maps",
+           clearSelection: "Effacer la sélection",
+           searchError: "Erreur lors de la recherche",
+           gare: "Gare",
+           arret_bus: "Arrêt de bus",
+           aeroport: "Aéroport",
+           hotel: "Hôtel",
+           parking: "Parking",
+           centre_commercial: "Centre commercial",
+           autre: "Autre",
+           active: "Actif",                                       
+           inactive: "Inactif",
+           saveMeetingPoint: "Enregistrer le point",
+           updateMeetingPoint: "Mettre à jour le point",
            
            
       
@@ -524,7 +528,7 @@ export const resources = {
       undo: "Undo",
 
       // ================= PASSENGER HOME =================
-      // ================= PASSENGER HOME =================
+
       searchPlaceholder: "Search: city, driver, offer...",
       availableTrips: "Available Trips",
       offers: "Offers",
@@ -606,17 +610,7 @@ export const resources = {
       ok: "OK",
       seatsCount: "{{count}} seat(s)",
       ariary: "Ar",
-
-      /* ================= VEHICLE LABELS ================= */
-
-      sprinter316: "Mercedes-Benz Sprinter 316 CDI",
-      sprinter519: "Mercedes-Benz Sprinter 519 CDI",
-      hiaceCommuter: "Toyota Hiace Commuter",
-      hiaceGL: "Toyota Hiace GL",
-      nissanCivilian: "Nissan Civilian 4.5L",
-      crafter: "Volkswagen Crafter 2.0 TDI",
-      pickup: "Mitsubishi L200 Double Cab",     
-
+   
     // ================= DRIVER HOME ================= 
     dashboardOverview: "Overview",
     credits: "Credits",
@@ -771,6 +765,19 @@ export const resources = {
       address: "Address",
       latitude: "Latitude",
       longitude: "Longitude",
+      searchPlace: "Search for a place",
+     useCurrentLocation: "Use my location",
+     currentLocationConfirm: "Do you want to use your current location?",
+     importFromGoogle: "Import from Google Maps",
+     clearSelection: "Clear selection",
+     searchError: "Error during search",
+     gare: "Train station",
+     arret_bus: "Bus stop",
+     aeroport: "Airport",
+     hotel: "Hotel",
+     parking: "Parking",
+     centre_commercial: "Shopping mall",
+      autre: "Other",
       active: "Active",
       inactive: "Inactive",
       saveMeetingPoint: "Save meeting point",
@@ -1021,15 +1028,6 @@ export const resources = {
         seatsCount: "Seza {{count}}",
         ariary: "Ar",
 
-      /* ================= VEHICLE LABELS ================= */
-
-      sprinter316: "Mercedes-Benz Sprinter 316 CDI",
-      sprinter519: "Mercedes-Benz Sprinter 519 CDI",
-      hiaceCommuter: "Toyota Hiace Commuter",
-      hiaceGL: "Toyota Hiace GL",
-      nissanCivilian: "Nissan Civilian 4.5L",
-      crafter: "Volkswagen Crafter 2.0 TDI",
-      pickup: "Mitsubishi L200 Double Cab",
 
      // ================= DRIVER HOME =================
      dashboardOverview: "Topi-maso",
@@ -1193,6 +1191,19 @@ export const resources = {
          meetingPointInformation: "Mombamomba ny toerana",
          meetingPointSaved: "Voarakitra soa aman-tsara ny toerana fihaonana",
          meetingPointUpdated: "Nohavaozina ny toerana fihaonana",
+        searchPlace: "Hitady toerana",
+        useCurrentLocation: "Ampiasao ny toerana misy ahy",
+        currentLocationConfirm: "Tianao ve ny mampiasa ny toerana misy anao ankehitriny?",
+        importFromGoogle: "Ampidiro avy amin'ny Google Maps",
+        clearSelection: "Fafao ny fifantenana",
+        searchError: "Tsy nahomby ny fikarohana",
+        gare: "Garan-dalamby",
+        arret_bus: "Fijanonan'ny taksibe",
+        aeroport: "Seranam-piaramanidina",
+        hotel: "Hotely",
+        parking: "Toerana fijanonan'ny fiara",
+        centre_commercial: "Foibe ara-barotra",
+        autre: "Hafa",
          placeType: "Karazana toerana",
          active: "Miasa",
          inactive: "Tsy miasa",

@@ -29,6 +29,7 @@ import { useTranslation } from "react-i18next";
 import { SideMenu } from "./SideMenu";
 import { MainView } from "./Navigation";
 import { PublishScreen } from "./PublishScreen";
+import RideRequestScreen from "./RideRequestScreen"; // 🔹 IMPORT AJOUTÉ
 
 /* ===================== TYPES ===================== */
 type TripStatus = "open" | "full" | "completed" | "cancelled";
@@ -90,6 +91,11 @@ export function DriverHome({
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
   const [selectedRideRequest, setSelectedRideRequest] = useState<RideRequest | null>(null);
   const [showPublishScreen, setShowPublishScreen] = useState(false);
+  
+  // =========================================================
+  // 🔹 NOUVEAU : État pour afficher l'écran de création de demande
+  // =========================================================
+  const [showRideRequestScreen, setShowRideRequestScreen] = useState(false);
  
   const [totalCredits, setTotalCredits] = useState(0);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -149,9 +155,7 @@ export function DriverHome({
     setTripPage(1);
   };
 
-  // =========================================================
-  // 🔹 NOUVEAU : Fonctions de toggle synchronisées pour les demandes
-  // =========================================================
+  // Fonctions de toggle synchronisées pour les demandes
   const toggleRequestDate = (date: string | null) => {
     setRequestFilterDate(prev => (prev === date ? null : date));
     setRequestPage(1);
@@ -167,9 +171,7 @@ export function DriverHome({
     setRequestPage(1);
   };
 
-  // =========================================================
-  // 🔹 NOUVEAU : Fonctions pour ouvrir les modals de filtre des demandes
-  // =========================================================
+  // Fonctions pour ouvrir les modals de filtre des demandes
   const openRequestDateFilter = () => {
     setModalType("date");
     setModalInput(requestFilterDate || "");
@@ -188,9 +190,7 @@ export function DriverHome({
     setModalVisible(true);
   };
 
-  // =========================================================
-  // 🔹 NOUVEAU : Appliquer le filtre pour les demandes
-  // =========================================================
+  // Appliquer le filtre pour les demandes
   const applyRequestFilter = (value: string) => {
     if (modalType === "date") {
       setRequestFilterDate(value);
@@ -334,9 +334,6 @@ export function DriverHome({
     });
   }, [trips, filterDate, filterDeparture, filterDestination, filterVehicle]);
 
-  // =========================================================
-  // 🔹 NOUVEAU : Filtrage des demandes avec ses propres filtres
-  // =========================================================
   const filteredRideRequests = useMemo(() => {
     return rideRequests.filter(r => {
       if (requestFilterDate && normalizeDate(r.desired_date) !== requestFilterDate)
@@ -677,7 +674,15 @@ export function DriverHome({
         }}
       />
 
-      {showPublishScreen && selectedRideRequest ? (
+      {/* ========================================================= */}
+      {/* 🔹 NOUVEAU : Affichage conditionnel de RideRequestScreen */}
+      {/* ========================================================= */}
+      {showRideRequestScreen ? (
+        <RideRequestScreen
+          userId={1}
+          onBack={() => setShowRideRequestScreen(false)}
+        />
+      ) : showPublishScreen && selectedRideRequest ? (
         <PublishScreen
           rideRequestId={selectedRideRequest.id}
           userType="driver"
@@ -708,11 +713,13 @@ export function DriverHome({
               <Text style={styles.statLabel}>{t("trips")}</Text>
             </TouchableOpacity>
 
-            {/* RIDE REQUESTS CARD */}
+            {/* ========================================================= */}
+            {/* 🔹 AMÉLIORATION : Carte RIDE REQUESTS avec navigation */}
+            {/* ========================================================= */}
             <TouchableOpacity
               style={styles.statCard}
               activeOpacity={0.85}
-              onPress={() => onViewChange?.("rideRequests")}
+              onPress={() => setShowRideRequestScreen(true)}
             >
               <Car color="#1D4ED8" />
               <Text style={styles.statValue}>{rideRequests.length}</Text>
@@ -875,9 +882,7 @@ export function DriverHome({
           {/* Demandes de trajets */}
           <Text style={styles.section}>{t("myRideRequests")}</Text>
           
-          {/* ========================================================= */}
-          {/* 🔹 NOUVEAU : Filtres synchronisés pour les demandes */}
-          {/* ========================================================= */}
+          {/* Filtres synchronisés pour les demandes */}
           <View style={[styles.filtersRow, { marginHorizontal: 16, marginBottom: 10 }]}>
             <TouchableOpacity
               style={[styles.filterChip, requestFilterDate && { backgroundColor: "#047857" }]}
@@ -1074,4 +1079,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 });
+
 
