@@ -1,4 +1,4 @@
-// PassengerHome.tsx (version complète avec chip “Book” sur les offres)
+// PassengerHome.tsx (version avec "Voir plus" aligné à droite pour les deux sections)
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   View,
@@ -16,7 +16,7 @@ import {
   Modal,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { DollarSign, Users, Calendar, Clock, Sliders, Car } from "lucide-react-native";
+import { DollarSign, Users, Calendar, Clock, Sliders, Car, X, Filter, Star, ChevronRight } from "lucide-react-native";
 import QRCode from "react-native-qrcode-svg";
 import { Header } from "../components/Header";
 import RideRequestScreen from "./RideRequestScreen";
@@ -46,7 +46,7 @@ export interface Trip {
   time: string;
   price: number;
   meetingPoints: string[];
-  hasRated?: boolean; // indique si le passager a déjà évalué
+  hasRated?: boolean;
 }
 
 export interface Offer {
@@ -58,14 +58,28 @@ export interface Offer {
   car_info: string;
 }
 
+// =========================================================
+// 🔹 INTERFACE POUR LES FILTRES AMÉLIORÉS
+// =========================================================
+interface FilterOptions {
+  sortType: "none" | "price" | "date" | "rating";
+  onlyAvailable: boolean;
+  priceRange: [number, number];
+  maxPrice: number;
+  departureFilter: string;
+  arrivalFilter: string;
+  minRating: number;
+  selectedVehicleTypes: string[];
+}
+
 interface PassengerHomeProps {
   userId: number;
   onBookTrip?: (trip: Trip, offer: Offer | null, seats: number) => void;
   onSearch: (trips: Trip[], offers: Offer[]) => void;
   onNotifications?: () => void;
   onProfileClick?: () => void;
-  userType?: "driver" | "passenger"; // Pour savoir si c'est un passager
-  onRateTrip?: (trip: Trip) => void; // callback pour ouvrir l'écran rating
+  userType?: "driver" | "passenger";
+  onRateTrip?: (trip: Trip) => void;
 }
 
 /* ===================== COMPONENT ===================== */
@@ -84,11 +98,28 @@ export default function PassengerHome({
   const [loadingTrips, setLoadingTrips] = useState(true);
   const [loadingOffers, setLoadingOffers] = useState(true);
 
+  // =========================================================
+  // 🔹 ÉTATS POUR LES FILTRES AMÉLIORÉS
+  // =========================================================
   const [filterVisible, setFilterVisible] = useState(false);
-  const [sortType, setSortType] = useState<"none" | "price" | "date">("none");
-  const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [filters, setFilters] = useState<FilterOptions>({
+    sortType: "none",
+    onlyAvailable: false,
+    priceRange: [0, 100000],
+    maxPrice: 100000,
+    departureFilter: "",
+    arrivalFilter: "",
+    minRating: 0,
+    selectedVehicleTypes: [],
+  });
+  
+  // État pour les filtres temporaires (pendant l'édition dans le modal)
+  const [tempFilters, setTempFilters] = useState<FilterOptions>(filters);
+  
+  // Statistiques des prix pour le slider
+  const [priceStats, setPriceStats] = useState({ min: 0, max: 100000, avg: 25000 });
 
-  const slideAnim = useRef(new Animated.Value(500)).current; // Modal filter slide
+  const slideAnim = useRef(new Animated.Value(500)).current;
 
   const [refreshing, setRefreshing] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -97,15 +128,28 @@ export default function PassengerHome({
   const [selectedRideRequestId, setSelectedRideRequestId] = useState<number | null>(null);
 
   const [selectedTripForRating, setSelectedTripForRating] = useState<Trip | null>(null);
-  const [ratingToken, setRatingToken] = useState<string>(""); // token pour RatingScreen
+  const [ratingToken, setRatingToken] = useState<string>("");
 
   const [infoCards] = useState([
     { id: 1, title: t("publishRideTitle"), description: t("publishRideDesc") },
   ]);
 
-  const PAGE_SIZE = 3;
+  const PAGE_SIZE = 1;
   const [tripPage, setTripPage] = useState(1);
   const [offerPage, setOfferPage] = useState(1);
+
+  // Types de véhicules disponibles (extraits des trajets)
+  const vehicleTypes = useMemo(() => {
+    const types = new Set<string>();
+    trips.forEach(trip => {
+      if (trip.vehicle?.model) {
+        const modelParts = trip.vehicle.model.split(' ');
+        const model = modelParts.length > 0 ? modelParts[0] : 'Autre';
+        types.add(model);
+      }
+    });
+    return Array.from(types);
+  }, [trips]);
 
   /* ===================== FETCH ===================== */
   const safeFetchJson = async (url: string) => {
@@ -126,40 +170,60 @@ export default function PassengerHome({
     const json = await safeFetchJson("http://10.0.2.2:8080/rides");
 
     if (Array.isArray(json?.rides)) {
-      setTrips(
-        json.rides.map((r: any) => ({
-          id: String(r.id),
-          departure: r.departure ?? "",
-          arrival: r.arrival ?? "",
-          date: r.date ?? "",
-          time: r.time ?? "",
-          price: Number(r.price ?? 0),
-          meetingPoints: r.meetingPoints ?? [],
-          hasRated: r.hasRated ?? false,
-          driver_id: r.driver?.id ?? 0,
-          driver: {
-            name: r.driver?.name ?? "Driver",
-            rating: Number(r.driver?.rating ?? 4.7),
-            avatar: r.driver?.avatar ?? "",
-            phone: r.driver?.phone ?? null,
-          },
-          vehicle: {
-            model: r.vehicle?.model ?? "Car",
-            plate: r.vehicle?.immatriculation ?? "",
-            totalSeats: Number(r.vehicle?.nombre_places ?? 4),
-            availableSeats: Number(r.vehicle?.availableSeats ?? 1),
-          },
-        }))
-      );
-    } else setTrips([]);
+      const fetchedTrips = json.rides.map((r: any) => ({
+        id: String(r.id),
+        departure: r.departure ?? "",
+        arrival: r.arrival ?? "",
+        date: r.date ?? "",
+        time: r.time ?? "",
+        price: Number(r.price ?? 0),
+        meetingPoints: Array.isArray(r.meetingPoints) ? r.meetingPoints : [],
+        hasRated: r.hasRated ?? false,
+        driver_id: r.driver?.id ?? 0,
+        driver: {
+          name: r.driver?.name ?? "Driver",
+          rating: Number(r.driver?.rating ?? 4.7),
+          avatar: r.driver?.avatar ?? "",
+          phone: r.driver?.phone ?? null,
+        },
+        vehicle: {
+          model: r.vehicle?.model ?? "Car",
+          plate: r.vehicle?.immatriculation ?? "",
+          totalSeats: Number(r.vehicle?.nombre_places ?? 4),
+          availableSeats: Number(r.vehicle?.availableSeats ?? 1),
+        },
+      }));
+      
+      setTrips(fetchedTrips);
+      
+      // Calculer les statistiques de prix
+      if (fetchedTrips.length > 0) {
+        const prices = fetchedTrips.map((t: Trip) => t.price);
+        const maxPrice = Math.max(...prices);
+        const minPrice = Math.min(...prices);
+        const avgPrice = Math.round(prices.reduce((a: number, b: number) => a + b, 0) / prices.length);
+        
+        setPriceStats({
+          min: minPrice,
+          max: maxPrice,
+          avg: avgPrice
+        });
+        setFilters(prev => ({ ...prev, priceRange: [minPrice, maxPrice], maxPrice }));
+      }
+    } else {
+      setTrips([]);
+    }
     setLoadingTrips(false);
   };
 
   const fetchOffers = async () => {
     setLoadingOffers(true);
     const json = await safeFetchJson("http://10.0.2.2:8080/offers");
-    if (Array.isArray(json?.offers)) setOffers(json.offers);
-    else setOffers([]);
+    if (Array.isArray(json?.offers)) {
+      setOffers(json.offers);
+    } else {
+      setOffers([]);
+    }
     setLoadingOffers(false);
   };
 
@@ -176,39 +240,149 @@ export default function PassengerHome({
     setRefreshing(false);
   };
 
-  /* ===================== SEARCH / FILTER ===================== */
+  /* ===================== GESTION DU MODAL DE FILTRE ===================== */
+  const openFilterModal = () => {
+    setTempFilters({...filters});
+    setFilterVisible(true);
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 300,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeFilterModal = () => {
+    Animated.timing(slideAnim, {
+      toValue: 500,
+      duration: 250,
+      easing: Easing.in(Easing.ease),
+      useNativeDriver: true,
+    }).start(() => setFilterVisible(false));
+  };
+
+  const applyFilters = () => {
+    setFilters({...tempFilters});
+    setTripPage(1);
+    setOfferPage(1);
+    closeFilterModal();
+  };
+
+  const resetFilters = () => {
+    const resetOptions: FilterOptions = {
+      sortType: "none",
+      onlyAvailable: false,
+      priceRange: [priceStats.min, priceStats.max],
+      maxPrice: priceStats.max,
+      departureFilter: "",
+      arrivalFilter: "",
+      minRating: 0,
+      selectedVehicleTypes: [],
+    };
+    setTempFilters({...resetOptions});
+    setFilters({...resetOptions});
+    setSearchText("");
+    setTripPage(1);
+    setOfferPage(1);
+    closeFilterModal();
+  };
+
+  const toggleVehicleType = (type: string) => {
+    setTempFilters(prev => {
+      const selected = prev.selectedVehicleTypes.includes(type)
+        ? prev.selectedVehicleTypes.filter(t => t !== type)
+        : [...prev.selectedVehicleTypes, type];
+      return { ...prev, selectedVehicleTypes: selected };
+    });
+  };
+
+  /* ===================== FILTRAGE AMÉLIORÉ ===================== */
   const filteredTrips = useMemo(() => {
-    let result = [...trips];
-    const q = searchText.toLowerCase().trim();
-    if (q) {
+    try {
+      let result = [...trips];
+      const q = searchText.toLowerCase().trim();
+
+      if (q) {
+        result = result.filter(
+          (t) =>
+            (t.departure?.toLowerCase() || '').includes(q) ||
+            (t.arrival?.toLowerCase() || '').includes(q) ||
+            (t.driver?.name?.toLowerCase() || '').includes(q)
+        );
+      }
+
+      if (filters.onlyAvailable) {
+        result = result.filter((t) => (t.vehicle?.availableSeats || 0) > 0);
+      }
+
       result = result.filter(
-        (t) =>
-          t.departure.toLowerCase().includes(q) ||
-          t.arrival.toLowerCase().includes(q) ||
-          t.driver.name.toLowerCase().includes(q)
+        (t) => t.price >= filters.priceRange[0] && t.price <= filters.priceRange[1]
       );
+
+      if (filters.departureFilter) {
+        result = result.filter((t) =>
+          (t.departure?.toLowerCase() || '').includes(filters.departureFilter.toLowerCase())
+        );
+      }
+
+      if (filters.arrivalFilter) {
+        result = result.filter((t) =>
+          (t.arrival?.toLowerCase() || '').includes(filters.arrivalFilter.toLowerCase())
+        );
+      }
+
+      if (filters.minRating > 0) {
+        result = result.filter((t) => (t.driver?.rating || 0) >= filters.minRating);
+      }
+
+      if (filters.selectedVehicleTypes.length > 0) {
+        result = result.filter((t) => {
+          const vehicleModel = t.vehicle?.model?.split(' ')[0] || '';
+          return filters.selectedVehicleTypes.some(type => 
+            vehicleModel.toLowerCase().includes(type.toLowerCase())
+          );
+        });
+      }
+
+      if (filters.sortType === "price") {
+        result.sort((a, b) => a.price - b.price);
+      } else if (filters.sortType === "date") {
+        result.sort(
+          (a, b) => new Date(a.date + " " + a.time).getTime() - new Date(b.date + " " + b.time).getTime()
+        );
+      } else if (filters.sortType === "rating") {
+        result.sort((a, b) => (b.driver?.rating || 0) - (a.driver?.rating || 0));
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Error filtering trips:", error);
+      return [];
     }
-    if (onlyAvailable) {
-      result = result.filter((t) => t.vehicle.availableSeats > 0);
-    }
-    if (sortType === "price") result.sort((a, b) => a.price - b.price);
-    if (sortType === "date")
-      result.sort(
-        (a, b) => new Date(a.date + " " + a.time).getTime() - new Date(b.date + " " + b.time).getTime()
-      );
-    return result;
-  }, [searchText, trips, sortType, onlyAvailable]);
+  }, [searchText, trips, filters]);
 
   const filteredOffers = useMemo(() => {
-    const q = searchText.toLowerCase().trim();
-    if (!q) return offers;
-    return offers.filter(
-      (o) => o.car_info.toLowerCase().includes(q) || o.message?.toLowerCase().includes(q)
-    );
+    try {
+      const q = searchText.toLowerCase().trim();
+      if (!q) return offers;
+      return offers.filter(
+        (o) => 
+          (o.car_info?.toLowerCase() || '').includes(q) || 
+          (o.message?.toLowerCase() || '').includes(q)
+      );
+    } catch (error) {
+      console.error("Error filtering offers:", error);
+      return [];
+    }
   }, [searchText, offers]);
 
-  const paginatedTrips = filteredTrips.slice(0, tripPage * PAGE_SIZE);
-  const paginatedOffers = filteredOffers.slice(0, offerPage * PAGE_SIZE);
+  const paginatedTrips = useMemo(() => {
+    return filteredTrips.slice(0, tripPage * PAGE_SIZE);
+  }, [filteredTrips, tripPage]);
+
+  const paginatedOffers = useMemo(() => {
+    return filteredOffers.slice(0, offerPage * PAGE_SIZE);
+  }, [filteredOffers, offerPage]);
 
   const getMapsDirectionUrl = (from: string, to: string) =>
     `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}`;
@@ -222,124 +396,142 @@ export default function PassengerHome({
     setSelectedTripForRating(trip);
   };
 
-  const handleRatingSubmitted = (trip: Trip) => {
-    setTrips((prev) =>
-      prev.map((t) => (t.id === trip.id ? { ...t, hasRated: true } : t))
-    );
-    setSelectedTripForRating(null);
-  };
-
   /* ===================== RENDER ===================== */
-  const renderTrip = ({ item }: { item: Trip }) => (
-    <View style={styles.card}>
-      <Text style={styles.route}>
-        {item.departure} → {item.arrival}
-      </Text>
+  const renderTrip = ({ item }: { item: Trip }) => {
+    if (!item) return null;
+    
+    return (
+      <View style={styles.card}>
+        <Text style={styles.route}>
+          {item.departure || ''} → {item.arrival || ''}
+        </Text>
 
-      <View style={styles.driverRow}>
-        <Image
-          source={{ uri: item.driver.avatar || "https://via.placeholder.com/80" }}
-          style={styles.avatar}
-        />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.driver}>{item.driver.name}</Text>
-          <Text style={styles.smallText}>
-            {item.vehicle.model} • {item.vehicle.plate}
-          </Text>
+        <View style={styles.driverRow}>
+          <Image
+            source={{ uri: item.driver?.avatar || "https://via.placeholder.com/80" }}
+            style={styles.avatar}
+          />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.driver}>{item.driver?.name || ''}</Text>
+            <View style={styles.ratingContainer}>
+              <Star size={12} color="#F59E0B" fill="#F59E0B" />
+              <Text style={styles.ratingText}>{(item.driver?.rating || 0).toFixed(1)}</Text>
+            </View>
+            <Text style={styles.smallText}>
+              {item.vehicle?.model || ''} • {item.vehicle?.plate || ''}
+            </Text>
+          </View>
+
+          {userType === "passenger" && (
+            <TouchableOpacity
+              style={[
+                styles.ratingBadge,
+                { backgroundColor: item.hasRated ? "#D1FAE5" : "#FDE68A" },
+              ]}
+              onPress={() => openRatingScreen(item)}
+            >
+              <Text style={{ fontSize: 12, fontWeight: "700" }}>
+                {item.hasRated ? "✅ " + (t("rated") || 'Noté') : "⭐ " + (t("rateTrip") || 'Noter')}
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={styles.qrContainer}
+            onPress={() => Linking.openURL(getMapsDirectionUrl(item.departure || '', item.arrival || ''))}
+          >
+            <QRCode value={getMapsDirectionUrl(item.departure || '', item.arrival || '')} size={56} />
+            <Text style={styles.qrHint}>{t("tripLabel") || 'Trajet'}</Text>
+          </TouchableOpacity>
         </View>
 
-        {userType === "passenger" && (
-          <TouchableOpacity
-            style={[
-              styles.ratingBadge,
-              { backgroundColor: item.hasRated ? "#D1FAE5" : "#FDE68A" },
-            ]}
-            onPress={() => openRatingScreen(item)}
-          >
-            <Text style={{ fontSize: 12, fontWeight: "700" }}>
-              {item.hasRated ? "✅ " + t("rated") : "⭐ " + t("rateTrip")}
+        <Text style={styles.info}>
+          <Calendar size={14} /> {item.date || ''}
+        </Text>
+
+        <View style={styles.tripBottomRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.info}>
+              <Clock size={14} /> {item.time || ''}
             </Text>
+
+            <Text style={styles.info}>
+              <DollarSign size={14} /> {item.price || 0} Ar
+            </Text>
+            
+            <Text style={styles.smallText}>
+              <Users size={14} /> {item.vehicle?.availableSeats || 0}/{item.vehicle?.totalSeats || 0} {t("seats") || 'places'}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.bookChips}
+            onPress={() => onBookTrip?.(item, null, 1)}
+          >
+            <Text style={styles.bookChipsText}>{t("book") || 'Réserver'}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {item.driver?.phone && (
+          <TouchableOpacity
+            style={[styles.bookButton, { backgroundColor: "#2563EB" }]}
+            onPress={() => Linking.openURL(`tel:${item.driver.phone}`)}
+          >
+            <Text style={styles.bookText}>{t("callDriver") || 'Appeler'}</Text>
           </TouchableOpacity>
         )}
-
-        <TouchableOpacity
-          style={styles.qrContainer}
-          onPress={() => Linking.openURL(getMapsDirectionUrl(item.departure, item.arrival))}
-        >
-          <QRCode value={getMapsDirectionUrl(item.departure, item.arrival)} size={56} />
-          <Text style={styles.qrHint}>{t("tripLabel")}</Text>
-        </TouchableOpacity>
       </View>
-
-      <Text style={styles.info}>
-  <Calendar size={14} /> {item.date}
-</Text>
-
-<View style={styles.tripBottomRow}>
-  <View style={{ flex: 1 }}>
-    <Text style={styles.info}>
-      <Clock size={14} /> {item.time}
-    </Text>
-
-    <Text style={styles.info}>
-      <DollarSign size={14} /> {item.price} Ar
-    </Text>
-  </View>
-
-  <TouchableOpacity
-    style={styles.bookChips}
-    onPress={() => onBookTrip?.(item, null, 1)}
-  >
-    <Text style={styles.bookChipsText}>{t("book")}</Text>
-  </TouchableOpacity>
-</View>
-
-{item.driver.phone && (
-  <TouchableOpacity
-    style={[styles.bookButton, { backgroundColor: "#2563EB" }]}
-    onPress={() => Linking.openURL(`tel:${item.driver.phone}`)}
-  >
-    <Text style={styles.bookText}>{t("callDriver")}</Text>
-  </TouchableOpacity>
-)}
-        </View>
-  );
+    );
+  };
 
   // ===================== RENDER OFFER =====================
   const renderOffer = ({ item }: { item: Offer }) => {
+    if (!item) return null;
+    
     const trip = trips.find((t) => t.id === String(item.ride_request_id));
     if (!trip) return null;
 
     return (
       <View style={styles.card}>
         <Text style={styles.route}>
-          {t("offerFor")} {trip.departure} → {trip.arrival}
+          {t("offerFor") || 'Offre pour'} {trip.departure || ''} → {trip.arrival || ''}
         </Text>
 
         <View style={styles.offerRow}>
           <View style={{ flex: 1 }}>
             <Text style={styles.info}>
-              <Car size={14} /> {item.car_info}
+              <Car size={14} /> {item.car_info || ''}
             </Text>
             <Text style={styles.info}>
-              <Users size={14} /> {item.seats_offered} {t("seats")}
+              <Users size={14} /> {item.seats_offered || 0} {t("seats") || 'places'}
             </Text>
             <Text style={styles.info}>
-              <DollarSign size={14} /> {item.price_per_seat} Ar
+              <DollarSign size={14} /> {item.price_per_seat || 0} Ar
             </Text>
           </View>
 
-          {/* Chip “Book” */}
           <TouchableOpacity
             style={styles.bookChip}
-            onPress={() => onBookTrip?.(trip, item, Number(item.seats_offered))}
+            onPress={() => onBookTrip?.(trip, item, Number(item.seats_offered || 1))}
           >
-            <Text style={styles.bookChipText}>{t("book")}</Text>
+            <Text style={styles.bookChipText}>{t("book") || 'Réserver'}</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
   };
+
+  // ===================== RENDER FILTER CHIP =====================
+  const renderFilterChip = (label: string, active: boolean, onPress: () => void) => (
+    <TouchableOpacity
+      style={[styles.filterChip, active && styles.filterChipActive]}
+      onPress={onPress}
+    >
+      <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
@@ -351,27 +543,61 @@ export default function PassengerHome({
           <TextInput
             value={searchText}
             onChangeText={setSearchText}
-            placeholder={t("searchPlaceholder")}
+            placeholder={t("searchPlaceholder") || 'Rechercher...'}
             style={styles.searchInput}
             placeholderTextColor="#9CA3AF"
           />
+          {searchText.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchText("")}>
+              <X size={16} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
         </View>
 
         <TouchableOpacity
-          style={[styles.filterButton, filterVisible && { backgroundColor: "#065F46" }]}
-          onPress={() => {
-            setFilterVisible(true);
-            Animated.timing(slideAnim, {
-              toValue: 0,
-              duration: 300,
-              easing: Easing.out(Easing.ease),
-              useNativeDriver: true,
-            }).start();
-          }}
+          style={[styles.filterButton, filters.sortType !== "none" && { backgroundColor: "#065F46" }]}
+          onPress={openFilterModal}
         >
-          <Sliders size={20} color="#fff" />
+          <Filter size={20} color="#fff" />
+          {filters.sortType !== "none" && (
+            <View style={styles.filterBadge} />
+          )}
         </TouchableOpacity>
       </View>
+
+      {/* Filtres actifs sous forme de chips */}
+      {(filters.sortType !== "none" || filters.onlyAvailable || filters.minRating > 0 || filters.selectedVehicleTypes.length > 0) && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.activeFiltersScroll}>
+          <View style={styles.activeFiltersContainer}>
+            {filters.sortType !== "none" && (
+              renderFilterChip(
+                filters.sortType === "price" ? "💰 Prix" : 
+                filters.sortType === "date" ? "📅 Date" : "⭐ Note",
+                true,
+                () => setFilters(prev => ({ ...prev, sortType: "none" }))
+              )
+            )}
+            {filters.onlyAvailable && (
+              renderFilterChip("✅ Disponible", true, () => 
+                setFilters(prev => ({ ...prev, onlyAvailable: false }))
+              )
+            )}
+            {filters.minRating > 0 && (
+              renderFilterChip(`⭐ ${filters.minRating}+`, true, () => 
+                setFilters(prev => ({ ...prev, minRating: 0 }))
+              )
+            )}
+            {filters.selectedVehicleTypes.map((type, index) => (
+              renderFilterChip(type, true, () => 
+                setFilters(prev => ({ 
+                  ...prev, 
+                  selectedVehicleTypes: prev.selectedVehicleTypes.filter(t => t !== type) 
+                }))
+              )
+            ))}
+          </View>
+        </ScrollView>
+      )}
 
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -393,21 +619,51 @@ export default function PassengerHome({
           ))}
         </View>
 
-        <Text style={styles.section}>{t("availableTrips")}</Text>
-        <FlatList data={paginatedTrips} keyExtractor={(i) => i.id} renderItem={renderTrip} scrollEnabled={false} />
-        {paginatedTrips.length < filteredTrips.length && (
-          <TouchableOpacity onPress={() => setTripPage((p) => p + 1)}>
-            <Text style={styles.loadMore}>{t("seeMore")}</Text>
-          </TouchableOpacity>
-        )}
+        {/* SECTION TRAJETS AVEC "VOIR PLUS" ALIGNÉ À DROITE */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>
+            {t("availableTrips") || 'Trajets disponibles'} ({filteredTrips.length})
+          </Text>
+          {paginatedTrips.length < filteredTrips.length && (
+            <TouchableOpacity 
+              style={styles.seeMoreButton}
+              onPress={() => setTripPage((p) => p + 1)}
+            >
+              <Text style={styles.seeMoreText}>{t("seeMore") || 'Voir plus'}</Text>
+              <ChevronRight size={16} color="#047857" />
+            </TouchableOpacity>
+          )}
+        </View>
 
-        <Text style={styles.section}>{t("offers")}</Text>
-        <FlatList data={paginatedOffers} keyExtractor={(i) => String(i.id)} renderItem={renderOffer} scrollEnabled={false} />
-        {paginatedOffers.length < filteredOffers.length && (
-          <TouchableOpacity onPress={() => setOfferPage((p) => p + 1)}>
-            <Text style={styles.loadMore}>{t("seeMore")}</Text>
-          </TouchableOpacity>
-        )}
+        <FlatList 
+          data={paginatedTrips} 
+          keyExtractor={(i) => i?.id || Math.random().toString()} 
+          renderItem={renderTrip} 
+          scrollEnabled={false} 
+        />
+
+        {/* SECTION OFFRES AVEC "VOIR PLUS" ALIGNÉ À DROITE */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>
+            {t("offers") || 'Offres'} ({filteredOffers.length})
+          </Text>
+          {paginatedOffers.length < filteredOffers.length && (
+            <TouchableOpacity 
+              style={styles.seeMoreButton}
+              onPress={() => setOfferPage((p) => p + 1)}
+            >
+              <Text style={styles.seeMoreText}>{t("seeMore") || 'Voir plus'}</Text>
+              <ChevronRight size={16} color="#047857" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <FlatList 
+          data={paginatedOffers} 
+          keyExtractor={(i) => String(i?.id || Math.random())} 
+          renderItem={renderOffer} 
+          scrollEnabled={false} 
+        />
       </ScrollView>
 
       {rideRequestModalVisible && (
@@ -418,40 +674,127 @@ export default function PassengerHome({
         />
       )}
 
-      {/* ===================== FILTER MODAL ===================== */}
+      {/* FILTER MODAL */}
       <Modal visible={filterVisible} transparent animationType="none">
         <View style={styles.overlay}>
-          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={() => setFilterVisible(false)} />
+          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={closeFilterModal} />
           <Animated.View style={[styles.bottomSheet, { transform: [{ translateY: slideAnim }] }]}>
             <View style={styles.handleBar} />
-            <Text style={styles.filterTitle}>{t("filterSort")}</Text>
-            <TouchableOpacity style={styles.filterOption} onPress={() => setSortType("price")}>
-              <Text>💰 {t("sortByPrice")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.filterOption} onPress={() => setSortType("date")}>
-              <Text>📅 {t("sortByDate")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.filterOption} onPress={() => setOnlyAvailable((v) => !v)}>
-              <Text>{onlyAvailable ? "✅" : "⬜"} {t("onlyAvailable")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.applyButton}
-              onPress={() => {
-                Animated.timing(slideAnim, {
-                  toValue: 500,
-                  duration: 250,
-                  easing: Easing.in(Easing.ease),
-                  useNativeDriver: true,
-                }).start(() => setFilterVisible(false));
-              }}
-            >
-              <Text style={{ color: "#fff", fontWeight: "700" }}>{t("apply")}</Text>
-            </TouchableOpacity>
+            
+            <View style={styles.modalHeader}>
+              <Text style={styles.filterTitle}>{t("filterSort") || 'Filtrer et trier'}</Text>
+              <TouchableOpacity onPress={closeFilterModal}>
+                <X size={22} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Tri */}
+              <Text style={styles.filterSectionTitle}>{t("sortBy") || 'Trier par'}</Text>
+              <View style={styles.filterOptionsRow}>
+                {[
+                  { value: "price", label: "💰 " + (t("sortByPrice") || 'Prix') },
+                  { value: "date", label: "📅 " + (t("sortByDate") || 'Date') },
+                  { value: "rating", label: "⭐ " + (t("sortByRating") || 'Note') },
+                ].map((option) => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.filterOptionPill,
+                      tempFilters.sortType === option.value && styles.filterOptionPillActive,
+                    ]}
+                    onPress={() => setTempFilters(prev => ({ ...prev, sortType: option.value as any }))}
+                  >
+                    <Text style={[
+                      styles.filterOptionPillText,
+                      tempFilters.sortType === option.value && styles.filterOptionPillTextActive,
+                    ]}>
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Disponibilité */}
+              <TouchableOpacity
+                style={styles.filterRow}
+                onPress={() => setTempFilters(prev => ({ ...prev, onlyAvailable: !prev.onlyAvailable }))}
+              >
+                <Text>{t("onlyAvailable") || 'Uniquement disponibles'}</Text>
+                <View style={[styles.checkbox, tempFilters.onlyAvailable && styles.checkboxActive]}>
+                  {tempFilters.onlyAvailable && <Text style={{ color: "#fff" }}>✓</Text>}
+                </View>
+              </TouchableOpacity>
+
+              {/* Prix min */}
+              <Text style={styles.filterSectionTitle}>{t("priceRange") || 'Fourchette de prix'}</Text>
+              <View style={styles.priceRangeContainer}>
+                <Text style={styles.priceLabel}>{tempFilters.priceRange[0].toLocaleString()} Ar</Text>
+                <Text style={styles.priceLabel}>{tempFilters.priceRange[1].toLocaleString()} Ar</Text>
+              </View>
+              
+              {/* Note minimale */}
+              <Text style={styles.filterSectionTitle}>{t("minRating") || 'Note minimum'}</Text>
+              <View style={styles.ratingButtons}>
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <TouchableOpacity
+                    key={rating}
+                    style={[
+                      styles.ratingButton,
+                      tempFilters.minRating >= rating && styles.ratingButtonActive,
+                    ]}
+                    onPress={() => setTempFilters(prev => ({ ...prev, minRating: rating }))}
+                  >
+                    <Star 
+                      size={16} 
+                      color={tempFilters.minRating >= rating ? "#fff" : "#F59E0B"} 
+                      fill={tempFilters.minRating >= rating ? "#fff" : "#F59E0B"}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Types de véhicules */}
+              {vehicleTypes.length > 0 && (
+                <>
+                  <Text style={styles.filterSectionTitle}>{t("vehicleTypes") || 'Types de véhicules'}</Text>
+                  <View style={styles.vehicleTypesContainer}>
+                    {vehicleTypes.map((type) => (
+                      <TouchableOpacity
+                        key={type}
+                        style={[
+                          styles.vehicleTypeChip,
+                          tempFilters.selectedVehicleTypes.includes(type) && styles.vehicleTypeChipActive,
+                        ]}
+                        onPress={() => toggleVehicleType(type)}
+                      >
+                        <Text style={[
+                          styles.vehicleTypeChipText,
+                          tempFilters.selectedVehicleTypes.includes(type) && styles.vehicleTypeChipTextActive,
+                        ]}>
+                          {type}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              )}
+
+              {/* Boutons d'action */}
+              <View style={styles.filterActions}>
+                <TouchableOpacity style={styles.resetButton} onPress={resetFilters}>
+                  <Text style={styles.resetButtonText}>{t("reset") || 'Réinitialiser'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
+                  <Text style={styles.applyButtonText}>{t("apply") || 'Appliquer'}</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </Animated.View>
         </View>
       </Modal>
 
-      {/* ===================== RATING MODAL ===================== */}
+      {/* RATING MODAL */}
       {selectedTripForRating && (
         <Modal visible transparent animationType="slide">
           <RatingScreen
@@ -482,37 +825,349 @@ export default function PassengerHome({
   );
 }
 
-/* ===================== STYLES ===================== */
+/* ===================== STYLES AMÉLIORÉS ===================== */
 const styles = StyleSheet.create({
-  searchWrapper: { flexDirection: "row", marginHorizontal: 16, marginTop: 12, marginBottom: 8, alignItems: "center" },
-  searchBox: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: "#fff", paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, elevation: 3 },
-  searchInput: { flex: 1, fontSize: 14, color: "#111827", padding: 0 },
-  filterButton: { marginLeft: 12, backgroundColor: "#047857", padding: 12, borderRadius: 12 },
-  section: { fontSize: 16, fontWeight: "700", margin: 16 },
-  card: { backgroundColor: "#fff", marginHorizontal: 16, marginBottom: 16, borderRadius: 20, padding: 14 },
-  route: { fontWeight: "700", fontSize: 15 },
-  driverRow: { flexDirection: "row", marginTop: 12, alignItems: "center", gap: 12 },
-  avatar: { width: 44, height: 44, borderRadius: 22 },
-  driver: { fontWeight: "600" },
-  smallText: { fontSize: 12, color: "#6B7280" },
-  info: { marginTop: 6, fontSize: 13 },
-  bookButton: { marginTop: 12, backgroundColor: "#047857", paddingVertical: 12, borderRadius: 14, alignItems: "center" },
-  bookText: { color: "#fff", fontWeight: "700" },
-  qrContainer: { alignItems: "center" },
-  qrHint: { fontSize: 10, color: "#6B7280" },
-  loadMore: { textAlign: "center", color: "#1d1f23", marginBottom: 16 },
-  infoCard: { backgroundColor: "#fff", padding: 16, borderRadius: 16, marginBottom: 12, elevation: 3 },
-  infoCardTitle: { fontSize: 14, fontWeight: "700", marginBottom: 4 },
-  infoCardDescription: { fontSize: 12, color: "#6B7280" },
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
-  bottomSheet: { backgroundColor: "#fff", padding: 20, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
-  handleBar: { width: 40, height: 5, backgroundColor: "#D1D5DB", borderRadius: 3, alignSelf: "center", marginBottom: 16 },
-  filterTitle: { fontWeight: "700", fontSize: 16, marginBottom: 16 },
-  filterOption: { paddingVertical: 12 },
-  applyButton: { marginTop: 20, backgroundColor: "#047857", padding: 14, borderRadius: 14, alignItems: "center" },
-  ratingBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, marginRight: 8, alignSelf: "flex-start" },
+  searchWrapper: { 
+    flexDirection: "row", 
+    marginHorizontal: 16, 
+    marginTop: 12, 
+    marginBottom: 8, 
+    alignItems: "center" 
+  },
+  searchBox: { 
+    flex: 1, 
+    flexDirection: "row", 
+    alignItems: "center", 
+    backgroundColor: "#fff", 
+    paddingHorizontal: 12, 
+    paddingVertical: 10, 
+    borderRadius: 14, 
+    elevation: 3 
+  },
+  searchInput: { 
+    flex: 1, 
+    fontSize: 14, 
+    color: "#111827", 
+    padding: 0 
+  },
+  filterButton: { 
+    marginLeft: 12, 
+    backgroundColor: "#047857", 
+    padding: 12, 
+    borderRadius: 12,
+    position: "relative",
+  },
+  filterBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#F59E0B",
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  
+  // Styles pour les filtres actifs
+  activeFiltersScroll: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  activeFiltersContainer: {
+    flexDirection: "row",
+    gap: 8,
+    paddingVertical: 4,
+  },
+  filterChip: {
+    backgroundColor: "#E5E7EB",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginRight: 8,
+  },
+  filterChipActive: {
+    backgroundColor: "#047857",
+  },
+  filterChipText: {
+    fontSize: 12,
+    color: "#374151",
+  },
+  filterChipTextActive: {
+    color: "#fff",
+    fontWeight: "600",
+  },
 
-  // ===================== NOUVEAUX STYLES OFFRES =====================
+  // =========================================================
+  // 🔹 STYLES POUR L'EN-TÊTE DES SECTIONS
+  // =========================================================
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  sectionTitle: { 
+    fontSize: 16, 
+    fontWeight: "700",
+    color: "#111827",
+  },
+  seeMoreButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  seeMoreText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#047857",
+    marginRight: 4,
+  },
+
+  card: { 
+    backgroundColor: "#fff", 
+    marginHorizontal: 16, 
+    marginBottom: 16, 
+    borderRadius: 20, 
+    padding: 14 
+  },
+  route: { 
+    fontWeight: "700", 
+    fontSize: 15 
+  },
+  driverRow: { 
+    flexDirection: "row", 
+    marginTop: 12, 
+    alignItems: "center", 
+    gap: 12 
+  },
+  avatar: { 
+    width: 44, 
+    height: 44, 
+    borderRadius: 22 
+  },
+  driver: { 
+    fontWeight: "600" 
+  },
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  ratingText: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  smallText: { 
+    fontSize: 12, 
+    color: "#6B7280",
+    marginTop: 2,
+  },
+  info: { 
+    marginTop: 6, 
+    fontSize: 13 
+  },
+  bookButton: { 
+    marginTop: 12, 
+    backgroundColor: "#047857", 
+    paddingVertical: 12, 
+    borderRadius: 14, 
+    alignItems: "center" 
+  },
+  bookText: { 
+    color: "#fff", 
+    fontWeight: "700" 
+  },
+  qrContainer: { 
+    alignItems: "center" 
+  },
+  qrHint: { 
+    fontSize: 10, 
+    color: "#6B7280" 
+  },
+  loadMore: { 
+    textAlign: "center", 
+    color: "#1d1f23", 
+    marginBottom: 16 
+  },
+  infoCard: { 
+    backgroundColor: "#fff", 
+    padding: 16, 
+    borderRadius: 16, 
+    marginBottom: 12, 
+    elevation: 3 
+  },
+  infoCardTitle: { 
+    fontSize: 14, 
+    fontWeight: "700", 
+    marginBottom: 4 
+  },
+  infoCardDescription: { 
+    fontSize: 12, 
+    color: "#6B7280" 
+  },
+  overlay: { 
+    flex: 1, 
+    backgroundColor: "rgba(0,0,0,0.4)", 
+    justifyContent: "flex-end" 
+  },
+  bottomSheet: { 
+    backgroundColor: "#fff", 
+    padding: 20, 
+    borderTopLeftRadius: 24, 
+    borderTopRightRadius: 24,
+    maxHeight: "80%",
+  },
+  handleBar: { 
+    width: 40, 
+    height: 5, 
+    backgroundColor: "#D1D5DB", 
+    borderRadius: 3, 
+    alignSelf: "center", 
+    marginBottom: 16 
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  filterTitle: { 
+    fontWeight: "700", 
+    fontSize: 18 
+  },
+  filterSectionTitle: {
+    fontWeight: "600",
+    fontSize: 14,
+    marginTop: 16,
+    marginBottom: 12,
+    color: "#374151",
+  },
+  filterOptionsRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  filterOptionPill: {
+    flex: 1,
+    backgroundColor: "#F3F4F6",
+    paddingVertical: 10,
+    borderRadius: 20,
+    alignItems: "center",
+  },
+  filterOptionPillActive: {
+    backgroundColor: "#047857",
+  },
+  filterOptionPillText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#374151",
+  },
+  filterOptionPillTextActive: {
+    color: "#fff",
+  },
+  filterRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: "#D1D5DB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkboxActive: {
+    backgroundColor: "#047857",
+    borderColor: "#047857",
+  },
+  priceRangeContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  priceLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#047857",
+  },
+  ratingButtons: {
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "center",
+  },
+  ratingButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ratingButtonActive: {
+    backgroundColor: "#047857",
+  },
+  vehicleTypesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  vehicleTypeChip: {
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  vehicleTypeChipActive: {
+    backgroundColor: "#047857",
+  },
+  vehicleTypeChipText: {
+    fontSize: 13,
+    color: "#374151",
+  },
+  vehicleTypeChipTextActive: {
+    color: "#fff",
+  },
+  filterActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  resetButton: {
+    flex: 1,
+    backgroundColor: "#F3F4F6",
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: "center",
+  },
+  resetButtonText: {
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  applyButton: { 
+    flex: 2,
+    backgroundColor: "#047857", 
+    paddingVertical: 14, 
+    borderRadius: 14, 
+    alignItems: "center" 
+  },
+  applyButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+
+  // Styles pour les offres
   offerRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -520,35 +1175,38 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   bookChip: {
-  backgroundColor: "#047857",
-  paddingVertical: 6,
-  paddingHorizontal: 14,
-  borderRadius: 16,
-},
-bookChipText: {
-  color: "#fff",
-  fontWeight: "700",
-  fontSize: 13,
-},
-
+    backgroundColor: "#047857",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+  },
+  bookChipText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 13,
+  },
   bookChips: {
-      backgroundColor: "#047857",
-      paddingVertical: 6,
-      paddingHorizontal: 14,
-      borderRadius: 16,
+    backgroundColor: "#047857",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 16,
   },
-  
   bookChipsText: {
-     color: "#fff",
-     fontWeight: "700",
-     fontSize: 13,
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 13,
   },
-
   tripBottomRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  marginTop: 6,
-},
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 6,
+  },
+  ratingBadge: { 
+    paddingHorizontal: 8, 
+    paddingVertical: 4, 
+    borderRadius: 12, 
+    marginRight: 8, 
+    alignSelf: "flex-start" 
+  },
 });
-

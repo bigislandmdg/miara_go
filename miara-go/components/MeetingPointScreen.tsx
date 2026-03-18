@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,9 +11,10 @@ import {
   Platform,
   ActivityIndicator,
   Linking,
+  FlatList,
 } from "react-native";
 
-import { ArrowLeft, Navigation, Map, Compass } from "lucide-react-native";
+import { ArrowLeft, Navigation, Map, Compass, ChevronDown, X } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import * as Location from 'expo-location';
 
@@ -34,6 +35,182 @@ interface Props {
   meetingPointToEdit?: any;
   selectedPoints?: MeetingPoint[];
 }
+
+// =========================================================
+// 🔹 LISTE DES VILLES DE MADAGASCAR (SANS DOUBLONS)
+// =========================================================
+const MADAGASCAR_CITIES = [
+  // Analamanga
+  "Antananarivo",
+  "Antananarivo Centre",
+  "Ambohidratrimo",
+  "Andramasina",
+  "Anjozorobe",
+  "Ankazobe",
+  "Manjakandriana",
+  
+  // Vakinankaratra
+  "Antsirabe",
+  "Ambatondrazaka",
+  "Ambatolampy",
+  "Betafo",
+  "Faratsiho",
+  
+  // Itasy
+  "Miarinarivo",
+  "Arivonimamo",
+  "Soavinandriana",
+  
+  // Bongolava
+  "Tsiroanomandidy",
+  "Fenoarivobe",
+  
+  // Haute Matsiatra
+  "Fianarantsoa",
+  "Ambohimahasoa",
+  "Ikalamavony",
+  
+  // Amoron'i Mania
+  "Ambositra",
+  "Ambatofinandrahana",
+  "Fandriana",
+  
+  // Vatovavy
+  "Mananjary",
+  "Ifanadiana",
+  "Nosy Varika",
+  
+  // Fitovinany
+  "Manakara",
+  "Ikongo",
+  "Vohipeno",
+  
+  // Atsimo Atsinanana
+  "Farafangana",
+  "Vangaindrano",
+  "Midongy Sud",
+  
+  // Ihorombe
+  "Ihosy",
+  "Iakora",
+  "Ivohibe",
+  
+  // Menabe
+  "Morondava",
+  "Mahabo",
+  "Manja",
+  "Miandrivazo",
+  
+  // Atsimo Andrefana
+  "Toliara",
+  "Ampanihy",
+  "Ankazoabo",
+  "Benenitra",
+  "Beroroha",
+  "Betioky",
+  "Morombe",
+  "Sakaraha",
+  
+  // Androy
+  "Ambovombe",
+  "Bekily",
+  "Beloha",
+  "Tsiombe",
+  
+  // Anosy
+  "Taolagnaro",
+  "Amboasary",
+  "Betroka",
+  
+  // Alaotra Mangoro
+  "Ambatondrazaka",
+  "Amparafaravola",
+  "Andilamena",
+  "Anosibe An'ala",
+  "Moramanga",
+  
+  // Atsinanana
+  "Toamasina",
+  "Brickaville",
+  "Mahanoro",
+  "Marolambo",
+  "Vatomandry",
+  
+  // Analanjirofo
+  "Fenoarivo Atsinanana",
+  "Fenérive-Est",
+  "Mananara Nord",
+  "Maroantsetra",
+  "Soanierana Ivongo",
+  "Vavatenina",
+  
+  // Sofia
+  "Antsohihy",
+  "Analalava",
+  "Bealanana",
+  "Befandriana Nord",
+  "Boriziny",
+  "Mampikony",
+  "Mandritsara",
+  
+  // Boeny
+  "Mahajanga",
+  "Ambatoboeny",
+  "Marovoay",
+  "Mitsinjo",
+  "Soalala",
+  
+  // Betsiboka
+  "Maevatanana",
+  "Kandreho",
+  "Tsaratanana",
+  
+  // Melaky
+  "Maintirano",
+  "Ambatomainty",
+  "Antsalova",
+  "Besalampy",
+  "Morafenobe",
+  
+  // Diana
+  "Antsiranana",
+  "Diego Suarez",
+  "Ambilobe",
+  "Ambanja",
+  "Nosy Be",
+  
+  // Sava
+  "Sambava",
+  "Andapa",
+  "Antalaha",
+  "Vohemar",
+  
+  // Villes supplémentaires sans doublons
+  "Maevatanana",
+  "Sambava",
+  "Antalaha",
+  "Manakara",
+  "Ambositra",
+  "Antsohihy",
+  "Farafangana",
+  "Vangaindrano",
+  "Vohipeno",
+  "Mananjary",
+  "Fenérive-Est",
+  "Ambanja",
+  "Ambatondrazaka",
+  "Ihosy",
+  "Moramanga",
+  "Morondava",
+  "Betafo",
+  "Anjozorobe",
+  "Ankazobe",
+].sort();
+
+// =========================================================
+// 🔹 SUPPRIMER LES DOUBLONS DANS LA LISTE
+// =========================================================
+const UNIQUE_CITIES = [...new Set(MADAGASCAR_CITIES)].sort();
 
 export function MeetingPointScreen({
   onBack,
@@ -60,13 +237,31 @@ export function MeetingPointScreen({
   const [gettingLocation, setGettingLocation] = useState(false);
 
   // =========================================================
+  // 🔹 ÉTATS POUR LE SÉLECTEUR DE VILLE
+  // =========================================================
+  const [cityModalVisible, setCityModalVisible] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
+  const [filteredCities, setFilteredCities] = useState(UNIQUE_CITIES);
+
+  // Filtrer les villes en fonction de la recherche
+  useEffect(() => {
+    if (citySearch.trim() === "") {
+      setFilteredCities(UNIQUE_CITIES);
+    } else {
+      const filtered = UNIQUE_CITIES.filter(c => 
+        c.toLowerCase().includes(citySearch.toLowerCase())
+      );
+      setFilteredCities(filtered);
+    }
+  }, [citySearch]);
+
+  // =========================================================
   // 🔹 Obtenir la position réelle avec Expo Location
   // =========================================================
   const getCurrentLocation = async () => {
     try {
       setGettingLocation(true);
 
-      // Demander la permission
       const { status } = await Location.requestForegroundPermissionsAsync();
       
       if (status !== 'granted') {
@@ -77,7 +272,6 @@ export function MeetingPointScreen({
         return null;
       }
 
-      // Obtenir la position actuelle
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
@@ -142,7 +336,6 @@ export function MeetingPointScreen({
 
     if (url) {
       Linking.openURL(url).catch(() => {
-        // Fallback vers l'URL web
         Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`);
       });
     }
@@ -160,7 +353,6 @@ export function MeetingPointScreen({
     const url = `waze://?ll=${latitude},${longitude}&navigate=yes`;
     
     Linking.openURL(url).catch(() => {
-      // Si Waze n'est pas installé, proposer de l'installer
       Alert.alert(
         t("wazeNotInstalled"),
         t("installWaze"),
@@ -185,6 +377,10 @@ export function MeetingPointScreen({
   const validate = () => {
     if (!name) {
       Alert.alert(t("error"), t("nameRequired"));
+      return false;
+    }
+    if (!city) {
+      Alert.alert(t("error"), t("cityRequired"));
       return false;
     }
     if (!latitude || !longitude) {
@@ -264,6 +460,55 @@ export function MeetingPointScreen({
     </View>
   );
 
+  // =========================================================
+  // 🔹 MODAL DE SÉLECTION DE VILLE (AVEC CLÉS UNIQUES)
+  // =========================================================
+  const CityPickerModal = () => (
+    <Modal visible={cityModalVisible} transparent animationType="slide">
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{t("selectCity")}</Text>
+            <TouchableOpacity onPress={() => setCityModalVisible(false)}>
+              <X size={22} color="#6B7280" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t("searchCity")}
+              value={citySearch}
+              onChangeText={setCitySearch}
+              autoFocus
+            />
+          </View>
+
+          <FlatList
+            data={filteredCities}
+            keyExtractor={(item, index) => `${item}-${index}`} // 🔹 CLÉ UNIQUE
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.cityItem}
+                onPress={() => {
+                  setCity(item);
+                  setCityModalVisible(false);
+                  setCitySearch("");
+                }}
+              >
+                <Text style={styles.cityItemText}>{item}</Text>
+              </TouchableOpacity>
+            )}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <Text style={styles.emptyListText}>{t("noCityFound")}</Text>
+            }
+          />
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <Modal animationType="slide">
       <View style={styles.container}>
@@ -324,12 +569,18 @@ export function MeetingPointScreen({
               onChangeText={setName}
             />
             
-            <TextInput
-              placeholder={t("city")}
-              style={styles.input}
-              value={city}
-              onChangeText={setCity}
-            />
+            {/* ========================================================= */}
+            {/* 🔹 SÉLECTEUR DE VILLE AMÉLIORÉ */}
+            {/* ========================================================= */}
+            <TouchableOpacity
+              style={styles.citySelector}
+              onPress={() => setCityModalVisible(true)}
+            >
+              <Text style={[styles.citySelectorText, !city && styles.placeholderText]}>
+                {city || t("selectCity")}
+              </Text>
+              <ChevronDown size={18} color="#6B7280" />
+            </TouchableOpacity>
             
             <TextInput
               placeholder={t("address")}
@@ -391,6 +642,9 @@ export function MeetingPointScreen({
             )}
           </TouchableOpacity>
         </ScrollView>
+
+        {/* MODAL DE SÉLECTION DE VILLE */}
+        <CityPickerModal />
       </View>
     </Modal>
   );
@@ -485,4 +739,76 @@ const styles = StyleSheet.create({
   halfInput: {
     flex: 1,
   },
+
+  // =========================================================
+  // 🔹 STYLES POUR LE SÉLECTEUR DE VILLE
+  // =========================================================
+  citySelector: {
+    backgroundColor: "#F9FAFB",
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  citySelectorText: {
+    fontSize: 14,
+    color: "#111827",
+  },
+  placeholderText: {
+    color: "#9CA3AF",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 20,
+    paddingBottom: 30,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  searchInput: {
+    backgroundColor: "#F3F4F6",
+    padding: 14,
+    borderRadius: 14,
+    fontSize: 14,
+  },
+  cityItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  cityItemText: {
+    fontSize: 15,
+    color: "#111827",
+  },
+  emptyListText: {
+    textAlign: "center",
+    paddingVertical: 30,
+    color: "#6B7280",
+    fontSize: 14,
+  },
 });
+

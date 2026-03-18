@@ -22,6 +22,7 @@ import {
   Car,
   Route,
   CreditCard,
+  ChevronRight,
 } from "lucide-react-native";
 
 import { Header } from "../components/Header";
@@ -29,7 +30,7 @@ import { useTranslation } from "react-i18next";
 import { SideMenu } from "./SideMenu";
 import { MainView } from "./Navigation";
 import { PublishScreen } from "./PublishScreen";
-import RideRequestScreen from "./RideRequestScreen"; // 🔹 IMPORT AJOUTÉ
+import RideRequestScreen from "./RideRequestScreen";
 
 /* ===================== TYPES ===================== */
 type TripStatus = "open" | "full" | "completed" | "cancelled";
@@ -72,7 +73,7 @@ interface DriverHomeProps {
 }
 
 /* ===================== PAGINATION ===================== */
-const ITEMS_PER_PAGE = 2;
+const ITEMS_PER_PAGE = 1;
 
 /* ===================== COMPONENT ===================== */
 export function DriverHome({
@@ -91,10 +92,8 @@ export function DriverHome({
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
   const [selectedRideRequest, setSelectedRideRequest] = useState<RideRequest | null>(null);
   const [showPublishScreen, setShowPublishScreen] = useState(false);
-  
-  // =========================================================
-  // 🔹 NOUVEAU : État pour afficher l'écran de création de demande
-  // =========================================================
+
+
   const [showRideRequestScreen, setShowRideRequestScreen] = useState(false);
  
   const [totalCredits, setTotalCredits] = useState(0);
@@ -114,7 +113,7 @@ export function DriverHome({
     | "offerSeats"
     | "offerMessage"
     | null
-  >(null);
+>(null);
 
   const [modalInput, setModalInput] = useState("");
 
@@ -674,9 +673,7 @@ export function DriverHome({
         }}
       />
 
-      {/* ========================================================= */}
-      {/* 🔹 NOUVEAU : Affichage conditionnel de RideRequestScreen */}
-      {/* ========================================================= */}
+      {/* Affichage conditionnel des écrans */}
       {showRideRequestScreen ? (
         <RideRequestScreen
           userId={1}
@@ -713,9 +710,7 @@ export function DriverHome({
               <Text style={styles.statLabel}>{t("trips")}</Text>
             </TouchableOpacity>
 
-            {/* ========================================================= */}
-            {/* 🔹 AMÉLIORATION : Carte RIDE REQUESTS avec navigation */}
-            {/* ========================================================= */}
+            {/* RIDE REQUESTS CARD */}
             <TouchableOpacity
               style={styles.statCard}
               activeOpacity={0.85}
@@ -738,91 +733,95 @@ export function DriverHome({
             </TouchableOpacity>
           </View>
 
-          {/* Mes trajets */}
-          <View style={styles.sectionRow}>
-            <Text style={styles.section}>{t("myTrips")}</Text>
-            {/* Filters pour les trajets */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filtersCarousel}
-            >
-              <TouchableOpacity
-                style={[styles.filterChip, filterDate && { backgroundColor: "#047857" }]}
-                onPress={() =>
-                  toggleDate(filterDate ? null : new Date().toISOString().slice(0, 10))
-                }
+          {/* ========================================================= */}
+          {/* 🔹 SECTION MES TRAJETS AVEC "VOIR PLUS" ALIGNÉ À DROITE */}
+          {/* ========================================================= */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.section}>
+              {t("myTrips")} ({filteredTrips.length})
+            </Text>
+            {paginatedTrips.length < filteredTrips.length && (
+              <TouchableOpacity 
+                style={styles.seeMoreButton}
+                onPress={() => setTripPage(p => p + 1)}
               >
-                <Calendar size={14} color={filterDate ? "#FFF" : "#374151"} />
-                <Text style={[styles.filterText, filterDate && { color: "#FFF" }]}>
-                  {filterDate || t("date")}
-                </Text>
+                <Text style={styles.seeMoreText}>{t("seeMore")}</Text>
+                <ChevronRight size={16} color="#047857" />
               </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.filterChip, filterDeparture && { backgroundColor: "#047857" }]}
-                onPress={() => {
-                  setModalType("departure");
-                  setModalInput(filterDeparture || "");
-                  setModalVisible(true);
-                }}
-              >
-                <Route size={14} color={filterDeparture ? "#FFF" : "#374151"} />
-                <Text style={[styles.filterText, filterDeparture && { color: "#FFF" }]}>
-                  {filterDeparture || t("departure")}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.filterChip, filterDestination && { backgroundColor: "#047857" }]}
-                onPress={() => {
-                  setModalType("destination");
-                  setModalInput(filterDestination || "");
-                  setModalVisible(true);
-                }}
-              >
-                <Route size={14} color={filterDestination ? "#FFF" : "#374151"} />
-                <Text style={[styles.filterText, filterDestination && { color: "#FFF" }]}>
-                  {filterDestination || t("destination")}
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.filterChip, filterVehicle && { backgroundColor: "#047857" }]}
-                onPress={() => {
-                  setModalType("vehicle");
-                  setModalInput(filterVehicle || "");
-                  setModalVisible(true);
-                }}
-              >
-                <Car size={14} color={filterVehicle ? "#FFF" : "#374151"} />
-                <Text style={[styles.filterText, filterVehicle && { color: "#FFF" }]}>
-                  {filterVehicle || t("vehicle")}
-                </Text>
-              </TouchableOpacity>
-            </ScrollView>
+            )}
           </View>
+
+          {/* Filtres pour les trajets */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filtersCarousel}
+          >
+            <TouchableOpacity
+              style={[styles.filterChip, filterDate && { backgroundColor: "#047857" }]}
+              onPress={() =>
+                toggleDate(filterDate ? null : new Date().toISOString().slice(0, 10))
+              }
+            >
+              <Calendar size={14} color={filterDate ? "#FFF" : "#374151"} />
+              <Text style={[styles.filterText, filterDate && { color: "#FFF" }]}>
+                {filterDate || t("date")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.filterChip, filterDeparture && { backgroundColor: "#047857" }]}
+              onPress={() => {
+                setModalType("departure");
+                setModalInput(filterDeparture || "");
+                setModalVisible(true);
+              }}
+            >
+              <Route size={14} color={filterDeparture ? "#FFF" : "#374151"} />
+              <Text style={[styles.filterText, filterDeparture && { color: "#FFF" }]}>
+                {filterDeparture || t("departure")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.filterChip, filterDestination && { backgroundColor: "#047857" }]}
+              onPress={() => {
+                setModalType("destination");
+                setModalInput(filterDestination || "");
+                setModalVisible(true);
+              }}
+            >
+              <Route size={14} color={filterDestination ? "#FFF" : "#374151"} />
+              <Text style={[styles.filterText, filterDestination && { color: "#FFF" }]}>
+                {filterDestination || t("destination")}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.filterChip, filterVehicle && { backgroundColor: "#047857" }]}
+              onPress={() => {
+                setModalType("vehicle");
+                setModalInput(filterVehicle || "");
+                setModalVisible(true);
+              }}
+            >
+              <Car size={14} color={filterVehicle ? "#FFF" : "#374151"} />
+              <Text style={[styles.filterText, filterVehicle && { color: "#FFF" }]}>
+                {filterVehicle || t("vehicle")}
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
 
           {/* Trips List */}
           {loadingTrips ? (
             [...Array(3)].map((_, i) => <SkeletonCard key={i} />)
           ) : (
-            <>
-              <FlatList
-                data={paginatedTrips}
-                renderItem={renderTrip}
-                keyExtractor={item => item.id}
-                scrollEnabled={false}
-              />
-              {paginatedTrips.length < filteredTrips.length && (
-                <TouchableOpacity 
-                  style={styles.loadMore} 
-                  onPress={() => setTripPage(p => p + 1)}
-                >
-                  <Text style={styles.loadMoreText}>{t("seeMore")}</Text>
-                </TouchableOpacity>
-              )}
-            </>
+            <FlatList
+              data={paginatedTrips}
+              renderItem={renderTrip}
+              keyExtractor={item => item.id}
+              scrollEnabled={false}
+            />
           )}
 
           {/* MODAL de filtres */}
@@ -879,8 +878,23 @@ export function DriverHome({
             </View>
           </Modal>
 
-          {/* Demandes de trajets */}
-          <Text style={styles.section}>{t("myRideRequests")}</Text>
+          {/* ========================================================= */}
+          {/* 🔹 SECTION DEMANDES DE TRAJETS AVEC "VOIR PLUS" ALIGNÉ À DROITE */}
+          {/* ========================================================= */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.section}>
+              {t("myRideRequests")} ({filteredRideRequests.length})
+            </Text>
+            {paginatedRideRequests.length < filteredRideRequests.length && (
+              <TouchableOpacity 
+                style={styles.seeMoreButton}
+                onPress={() => setRequestPage(p => p + 1)}
+              >
+                <Text style={styles.seeMoreText}>{t("seeMore")}</Text>
+                <ChevronRight size={16} color="#047857" />
+              </TouchableOpacity>
+            )}
+          </View>
           
           {/* Filtres synchronisés pour les demandes */}
           <View style={[styles.filtersRow, { marginHorizontal: 16, marginBottom: 10 }]}>
@@ -919,22 +933,12 @@ export function DriverHome({
           {loadingOffers ? (
             [...Array(2)].map((_, i) => <SkeletonCard key={i} />)
           ) : (
-            <>
-              <FlatList
-                data={paginatedRideRequests}
-                renderItem={renderRequest}
-                scrollEnabled={false}
-                keyExtractor={(item) => item.id}
-              />
-              {paginatedRideRequests.length < filteredRideRequests.length && (
-                <TouchableOpacity 
-                  style={styles.loadMore} 
-                  onPress={() => setRequestPage(p => p + 1)}
-                >
-                  <Text style={styles.loadMoreText}>{t("seeMore")}</Text>
-                </TouchableOpacity>
-              )}
-            </>
+            <FlatList
+              data={paginatedRideRequests}
+              renderItem={renderRequest}
+              scrollEnabled={false}
+              keyExtractor={(item) => item.id}
+            />
           )}
         </ScrollView>
       )}
@@ -1078,6 +1082,30 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 12,
   },
+
+  // =========================================================
+  // 🔹 NOUVEAUX STYLES POUR L'EN-TÊTE DES SECTIONS
+  // =========================================================
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  seeMoreButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  seeMoreText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#047857",
+    marginRight: 4,
+  },
 });
-
-

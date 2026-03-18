@@ -11,6 +11,37 @@ export const resources = {
       createAccountTitle: "Je n'ai pas de compte MiaraGo",
       loginButtonTitle: "J'ai déjà un compte MiaraGo",
 
+      // === PROFILE SCREEN ===========//
+      account: "Compte",
+      personalInfo: "Informations personnelles",
+      paymentMethods: "Moyens de paiement",
+      savedPlaces: "Lieux enregistrés",
+      preferences: "Préférences",
+      language: "Langue",
+      darkMode: "Mode sombre",
+      on: "Activé",
+      off: "Désactivé",
+      helpCenter: "Centre d'aide",
+      privacyPolicy: "Politique de confidentialité",
+      security: "Sécurité",
+      memberSince: "Membre depuis",
+      comingSoon: "Bientôt disponible",
+      logoutConfirmation: "Êtes-vous sûr de vouloir vous déconnecter ?",
+      phone: "Téléphone",
+      email: "Email",
+      role: "Rôle",
+      later: "Plus tard",
+      readMore: "Lire plus",
+      contact: "Contacter",
+      paymentMethodsInfo: "Gérez vos moyens de paiement pour faciliter vos réservations",
+      addPaymentMethod: "Ajouter un moyen de paiement :",
+      savedPlacesInfo: "Enregistrez vos lieux favoris pour gagner du temps",
+      addPlaceInfo: "Ajouter un lieu :",
+      notificationsInfo: "Recevez des notifications pour :\n\n• Nouveaux trajets disponibles\n• Offres promotionnelles\n• Rappels de réservation\n• Messages du conducteur",
+      helpCenterInfo: "Comment pouvons-nous vous aider ?\n\n• FAQ\n• Tutoriels vidéo\n• Assistance par email\n• Chat en direct",
+      privacyPolicyInfo: "Nous protégeons vos données personnelles :\n\n• Chiffrement des données\n• Non-partage avec des tiers\n• Conformité RGPD\n• Suppression sur demande",
+      securityInfo: "Options de sécurité :\n\n• Authentification à deux facteurs\n• Historique des connexions\n• Appareils connectés\n• Verrouillage biométrique",
+
       // ================= LOGIN =================
       phoneLabel: "Numéro de téléphone",
       phonePlaceholder: "034 12 345 67",
@@ -94,6 +125,11 @@ export const resources = {
     loginFailed: "Échec login biométrique",
     success: "✅ Authentification réussie",
     error: "Erreur biométrique",
+    faceIdDescription: "Utilisez la reconnaissance faciale pour vous connecter",
+    fingerprintDescription: "Utilisez votre empreinte digitale pour vous connecter",
+    biometricSecure: "Sécurisé et rapide",
+    biometricPrompt: "Placez votre doigt sur le capteur ou regardez la caméra",
+    authenticating: "Authentification en cours...",
 
     // ================= NOTIFICATIONS =================
     notifications: "Notifications",
@@ -371,33 +407,63 @@ export const resources = {
            inactive: "Inactif",
            saveMeetingPoint: "Enregistrer le point",
            updateMeetingPoint: "Mettre à jour le point",
+           selectCity: "Sélectionner une ville",
+           searchCity: "Rechercher une ville...",
+           noCityFound: "Aucune ville trouvée",
+           cityRequired: "La ville est requise",
            
-           
-      
+  
         // ==== ABOUT ==================
-
-         noContent: "Aucun contenu disponible",
-         aboutSection: {
-        miaraGo: {
-          title: "MiaraGo",
-          description:
-            "MiaraGo est une plateforme de covoiturage moderne qui connecte efficacement les conducteurs et les passagers.",
-        },
-        features: {
-          title: "Fonctionnalités",
-          description:
-            "Profitez de la réservation simplifiée, paiements sécurisés, suivi en temps réel et plus encore.",
-        },
-        security: {
-          title: "Sécurité",
-          description:
-            "Nous garantissons une sécurité maximale pour les conducteurs et les passagers.",
-        },
-        contact: {
-          title: "Contact",
-          description: "Contactez-nous à tout moment à support@miarago.com",
-        }
-      },
+  noContent: "Aucun contenu disponible",
+  aboutSection: {
+    miaraGo: {
+      title: "MiaraGo",
+      description: "MiaraGo est une plateforme de covoiturage moderne qui connecte efficacement les conducteurs et les passagers.",
+      content: "MiaraGo a été fondée en 2026 avec pour mission de révolutionner le covoiturage à Madagascar."
+    },
+    features: {
+      title: "Fonctionnalités",
+      description: "Profitez de la réservation simplifiée, paiements sécurisés, suivi en temps réel et plus encore.",
+      content: "Découvrez toutes les fonctionnalités qui rendent MiaraGo unique."
+    },
+    security: {
+      title: "Sécurité",
+      description: "Nous garantissons une sécurité maximale pour les conducteurs et les passagers.",
+      content: "La sécurité de nos utilisateurs est notre priorité absolue."
+    },
+    contact: {
+      title: "Contact",
+      description: "Contactez-nous à tout moment à support@miarago.com",
+      content: "Notre équipe est disponible 24/7 pour répondre à toutes vos questions."
+    }
+  },
+  abouts: {
+    mission: "Notre mission",
+    missionDesc: "Connecter les voyageurs et conducteurs pour des trajets partagés à Madagascar",
+    vision: "Notre vision",
+    visionDesc: "Devenir la plateforme de covoiturage de référence dans l'océan Indien",
+    founded: "Fondée en"
+  },
+  features: {
+    feature1: "Recherche intelligente",
+    feature1Desc: "Trouvez rapidement des trajets correspondant à vos besoins",
+    feature2: "Paiement sécurisé",
+    feature2Desc: "Plusieurs options de paiement avec protection intégrée",
+    feature3: "Notation des utilisateurs",
+    feature3Desc: "Évaluez et consultez les avis des conducteurs et passagers",
+    feature4: "Messagerie intégrée",
+    feature4Desc: "Communiquez facilement avec les autres utilisateurs"
+  },
+  securities: {
+    security1: "Chiffrement des données",
+    security1Desc: "Toutes vos données personnelles sont cryptées",
+    security2: "Authentification sécurisée",
+    security2Desc: "Connexion avec email, téléphone ou biométrie",
+    security3: "Vérification des utilisateurs",
+    security3Desc: "Profils vérifiés pour plus de confiance",
+    security4: "Support 24/7",
+    security4Desc: "Une équipe disponible pour vous assister à tout moment"
+  },
 
        // ======== SETTINGS =========
         settingsSection: {
@@ -413,15 +479,38 @@ export const resources = {
         whatsappSupport: "Support WhatsApp",
         chooseContact: "Choisir le mode de contact",
         shareApp: "Partager l'application",
-        inviteMessage: "🚗 Télécharge MiaraGo pour partager tes trajets facilement ! https://miarago.app"
+        inviteMessage: "🚗 Télécharge MiaraGo pour partager tes trajets facilement ! https://miarago.app",
+        website: "Visiter notre site web"
         },
         helpSection: {
-          faq: { title: "FAQ", description: "Questions fréquemment posées" },
+          faq: { title: "FAQ", description: "Questions fréquemment posées",   
+            content: "Questions fréquemment posées sur l'utilisation de MiaraGo" },
+
           contactSupport: { title: "Contacter le support", description: "Obtenez de l'aide de notre équipe" },
-          guides: { title: "Guides", description: "Lire les guides étape par étape" },
+          guides: { title: "Guides", description: "Lire les guides étape par étape", 
+             content: "Guides et tutoriels pour mieux utiliser l'application"
+           },
         },
 
-      },
+       tapForMore: "Appuyez pour plus d'informations",
+  guides: {
+    content: "Guides et tutoriels pour mieux utiliser l'application",
+    guide1: "Guide du passager",
+    guide1Desc: "Comment rechercher et réserver un trajet",
+    guide2: "Guide du conducteur",
+    guide2Desc: "Comment publier un trajet et gérer ses réservations",
+    guide3: "Guide de sécurité",
+    guide3Desc: "Conseils pour voyager en toute sécurité"
+  },
+  faq: {
+    question1: "Comment créer un compte ?",
+    answer1: "Téléchargez l'application, cliquez sur 'S'inscrire' et suivez les instructions.",
+    question2: "Comment réserver un trajet ?",
+    answer2: "Recherchez un trajet, sélectionnez vos places et confirmez la réservation.",
+    question3: "Comment payer ?",
+    answer3: "Vous pouvez payer par carte bancaire, Mobile Money ou espèces."
+  },
+  },
   },
 
   en: {
@@ -435,6 +524,37 @@ export const resources = {
       createAccountTitle: "I don't have a MiaraGo account",
       loginButtonTitle: "I already have a MiaraGo account",
 
+      // ======= PROFILE SCREEN ======== //
+      account: "Account",
+      personalInfo: "Personal information",
+      paymentMethods: "Payment methods",
+      savedPlaces: "Saved places",
+      preferences: "Preferences",
+      language: "Language",
+      darkMode: "Dark mode",
+      on: "On",
+      off: "Off",
+      helpCenter: "Help center",
+      privacyPolicy: "Privacy policy",
+      security: "Security",
+      memberSince: "Member since",
+      comingSoon: "Coming soon",
+      logoutConfirmation: "Are you sure you want to logout?",
+      phone: "Phone",
+      email: "Email",
+      role: "Role",
+      later: "Later",
+      readMore: "Read more",
+      contact: "Contact",
+      paymentMethodsInfo: "Manage your payment methods to facilitate your bookings",
+      addPaymentMethod: "Add a payment method:",
+      savedPlacesInfo: "Save your favorite places to save time",
+      addPlaceInfo: "Add a place:",
+      notificationsInfo: "Receive notifications for:\n\n• New available trips\n• Promotional offers\n• Booking reminders\n• Driver messages",
+      helpCenterInfo: "How can we help you?\n\n• FAQ\n• Video tutorials\n• Email support\n• Live chat",
+      privacyPolicyInfo: "We protect your personal data:\n\n• Data encryption\n• No sharing with third parties\n• GDPR compliance\n• Deletion on request",
+      securityInfo: "Security options:\n\n• Two-factor authentication\n• Login history\n• Connected devices\n• Biometric lock",
+  
       // ================= LOGIN =================
       phoneLabel: "Phone number",
       phonePlaceholder: "034 12 345 67",
@@ -518,6 +638,11 @@ export const resources = {
       loginFailed: "Biometric login failed",
       success: "✅ Authentication successful",
       error: "Biometric error",
+      faceIdDescription: "Use facial recognition to log in",
+      fingerprintDescription: "Use your fingerprint to log in",
+      biometricSecure: "Secure and fast",
+      biometricPrompt: "Place your finger on the sensor or look at the camera",
+      authenticating: "Authenticating...",
 
       // ================= NOTIFICATIONS =================
       notifications: "Notifications",
@@ -782,6 +907,10 @@ export const resources = {
       inactive: "Inactive",
       saveMeetingPoint: "Save meeting point",
       updateMeetingPoint: "Update meeting point",
+      selectCity: "Select a city",
+      searchCity: "Search for a city...",
+      noCityFound: "No city found",
+      cityRequired: "City is required",
 
       // ================= LUGGAGE SCREEN =================
       newLuggage: "New luggage",
@@ -794,28 +923,56 @@ export const resources = {
       saveLuggage: "Save luggage",
 
       // ====== ABOUT ======
-      noContent: "No content available",
-      aboutSection: {
-        miaraGo: {
-          title: "MiaraGo",
-          description:
-            "MiaraGo is a modern ride-sharing platform that connects drivers and passengers efficiently.",
-        },
-        features: {
-          title: "Features",
-          description:
-            "Enjoy seamless booking, secure payments, real-time tracking, and more.",
-        },
-        security: {
-          title: "Security",
-          description:
-            "We ensure top-notch safety for both drivers and passengers.",
-        },
-        contact: {
-          title: "Contact",
-          description: "Reach us anytime at support@miarago.com",
-        },
-      }, 
+     noContent: "No content available",
+     aboutSection: {
+     miaraGo: {
+      title: "MiaraGo",
+      description: "MiaraGo is a modern carpooling platform that efficiently connects drivers and passengers.",
+      content: "MiaraGo was founded in 2026 with the mission to revolutionize carpooling in Madagascar."
+    },
+    features: {
+      title: "Features",
+      description: "Enjoy simplified booking, secure payments, real-time tracking and more.",
+      content: "Discover all the features that make MiaraGo unique."
+    },
+    security: {
+      title: "Security",
+      description: "We guarantee maximum security for both drivers and passengers.",
+      content: "The safety of our users is our top priority."
+    },
+    contact: {
+      title: "Contact",
+      description: "Contact us anytime at support@miarago.com",
+      content: "Our team is available 24/7 to answer all your questions."
+    }
+  },
+  abouts: {
+    mission: "Our Mission",
+    missionDesc: "Connecting travelers and drivers for shared journeys in Madagascar",
+    vision: "Our Vision",
+    visionDesc: "Becoming the leading carpooling platform in the Indian Ocean",
+    founded: "Founded in"
+  },
+  features: {
+    feature1: "Smart Search",
+    feature1Desc: "Quickly find trips that match your needs",
+    feature2: "Secure Payment",
+    feature2Desc: "Multiple payment options with built-in protection",
+    feature3: "User Ratings",
+    feature3Desc: "Rate and view reviews of drivers and passengers",
+    feature4: "Integrated Messaging",
+    feature4Desc: "Easily communicate with other users"
+  },
+  securities: {
+    security1: "Data Encryption",
+    security1Desc: "All your personal data is encrypted and protected",
+    security2: "Secure Authentication",
+    security2Desc: "Login with email, phone, or biometrics",
+    security3: "User Verification",
+    security3Desc: "Verified profiles for greater trust and safety",
+    security4: "24/7 Support",
+    security4Desc: "A dedicated team available to assist you anytime"
+  },
       // =============== SETTINGS SCREEN =====
       settingsSection: {
         account: { title: "Account", description: "Manage your account information" },
@@ -833,10 +990,33 @@ export const resources = {
       inviteMessage: "🚗 Download MiaraGo to easily share rides! https://miarago.app" 
       },
       helpSection: {
-        faq: { title: "FAQ", description: "Frequently Asked Questions" },
+        faq: { title: "FAQ", description: "Frequently Asked Questions",
+           content: "Frequently asked questions about using MiaraGo"
+         },
         contactSupport: { title: "Contact Support", description: "Get help from our team" },
-        guides: { title: "Guides", description: "Read step-by-step guides" },
+        guides: { title: "Guides", description: "Read step-by-step guides",
+           content: "Guides and tutorials to better use the application",
+         },
       },
+
+      tapForMore: "Tap for more information",
+  guides: {
+    content: "Guides and tutorials to better use the application",
+    guide1: "Passenger guide",
+    guide1Desc: "How to search and book a trip",
+    guide2: "Driver guide",
+    guide2Desc: "How to publish a trip and manage bookings",
+    guide3: "Safety guide",
+    guide3Desc: "Tips for traveling safely"
+  },
+  faq: {
+    question1: "How to create an account?",
+    answer1: "Download the app, click on 'Sign up' and follow the instructions.",
+    question2: "How to book a trip?",
+    answer2: "Search for a trip, select your seats and confirm the booking.",
+    question3: "How to pay?",
+    answer3: "You can pay by bank card, Mobile Money or cash."
+  },
     },
   },
 
@@ -851,6 +1031,37 @@ export const resources = {
       createAccountTitle: "Tsy manana kaonty MiaraGo aho",
       loginButtonTitle: "Efa manana kaonty MiaraGo aho",
 
+      // ======= PROFILE SCREEN ===== //
+      account: "Kaonty",
+      personalInfo: "Fampahalalana manokana",
+      paymentMethods: "Fomba fandoavana",
+      savedPlaces: "Toerana voatahiry",
+      preferences: "Safidy",
+      language: "Fiteny",
+      darkMode: "Maizina",
+      on: "Miasa",
+      off: "Tsy miasa",
+      helpCenter: "Foibe fanampiana",
+      privacyPolicy: "Politika momba ny fiainana manokana",
+      security: "Fiarovana",
+      memberSince: "Mpikambana hatramin'ny",
+      comingSoon: "Ho avy tsy ho ela",
+      logoutConfirmation: "Tena tianao ve ny hivoaka?",
+      phone: "Telefaonina",
+      email: "Mailaka",
+      role: "Toerana",
+      later: "Any aoriana",
+      readMore: "Hamaky bebe kokoa",
+      contact: "Hifandray",
+      paymentMethodsInfo: "Rantano ny fomba fandoavana mba hanamorana ny famandrihana",
+      addPaymentMethod: "Ampio fomba fandoavana:",
+      savedPlacesInfo: "Tehirizo ny toerana tianao mba hitsitsiana fotoana",
+      addPlaceInfo: "Ampio toerana:",
+      notificationsInfo: "Mahazoa fampandrenesana momba:\n\n• Dia vaovao misy\n• Tolotra manokana\n• Fampahatsiahivana famandrihana\n• Hafatra avy amin'ny mpamily",
+      helpCenterInfo: "Ahoana no ahafahanay manampy anao?\n\n• Fanontaniana matetika (FAQ)\n• Lahatsary fampianarana\n• Fanampiana amin'ny mailaka\n• Resaka mivantana",
+      privacyPolicyInfo: "Miaro ny angon-drakitra manokana anao izahay:\n\n• Fanafenana ny angona\n• Tsy zaraina amin'ny antoko hafa\n• Fanarahana ny lalàna RGPD\n• Fafana raha angatahina",
+      securityInfo: "Safidy fiarovana:\n\n• Fanamarinana dingana roa\n• Tantaran'ny fidirana\n• Fitaovana mifandray\n• Hidim-bava biometrika",
+  
       // ================= LOGIN =================
       phoneLabel: "Laharana finday",
       phonePlaceholder: "034 12 345 67",
@@ -935,6 +1146,11 @@ export const resources = {
        loginFailed: "Tsy nahomby ny fidirana biometrika",
        success: "✅ Tafiditra soa aman-tsara",
        error: "Hadisoana biometrika",
+       faceIdDescription: "Ampiasao ny fijerena endrika hidirana",
+       fingerprintDescription: "Ampiasao ny dian-tananao hidirana",
+       biometricSecure: "Azo antoka sy haingana",
+       biometricPrompt: "Apetraho eo amin'ny sensor ny rantsan-tananao na jereo ny fakan-tsary",
+       authenticating: "Fanamarinana mbola mitohy...",
 
        // ================= NOTIFICATIONS =================
        notifications: "Fampandrenesana",
@@ -1027,7 +1243,6 @@ export const resources = {
         ok: "OK",
         seatsCount: "Seza {{count}}",
         ariary: "Ar",
-
 
      // ================= DRIVER HOME =================
      dashboardOverview: "Topi-maso",
@@ -1214,31 +1429,62 @@ export const resources = {
          longitude: "Longitude",
          saveMeetingPoint: "Tehirizo ny toerana",
          updateMeetingPoint: "Havaozina ny toerana",
-         
+         selectCity: "Fidio ny tanàna",
+         searchCity: "Karohy tanàna...",
+         noCityFound: "Tsy misy tanàna hita",
+         cityRequired: "Ilaina ny tanàna",
 
       // ============= ABOUT =================
-      noContent: "Tsy misy votoaty azo aseho",
+      noContent: "Tsy misy votoaty azo",
       aboutSection: {
-        miaraGo: {
-          title: "MiaraGo",
-          description:
-            "MiaraGo dia sehatra fitateram-bahoaka maoderina mampifandray mpamily sy mpandeha am-pahombiazana.",
-        },
-        features: {
-          title: "Toetoetra",
-          description:
-            "Mankafy famandrihana mora, fandoavam-bola azo antoka, fanaraha-maso fotoana tena izy, sy ny maro hafa.",
-        },
-        security: {
-          title: "Fiarovana",
-          description:
-            "Miantoka ny fiarovana ambony indrindra ho an'ny mpamily sy ny mpandeha izahay.",
-        },
-        contact: {
-          title: "Mifandraisa",
-          description: "Mifandraisa aminay amin'ny support@miarago.com",
-        },
-      },
+      miaraGo: {
+        title: "MiaraGo",
+        description: "MiaraGo dia sehatra fitadiavana fiara iraisana maoderina mampifandray ny mpamily sy mpandeha amin'ny fomba mahomby.",
+        content: "MiaraGo dia niorina tamin'ny 2026 miaraka amin'ny iraka hanova ny fiara iraisana eto Madagasikara."
+    },
+      features: {
+      title: "Endri-javatra",
+      description: "Ankafizo ny famandrihana tsotra, fandoavana azo antoka, fanaraha-maso amin'ny fotoana tena izy sy ny maro hafa.",
+      content: "Hitady ny endri-javatra rehetra mahatonga an'i MiaraGo ho miavaka."
+    },
+    security: {
+      title: "Fiarovana",
+      description: "Manome antoka ny fiarovana faratampony ho an'ny mpamily sy ny mpandeha izahay.",
+      content: "Ny fiarovana ny mpampiasa anay no laharam-pahamehana."
+    },
+    contact: {
+      title: "Fifandraisana",
+      description: "Mifandraisa aminay amin'ny fotoana rehetra amin'ny support@miarago.com",
+      content: "Ny ekipanay dia misy 24/7 hamaly ny fanontanianao rehetra."
+    }
+  },
+  abouts: {
+    mission: "Iraka",
+    missionDesc: "Mampifandray ny mpandeha sy mpamily ho amin'ny dia iraisana eto Madagasikara",
+    vision: "Fahitana",
+    visionDesc: "Lasa sehatra fitadiavana fiara iraisana malaza any amin'ny Ranomasimbe Indianina",
+    founded: "Niorina tamin'ny"
+  },
+  features: {
+    feature1: "Fikarohana hendry",
+    feature1Desc: "Hitady haingana ny dia mifanaraka amin'ny filanao",
+    feature2: "Fandoavana azo antoka",
+    feature2Desc: "Fomba fandoavana maro miaraka amin'ny fiarovana",
+    feature3: "Fanamarihana mpampiasa",
+    feature3Desc: "Manome na mijery ny hevitry ny mpamily sy mpandeha",
+    feature4: "Hafatra anatiny",
+    feature4Desc: "Mifandray mora foana amin'ny mpampiasa hafa"
+  },
+  securities: {
+    security1: "Fanafenana ny angona",
+    security1Desc: "Ny angona manokana rehetra dia voaaro sy voafefy",
+    security2: "Fidirana azo antoka",
+    security2Desc: "Midira amin'ny mailaka, telefaonina na biometrika",
+    security3: "Fanamarinana ny mpampiasa",
+    security3Desc: "Kaonty voamarina mba hahazoana fitokisana bebe kokoa",
+    security4: "Fanampiana 24/7",
+    security4Desc: "Ekipa vonona hanampy anao amin'ny fotoana rehetra"
+  },
 
       // ============== SETTING ============
       settingsSection: {
@@ -1257,9 +1503,31 @@ export const resources = {
         inviteMessage: "Ampiasao ity app MiaraGo ity ho an'ny fitaterana mora kokoa!"
       },
       helpSection: {
-          faq: { title: "FAQ", description: "Fanontaniana matetika apetraka" },
+          faq: { title: "FAQ", description: "Fanontaniana matetika apetraka",
+            content: "Fanontaniana matetika apetraka momba ny fampiasana MiaraGo"
+           },
           contactSupport: { title: "Mifandraisa amin'ny fanohanana", description: "Makà fanampiana avy amin'ny ekipa" },
-          guides: { title: "Torolàlana", description: "Vakio ny torolàlana dingana-dingana" },
+          guides: { title: "Torolàlana", description: "Vakio ny torolàlana dingana-dingana",
+             content: "Torolalana sy fampianarana hampiasana tsara ny application",
+          },
+      },
+      tapForMore: "Tsindrio raha mila fanazavana fanampiny",
+      guides: {
+         content: "Torolalana sy fampianarana hampiasana tsara ny application",
+         guide1: "Torolalana ho an'ny mpandeha",
+         guide1Desc: "Ahoana no fomba fitadiavana sy famandrihana dia",
+         guide2: "Torolalana ho an'ny mpamily",
+         guide2Desc: "Ahoana no fomba namoahana dia sy fitantanana ny famandrihana",
+         guide3: "Torolalana momba ny fiarovana",
+         guide3Desc: "Torohevitra ho amin'ny dia azo antoka"
+      },
+      faq: {
+        question1: "Ahoana no fomba fanaovana kaonty?",
+        answer1: "Ampidino ny application, tsindrio ny 'Hisoratra anarana' ary araho ny toromarika.",
+        question2: "Ahoana no fomba famandrihana dia?",
+        answer2: "Mitadiava dia, mifidiana ny toerana tianao ary hamafiso ny famandrihana.",
+        question3: "Ahoana no fomba fandoavana?",
+        answer3: "Afaka mandoa amin'ny carte bancaire, Mobile Money na vola madinika ianao."
       },
      }
   },
