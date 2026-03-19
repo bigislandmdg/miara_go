@@ -53,13 +53,32 @@ $routes->group('rides', ['namespace' => 'App\Controllers'], function($routes) {
 // -------------------------
 // Messages Routes
 // -------------------------
+// Routes API complètes pour les messages
+// Messages Routes
 $routes->group('messages', ['namespace' => 'App\Controllers'], function($routes) {
-    $routes->get('', 'MessagesController::index');
-    $routes->post('', 'MessagesController::create');
+    // GET
+    $routes->get('/', 'MessagesController::index');
+    $routes->get('conversations/(:num)', 'MessagesController::conversations/$1');
+    $routes->get('unread/(:num)', 'MessagesController::unread/$1');
+    $routes->get('search', 'MessagesController::search');
+    $routes->get('stats/(:num)', 'MessagesController::stats/$1');
+    $routes->get('last/(:num)/(:num)/(:num)', 'MessagesController::lastMessage/$1/$2/$3');
+    $routes->get('between/(:num)/(:num)/(:num)', 'MessagesController::between/$1/$2/$3');
+    $routes->get('recent/(:num)', 'MessagesController::recent/$1');
     $routes->get('(:num)', 'MessagesController::show/$1');
+    
+    // POST
+    $routes->post('/', 'MessagesController::create');
+    $routes->post('with-metadata', 'MessagesController::createWithMetadata');
+    $routes->post('cleanup', 'MessagesController::cleanup');
+    
+    // PUT
+    $routes->put('read', 'MessagesController::markAsRead');
     $routes->put('(:num)', 'MessagesController::update/$1');
+    
+    // DELETE
     $routes->delete('(:num)', 'MessagesController::delete/$1');
-    $routes->get('filter', 'MessagesController::filter');
+    $routes->delete('conversation', 'MessagesController::deleteConversation');
 });
 
 // -------------------------

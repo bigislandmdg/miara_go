@@ -167,8 +167,12 @@ export const resources = {
     seeDetails: "Voir les détails",
 
     // ================= MESSAGES =================
-     typeMessage: "Tapez votre message…", // FR
      noDriverNumber: "Numéro non disponible", // FR
+     tripDetails: "Détails du trajet",
+     loadingMessages: "Chargement des messages...",
+     noMessages: "Aucun message",
+     startConversation: "Commencez la conversation",
+     typeMessage: "Écrivez votre message...",
 
     // ================= RIDE REQUEST =================
       newRequest: "Nouvelle demande",
@@ -284,6 +288,18 @@ export const resources = {
       ratingError: "Erreur lors de l’envoi de la note",
       invalidRideId: "Erreur : identifiant du trajet invalide",
       driverBonus: "🎁 Le conducteur recevra +2 crédits",
+      tapToRate: "Appuyez pour noter",
+      poor: "Mauvais",
+      fair: "Moyen",
+      good: "Bon",
+      veryGood: "Très bon",
+      excellent: "Excellent",
+      shareExperience: "Partagez votre expérience...",
+      selectRating: "Sélectionnez une note",
+      submitRating: "Envoyer la note",
+      submitted: "Envoyé !",
+      ratingHint: "Votre note aide la communauté à faire de meilleurs choix",
+
 
       // ================= TRIP SCREEN =================
       creatingTrip: "Créer un trajet",
@@ -683,6 +699,11 @@ export const resources = {
     // ================= MESSAGES =================
     typeMessage: "Type your message…", // EN
     noDriverNumber: "Number not available", // EN
+    tripDetails: "Trip details",
+    loadingMessages: "Loading messages...",
+    noMessages: "No messages",
+    startConversation: "Start the conversation",
+    
 
     // ================= RIDE REQUEST =================
     newRequest: "New Ride Request",
@@ -797,8 +818,18 @@ export const resources = {
      ratingError: "Error while sending rating",
      invalidRideId: "Invalid ride identifier",
      driverBonus: "🎁 The driver will receive +2 credits",
-
-
+     tapToRate: "Tap to rate",
+     poor: "Poor",
+     fair: "Fair",
+     good: "Good",
+     veryGood: "Very good",
+     excellent: "Excellent",
+     shareExperience: "Share your experience...",
+     selectRating: "Select a rating",
+     submitRating: "Submit rating",
+     submitted: "Submitted!",
+     ratingHint: "Your rating helps the community make better choices",
+  
      // ================= TRIP SCREEN =================
       creatingTrip: "Creating a trip",
       fillRequiredFields: "Please fill all required fields.",
@@ -1192,6 +1223,11 @@ export const resources = {
       // ================= MESSAGES =================
         typeMessage: "Soraty ny hafatrao…", // MG
         noDriverNumber: "Tsy misy nomeraon'ny mpamily", // MG
+        tripDetails: "Tsipirian'ny dia",
+        loadingMessages: "Fampidirana hafatra...",
+        noMessages: "Tsy misy hafatra",
+        startConversation: "Atombohy ny resaka",
+
 
       // ================= RIDE REQUEST =================
         newRequest: "Fangatahana fitaterana vaovao",
@@ -1306,6 +1342,17 @@ export const resources = {
     ratingError: "Nisy olana tamin'ny fandefasana",
     invalidRideId: "ID dia tsy manan-kery",
     driverBonus: "🎁 Hahazo +2 crédit ny mpamily",
+    tapToRate: "Tsindrio hanome naoty",
+    poor: "Ratsy",
+    fair: "Tsotra",
+    good: "Tsara",
+    veryGood: "Tsara be",
+    excellent: "Tena tsara",
+    shareExperience: "Zarao ny traikefanao...",
+    selectRating: "Fidio ny naoty",
+    submitRating: "Alefaso ny naoty",
+    submitted: "Voalefa!",
+    ratingHint: "Ny naoty omenao dia manampy ny fiarahamonina hisafidy tsara kokoa",
 
     // ================= TRIP SCREEN =================
     creatingTrip: "Mamory dia",
@@ -1399,8 +1446,7 @@ export const resources = {
         updateLuggage: "Havaozina ny entana",
         saveLuggage: "Tehirizo ny entana",
     
-      // ============== MEETING-POINT SCREEN ============
-    
+      // ============== MEETING-POINT SCREEN ============    
          newMeetingPoint: "Toerana fihaonana vaovao",
          editMeetingPoint: "Hanova ny toerana fihaonana",
          meetingPointInformation: "Mombamomba ny toerana",
