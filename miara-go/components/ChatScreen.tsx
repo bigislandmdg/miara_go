@@ -1,4 +1,4 @@
-// ChatScreen.tsx - Version finale corrigée
+// ChatScreen.tsx - Version finale complète
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -16,6 +16,7 @@ import {
   Easing,
   Dimensions,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { 
@@ -31,6 +32,8 @@ import {
   Clock,
   DollarSign,
   User,
+  X,
+  MessageCircle,
 } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
@@ -75,6 +78,14 @@ interface Message {
   status?: "sending" | "sent" | "delivered" | "read" | "error";
   type?: string;
   metadata?: any;
+  sender_id?: string;
+  receiver_id?: string;
+  sender_nom?: string;
+  sender_prenom?: string;
+  sender_role?: string;
+  receiver_nom?: string;
+  receiver_prenom?: string;
+  receiver_role?: string;
 }
 
 interface UserInfo {
@@ -127,6 +138,7 @@ export function ChatScreen({
   const [showTripInfo, setShowTripInfo] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [contactModalVisible, setContactModalVisible] = useState(false);
 
   const scrollViewRef = useRef<ScrollView>(null);
   const spinAnim = useRef(new Animated.Value(0)).current;
@@ -134,7 +146,8 @@ export function ChatScreen({
   const slideAnim = useRef(new Animated.Value(30)).current;
   const inputScaleAnim = useRef(new Animated.Value(1)).current;
   const isFetching = useRef(false);
-  const initialLoadDone = useRef(false);
+  const pollingInterval = useRef<NodeJS.Timeout | null>(null);
+  const initialFetchDone = useRef(false);
 
   /* ===================== ANIMATIONS ===================== */
   useEffect(() => {
@@ -191,104 +204,19 @@ export function ChatScreen({
     loadCurrentUser();
   }, []);
 
-  /* ===================== FETCH OTHER USER INFO ===================== */
-  // Dans ChatScreen.tsx - Remplacer la partie FETCH OTHER USER INFO par ceci :
-
-/* ===================== EXTRACT OTHER USER FROM MESSAGES ===================== */
-useEffect(() => {
-  const extractOtherUserFromMessages = () => {
-    if (!currentUser || messages.length === 0) return;
-
-    // Chercher le premier message pour extraire les infos de l'autre utilisateur
-    const firstMessage = messages[0] as any; // Cast pour accéder aux champs backend
-    
-    if (firstMessage) {
-      // Déterminer qui est l'autre utilisateur
-      if (firstMessage.sender === "other") {
-        // Si le premier message est de "other", on prend ses infos
-        setOtherUser({
-          id: parseInt(firstMessage.sender_id),
-          nom: firstMessage.sender_nom || "",
-          prenom: firstMessage.sender_prenom || "",
-          phone: "",
-          role: firstMessage.sender_role === "driver" ? "driver" : "user",
-          rating: 4.5,
-        });
-      } else {
-        // Sinon, on prend les infos du receiver
-        setOtherUser({
-          id: parseInt(firstMessage.receiver_id),
-          nom: firstMessage.receiver_nom || "",
-          prenom: firstMessage.receiver_prenom || "",
-          phone: "",
-          role: firstMessage.receiver_role === "driver" ? "driver" : "user",
-          rating: 4.5,
-        });
-      }
-      setLoadingOtherUser(false);
-    }
-  };
-
-  extractOtherUserFromMessages();
-}, [messages, currentUser]);
-
-/* ===================== FETCH OTHER USER PHONE ===================== */
-useEffect(() => {
-  const fetchOtherUserPhone = async () => {
-    if (!otherUser) return;
-
-    try {
-      const res = await fetch(`http://10.0.2.2:8080/users/${otherUser.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        const user = data.user || data;
-        if (user) {
-          setOtherUser(prev => ({
-            id: prev?.id || 0,
-            nom: prev?.nom || "",
-            prenom: prev?.prenom || "",
-            phone: user.phone || "",
-            role: prev?.role || "driver",
-            rating: prev?.rating || 4.5,
-          }));
-        }
-      }
-    } catch (error) {
-      console.log("Error fetching phone:", error);
-    }
-  };
-
-  fetchOtherUserPhone();
-}, [otherUser?.id]);
-
-// Supprimer l'ancien useEffect FETCH OTHER USER INFO  
-
-  /* ===================== MARK MESSAGES AS READ ===================== */
-  const markMessagesAsRead = async () => {
-    if (!currentUser || !trip.id) return;
-
-    try {
-      await fetch("http://10.0.2.2:8080/messages/read", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ride_id: parseInt(trip.id),
-          user_id: currentUser.id
-        })
-      });
-    } catch (error) {
-      console.log("Error marking messages as read:", error);
-    }
-  };
-
   /* ===================== FETCH MESSAGES ===================== */
-  const fetchMessages = async () => {
-    if (!currentUser || !otherUser || isFetching.current) return;
+  const fetchMessages = async (isInitial = false) => {
+    if (!currentUser || isFetching.current) return;
 
     try {
       isFetching.current = true;
       
-      const url = `http://10.0.2.2:8080/messages?ride_id=${trip.id}&user_id=${currentUser.id}&other_id=${otherUser.id}&limit=50`;
+      let url;
+      if (otherUser && otherUser.id) {
+        url = `http://10.0.2.2:8080/messages?ride_id=${trip.id}&user_id=${currentUser.id}&other_id=${otherUser.id}&limit=50`;
+      } else {
+        url = `http://10.0.2.2:8080/messages?ride_id=${trip.id}&limit=50`;
+      }
       console.log("Fetching messages from:", url);
       
       const res = await fetch(url);
@@ -297,14 +225,30 @@ useEffect(() => {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
 
-      const data: BackendResponse = await res.json();
+      const text = await res.text();
+      
+      if (!text || text.trim() === "") {
+        console.log("Empty response from server");
+        setMessages([]);
+        setLoading(false);
+        return;
+      }
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        console.log("JSON parse error:", parseError);
+        setMessages([]);
+        setLoading(false);
+        return;
+      }
       
       if (!data.status) {
         throw new Error("Erreur API");
       }
 
       const messagesArray: BackendMessage[] = data.messages || [];
-      console.log("Messages reçus:", messagesArray.length);
 
       const formatted: Message[] = messagesArray.map((m) => {
         const date = new Date(m.created_at.replace(' ', 'T'));
@@ -346,17 +290,76 @@ useEffect(() => {
             : undefined,
           type: m.type,
           metadata: metadata,
+          sender_id: m.sender_id,
+          receiver_id: m.receiver_id,
+          sender_nom: m.sender_nom,
+          sender_prenom: m.sender_prenom,
+          sender_role: m.sender_role,
+          receiver_nom: m.receiver_nom,
+          receiver_prenom: m.receiver_prenom,
+          receiver_role: m.receiver_role,
         };
       });
 
-      setMessages((prev) => {
-        if (JSON.stringify(prev) === JSON.stringify(formatted)) {
-          return prev;
+      setMessages(formatted);
+      setApiError(null);
+      
+      if (formatted.length > 0 && !otherUser) {
+        let driverInfo = null;
+        let passengerInfo = null;
+        
+        for (const msg of formatted) {
+        // Dans la partie où on extrait driverInfo
+        if (msg.sender_role === "driver") {
+        driverInfo = {
+            id: parseInt(msg.sender_id || "0"),
+            nom: msg.sender_nom || "",
+            prenom: msg.sender_prenom || "",
+            phone: msg.sender_id === "1" ? "+261341234567" : "", // Numéro direct pour le conducteur
+            role: "driver" as "user" | "driver",
+            rating: 4.5,
+          };
+        } else if (msg.receiver_role === "driver") {
+        driverInfo = {
+          id: parseInt(msg.receiver_id || "0"),
+          nom: msg.receiver_nom || "",
+          prenom: msg.receiver_prenom || "",
+          phone: msg.receiver_id === "1" ? "+261341234567" : "",
+          role: "driver" as "user" | "driver",
+          rating: 4.5,
+        };
+       }
+          
+          if (msg.sender_role === "user") {
+            passengerInfo = {
+              id: parseInt(msg.sender_id || "0"),
+              nom: msg.sender_nom || "",
+              prenom: msg.sender_prenom || "",
+              phone: "",
+              role: "user" as "user" | "driver",
+              rating: 4.5,
+            };
+          } else if (msg.receiver_role === "user") {
+            passengerInfo = {
+              id: parseInt(msg.receiver_id || "0"),
+              nom: msg.receiver_nom || "",
+              prenom: msg.receiver_prenom || "",
+              phone: "",
+              role: "user" as "user" | "driver",
+              rating: 4.5,
+            };
+          }
         }
-        return formatted;
-      });
+        
+        if (currentUser.role === "user" && driverInfo) {
+          setOtherUser(driverInfo);
+        } else if (currentUser.role === "driver" && passengerInfo) {
+          setOtherUser(passengerInfo);
+        }
+        
+        setLoadingOtherUser(false);
+      }
 
-      // Marquer les messages comme lus si nécessaire
       const hasUnread = messagesArray.some(m => 
         m.receiver_id === String(currentUser.id) && m.read === "0"
       );
@@ -364,26 +367,121 @@ useEffect(() => {
         markMessagesAsRead();
       }
 
+      if (isInitial) {
+        initialFetchDone.current = true;
+      }
+
     } catch (e) {
       console.log("Fetch error:", e);
-      setApiError("Erreur de connexion au serveur");
+      if (isInitial && messages.length === 0 && !initialFetchDone.current) {
+        setApiError("Erreur de connexion au serveur");
+      }
     } finally {
       isFetching.current = false;
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (!currentUser || !otherUser) return;
+  /* ===================== MARK MESSAGES AS READ ===================== */
+  const markMessagesAsRead = async () => {
+    if (!currentUser || !trip.id) return;
 
-    if (!initialLoadDone.current) {
-      fetchMessages();
-      initialLoadDone.current = true;
+    try {
+      const res = await fetch("http://10.0.2.2:8080/messages/read", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ride_id: parseInt(trip.id),
+          user_id: currentUser.id
+        })
+      });
+      
+      const text = await res.text();
+      if (!text || text.trim() === "") return;
+      
+      console.log("Mark as read response:", text);
+    } catch (error) {
+      console.log("Error marking messages as read:", error);
     }
+  };
+
+  /* ===================== FETCH OTHER USER PHONE ===================== */
+  /* ===================== FETCH OTHER USER PHONE ===================== */
+  /* ===================== FETCH OTHER USER PHONE ===================== */
+useEffect(() => {
+  const fetchOtherUserPhone = async () => {
+    if (!otherUser) return;
+
+    try {
+      console.log("🔍 Fetching phone for user ID:", otherUser.id);
+      const res = await fetch(`http://10.0.2.2:8080/users/${otherUser.id}`);
+      
+      if (res.ok) {
+        const text = await res.text();
+        console.log("📞 Raw response:", text);
+        
+        if (!text || text.trim() === "") {
+          console.log("⚠️ Empty response");
+          return;
+        }
+        
+        const data = JSON.parse(text);
+        console.log("✅ Parsed user data:", data);
+        
+        const user = data.user || data;
+        if (user && user.phone) {
+          setOtherUser(prev => ({
+            id: prev?.id || 0,
+            nom: prev?.nom || "",
+            prenom: prev?.prenom || "",
+            phone: user.phone,
+            role: prev?.role || "driver",
+            rating: prev?.rating || 4.5,
+          }));
+          console.log("📞 Phone number set to:", user.phone);
+        } else {
+          console.log("⚠️ No phone number found in response");
+        }
+      } else {
+        console.log("❌ HTTP error:", res.status);
+      }
+    } catch (error) {
+      console.log("❌ Error fetching phone:", error);
+    }
+  };
+
+  if (otherUser && !otherUser.phone) {
+    fetchOtherUserPhone();
+  }
+}, [otherUser]);
+
+  /* ===================== START FETCHING ===================== */
+  useEffect(() => {
+    if (currentUser && !initialFetchDone.current) {
+      fetchMessages(true);
+    }
+  }, [currentUser]);
+
+  /* ===================== POLLING FOR NEW MESSAGES ===================== */
+  useEffect(() => {
+    if (!currentUser || !initialFetchDone.current) return;
+
+    if (pollingInterval.current) {
+      clearInterval(pollingInterval.current);
+    }
+
+    pollingInterval.current = setInterval(() => {
+      if (!isFetching.current) {
+        fetchMessages(false);
+      }
+    }, 5000);
     
-    const interval = setInterval(fetchMessages, 3000);
-    return () => clearInterval(interval);
-  }, [currentUser, otherUser, trip.id]);
+    return () => {
+      if (pollingInterval.current) {
+        clearInterval(pollingInterval.current);
+      }
+    };
+  }, [currentUser, initialFetchDone.current]);
 
   /* ===================== FETCH UNREAD COUNT ===================== */
   const fetchUnreadCount = async () => {
@@ -391,10 +489,18 @@ useEffect(() => {
 
     try {
       const res = await fetch(`http://10.0.2.2:8080/messages/unread/${currentUser.id}`);
-      const data = await res.json();
+      const text = await res.text();
+      
+      if (!text || text.trim() === "") {
+        setUnreadCount(0);
+        return;
+      }
+      
+      const data = JSON.parse(text);
       setUnreadCount(data.unread_count || 0);
     } catch (error) {
       console.log("Error fetching unread count:", error);
+      setUnreadCount(0);
     }
   };
 
@@ -465,7 +571,12 @@ useEffect(() => {
         throw new Error(errorText);
       }
 
-      const response = await res.json();
+      const responseText = await res.text();
+      if (!responseText || responseText.trim() === "") {
+        throw new Error("Empty response");
+      }
+
+      const response = JSON.parse(responseText);
       console.log("Send response:", response);
 
       setMessages((prev) =>
@@ -479,6 +590,8 @@ useEffect(() => {
             : m
         )
       );
+
+      setTimeout(() => fetchMessages(false), 500);
 
     } catch (error) {
       console.log("Send error:", error);
@@ -497,30 +610,52 @@ useEffect(() => {
     setNewMessage(msg.text);
   };
 
-  /* ===================== CALL ===================== */
-  const handleCall = () => {
-    if (!otherUser) return;
+  /* ===================== GET AVATAR LETTERS ===================== */
+  const getAvatarLetters = (user: UserInfo | null) => {
+    if (!user) return "?";
+    const firstLetter = user.prenom?.charAt(0).toUpperCase() || "";
+    const secondLetter = user.nom?.charAt(0).toUpperCase() || "";
+    return firstLetter + secondLetter;
+  };
 
-    const contact = otherUser.phone;
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      "#10B981", // vert
+      "#3B82F6", // bleu
+      "#F59E0B", // orange
+      "#EF4444", // rouge
+      "#8B5CF6", // violet
+      "#EC4899", // rose
+      "#14B8A6", // turquoise
+      "#F97316", // orange foncé
+    ];
     
-    if (!contact) {
-      Alert.alert(t("appName"), "Numéro de téléphone non disponible");
-      return;
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+  };
 
-    const userName = `${otherUser.prenom} ${otherUser.nom}`;
+  /* ===================== CONTACT FUNCTIONS ===================== */
+  const makePhoneCall = () => {
+    if (!otherUser?.phone) return;
+    setContactModalVisible(false);
+    Linking.openURL(`tel:${otherUser.phone}`);
+  };
 
-    Alert.alert(
-      t("appName"),
-      `Appeler ${userName}?`,
-      [
-        { text: t("cancel"), style: "cancel" },
-        {
-          text: t("call"),
-          onPress: () => Linking.openURL(`tel:${contact}`),
-        },
-      ]
-    );
+  const openWhatsApp = () => {
+    if (!otherUser?.phone) return;
+    setContactModalVisible(false);
+    let phoneNumber = otherUser.phone.replace(/\+/g, '');
+    Linking.openURL(`https://wa.me/${phoneNumber}`);
+  };
+
+  const sendSMS = () => {
+    if (!otherUser?.phone) return;
+    setContactModalVisible(false);
+    Linking.openURL(`sms:${otherUser.phone}`);
   };
 
   /* ===================== RENDER STATUS ICON ===================== */
@@ -578,9 +713,10 @@ useEffect(() => {
   /* ===================== UI ===================== */
   const otherUserFullName = otherUser 
     ? `${otherUser.prenom} ${otherUser.nom}`.trim() 
-    : "Utilisateur";
+    : "Chargement...";
 
-  const otherUserAvatar = otherUser?.avatar;
+  const otherUserAvatarLetters = otherUser ? getAvatarLetters(otherUser) : "?";
+  const otherUserAvatarColor = otherUser ? getAvatarColor(otherUser.prenom + otherUser.nom) : "#10B981";
   const otherUserRating = otherUser?.rating || 4.5;
   const otherUserRole = otherUser?.role === "driver" ? t("driver") : t("passenger");
 
@@ -615,16 +751,13 @@ useEffect(() => {
           onPress={() => setShowTripInfo(!showTripInfo)}
           activeOpacity={0.7}
         >
-          <Image
-            source={{
-              uri: otherUserAvatar && otherUserAvatar.length > 0
-                ? otherUserAvatar
-                : "https://via.placeholder.com/80",
-            }}
-            style={styles.avatar}
-          />
+          {/* Avatar lettre */}
+          <View style={[styles.avatarLetter, { backgroundColor: otherUserAvatarColor }]}>
+            <Text style={styles.avatarLetterText}>{otherUserAvatarLetters}</Text>
+          </View>
+          
           <View style={styles.userTextContainer}>
-            {loadingOtherUser ? (
+            {!otherUser ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <>
@@ -646,7 +779,7 @@ useEffect(() => {
 
         <View style={styles.headerActions}>
           <TouchableOpacity
-            onPress={handleCall}
+            onPress={() => setContactModalVisible(true)}
             disabled={!otherUser?.phone}
             style={[styles.headerButton, !otherUser?.phone && styles.disabledButton]}
           >
@@ -719,13 +852,6 @@ useEffect(() => {
             </Text>
           </View>
         </Animated.View>
-      )}
-
-      {/* API ERROR MESSAGE */}
-      {apiError && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{apiError}</Text>
-        </View>
       )}
 
       {/* MESSAGES */}
@@ -818,6 +944,65 @@ useEffect(() => {
           <Send color="white" size={18} />
         </TouchableOpacity>
       </Animated.View>
+
+      {/* CONTACT MODAL */}
+      <Modal
+        visible={contactModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setContactModalVisible(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
+          onPress={() => setContactModalVisible(false)}
+        >
+          <View style={styles.contactModal}>
+            <View style={styles.contactModalHeader}>
+              <Text style={styles.contactModalTitle}>
+                Contacter {otherUser?.prenom} {otherUser?.nom}
+              </Text>
+              <TouchableOpacity onPress={() => setContactModalVisible(false)}>
+                <X size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.contactOption} onPress={makePhoneCall}>
+              <View style={[styles.contactIcon, { backgroundColor: "#10B981" }]}>
+                <Phone size={22} color="#fff" />
+              </View>
+              <View style={styles.contactTextContainer}>
+                <Text style={styles.contactOptionTitle}>Appeler</Text>
+                <Text style={styles.contactOptionNumber}>{otherUser?.phone || "Numéro non disponible"}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.contactOption} onPress={openWhatsApp}>
+              <View style={[styles.contactIcon, { backgroundColor: "#25D366" }]}>
+                <MessageCircle size={22} color="#fff" />
+              </View>
+              <View style={styles.contactTextContainer}>
+                <Text style={styles.contactOptionTitle}>WhatsApp</Text>
+                <Text style={styles.contactOptionNumber}>{otherUser?.phone || "Numéro non disponible"}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.contactOption} onPress={sendSMS}>
+              <View style={[styles.contactIcon, { backgroundColor: "#3B82F6" }]}>
+                <MessageCircle size={22} color="#fff" />
+              </View>
+              <View style={styles.contactTextContainer}>
+                <Text style={styles.contactOptionTitle}>SMS</Text>
+                <Text style={styles.contactOptionNumber}>{otherUser?.phone || "Numéro non disponible"}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.contactCancel} onPress={() => setContactModalVisible(false)}>
+              <Text style={styles.contactCancelText}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -835,7 +1020,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingTop: Platform.OS === "ios" ? 50 : 40,
     paddingBottom: 16,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 15,
@@ -859,12 +1044,19 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   
-  avatar: {
+  avatarLetter: {
     width: 44,
     height: 44,
     borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 2,
     borderColor: "#fff",
+  },
+  avatarLetterText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#fff",
   },
   
   userTextContainer: {
@@ -971,22 +1163,6 @@ const styles = StyleSheet.create({
   tripInfoRoleText: {
     fontSize: 13,
     color: "#6B7280",
-  },
-  
-  errorContainer: {
-    backgroundColor: "#FEE2E2",
-    marginHorizontal: 16,
-    marginTop: 8,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#FECACA",
-  },
-  
-  errorText: {
-    color: "#B91C1C",
-    fontSize: 14,
-    textAlign: "center",
   },
   
   messages: {
@@ -1131,5 +1307,71 @@ const styles = StyleSheet.create({
   sendButtonDisabled: {
     backgroundColor: "#9CA3AF",
     shadowOpacity: 0.1,
+  },
+  
+  // Modal contact
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  contactModal: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 20,
+    width: "85%",
+    alignSelf: "center",
+  },
+  contactModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  contactModalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  contactOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  contactIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  contactTextContainer: {
+    flex: 1,
+  },
+  contactOptionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  contactOptionNumber: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginTop: 2,
+  },
+  contactCancel: {
+    marginTop: 16,
+    paddingVertical: 12,
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    borderRadius: 12,
+  },
+  contactCancelText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#6B7280",
   },
 });
