@@ -1,4 +1,4 @@
-// BookingScreen.tsx — Version avec bouton de confirmation dynamique
+// BookingScreen.tsx — Version synchronisée avec le contrôleur PHP
 import React, { JSX, useEffect, useRef, useState } from "react";
 import {
   View,
@@ -41,7 +41,7 @@ interface VehicleOption {
   is_active?: boolean;
   image?: string | null;
   isBooked?: boolean;
-  isOfferVehicle?: boolean; // 🔹 Indique si c'est le véhicule de l'offre
+  isOfferVehicle?: boolean;
 }
 
 interface BookingScreenProps {
@@ -67,6 +67,7 @@ export default function BookingScreen({
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // 🔹 Options synchronisées avec le contrôleur (baby_on_board, pets_on_board, luggage_on_board)
   const [babyOnBoard, setBabyOnBoard] = useState(false);
   const [petsOnBoard, setPetsOnBoard] = useState(false);
   const [luggageOnBoard, setLuggageOnBoard] = useState(false);
@@ -82,31 +83,38 @@ export default function BookingScreen({
   const pricePerSeat = offer ? Number(offer.price_per_seat) : trip.price;
   const totalPrice = selectedSeatCount * pricePerSeat;
 
+  // Options pour bébés (conservées pour l'UI mais converties en booléen pour le contrôleur)
   const [babyOptions, setBabyOptions] = useState<BabyOption[]>([
-      { label: t("0–6 mois"), icon: <Baby size={24} color="#111827" />, selected: false },
-      { label: t("6–12 mois"), icon: <Baby size={24} color="#111827" />, selected: false },
-      { label: t("12–18 mois"), icon: <Baby size={24} color="#111827" />, selected: false },
-      { label: t("18–30 mois"), icon: <Baby size={24} color="#111827" />, selected: false },
+    { label: t("0–6 mois"), icon: <Baby size={24} color="#111827" />, selected: false },
+    { label: t("6–12 mois"), icon: <Baby size={24} color="#111827" />, selected: false },
+    { label: t("12–18 mois"), icon: <Baby size={24} color="#111827" />, selected: false },
+    { label: t("18–30 mois"), icon: <Baby size={24} color="#111827" />, selected: false },
   ]);
 
   const toggleBabyOption = (label: string) => {
-     setBabyOptions(prev =>
-       prev.map(b => b.label === label ? { ...b, selected: !b.selected } : b)
-     );
-    };
+    setBabyOptions(prev =>
+      prev.map(b => b.label === label ? { ...b, selected: !b.selected } : b)
+    );
+    // 🔹 Si au moins une option bébé est sélectionnée, activer baby_on_board
+    const hasSelected = babyOptions.some(b => b.selected) || !babyOptions.find(b => b.label === label)?.selected;
+    setBabyOnBoard(hasSelected);
+  };
 
   const [petOptions, setPetOptions] = useState<PetOption[]>([
-  { type: t("dog"), icon: <Dog size={24} color="#111827" />, selected: false },
-  { type: t("cat"), icon: <Cat size={24} color="#111827" />, selected: false },
-  { type: t("bird"), icon: <Bird size={24} color="#111827" />, selected: false },
-  { type: t("rabbit"), icon: <Rabbit size={24} color="#111827" />, selected: false },
-]);
+    { type: t("dog"), icon: <Dog size={24} color="#111827" />, selected: false },
+    { type: t("cat"), icon: <Cat size={24} color="#111827" />, selected: false },
+    { type: t("bird"), icon: <Bird size={24} color="#111827" />, selected: false },
+    { type: t("rabbit"), icon: <Rabbit size={24} color="#111827" />, selected: false },
+  ]);
 
-const togglePet = (type: string) => {
-  setPetOptions(prev =>
-    prev.map(p => p.type === type ? { ...p, selected: !p.selected } : p)
-  );
-};
+  const togglePet = (type: string) => {
+    setPetOptions(prev =>
+      prev.map(p => p.type === type ? { ...p, selected: !p.selected } : p)
+    );
+    // 🔹 Si au moins un animal est sélectionné, activer pets_on_board
+    const hasSelected = petOptions.some(p => p.selected) || !petOptions.find(p => p.type === type)?.selected;
+    setPetsOnBoard(hasSelected);
+  };
 
   /* ================= ANIMATION ================= */
   useEffect(() => {
@@ -166,9 +174,6 @@ const togglePet = (type: string) => {
           return;
         }
 
-        // =========================================================
-        // 🔹 FORMATER LES VÉHICULES
-        // =========================================================
         const formatted: VehicleOption[] = data.vehicles.map((v: any) => ({
           label: `${v.marque ?? "Unknown"} ${v.modele ?? ""}`,
           seats: Number(v.nombre_places) || 2,
@@ -177,14 +182,10 @@ const togglePet = (type: string) => {
           image: v.photos || null,
           is_active: v.status === "active",
           isBooked: v.is_booked === true,
-          isOfferVehicle: false, // Sera défini après
+          isOfferVehicle: false,
         }));
 
-        // =========================================================
-        // 🔹 SI UNE OFFRE EXISTE, IDENTIFIER LE VÉHICULE CORRESPONDANT
-        // =========================================================
         if (offer?.car_info) {
-          // Chercher un véhicule qui correspond aux infos de l'offre
           const offerVehicleIndex = formatted.findIndex(v => 
             v.label.toLowerCase().includes(offer.car_info?.toLowerCase() || '') ||
             offer.car_info?.toLowerCase().includes(v.label.toLowerCase())
@@ -192,13 +193,12 @@ const togglePet = (type: string) => {
           
           if (offerVehicleIndex !== -1) {
             formatted[offerVehicleIndex].isOfferVehicle = true;
-            setSelectedVehicle(formatted[offerVehicleIndex]); // Pré-sélectionner
+            setSelectedVehicle(formatted[offerVehicleIndex]);
           } else {
-            // Si aucun véhicule ne correspond, prendre le premier
             setSelectedVehicle(formatted[0]);
           }
         } else {
-          setSelectedVehicle(formatted[0]); // Pas d'offre, prendre le premier
+          setSelectedVehicle(formatted[0]);
         }
 
         setVehicles(formatted);
@@ -224,14 +224,10 @@ const togglePet = (type: string) => {
     fetchVehicles();
   }, [userId, offer]);
 
-  // =========================================================
-  // 🔹 FONCTION DE SÉLECTION DE VÉHICULE
-  // =========================================================
   const handleSelectVehicle = (vehicle: VehicleOption) => {
     setSelectedVehicle(vehicle);
-    setSelectedSeatIndexes([]); // Reset des sièges quand on change de véhicule
+    setSelectedSeatIndexes([]);
     
-    // Si le véhicule est réservé, on peut afficher un message d'info
     if (vehicle.isBooked) {
       Toast.show({
         type: "info",
@@ -272,7 +268,6 @@ const togglePet = (type: string) => {
         return baseLayout;
       }
 
-      // Sprinter / minibus
       layout.push(["driver", seatNumber++, seatNumber++]);
       let remainingSeats = seats - 2;
       if (remainingSeats > 0) {
@@ -316,7 +311,6 @@ const togglePet = (type: string) => {
     setSelectedSeatIndexes([]);
   }, [selectedVehicle]);
 
-  /* ================= VEHICLE ICON ================= */
   const getVehicleIcon = (type?: string) => {
     const lower = type?.toLowerCase() || "";
     if (lower.includes("pickup") || lower.includes("hilux")) return <Car size={18} color="#fff" />;
@@ -324,21 +318,19 @@ const togglePet = (type: string) => {
     return <Car size={18} color="#fff" />;
   };
 
-  /* ================= SEAT TOGGLE ================= */
   const toggleSeat = (seatNumber: number) => {
     setSelectedSeatIndexes(prev =>
       prev.includes(seatNumber) ? prev.filter(s => s !== seatNumber) : [...prev, seatNumber]
     );
   };
 
-  /* ================= CONFIRM BOOKING ================= */
+  /* ================= CONFIRM BOOKING - SYNCHRONISÉ AVEC LE CONTRÔLEUR ================= */
   const confirmBooking = async () => {
     if (selectedSeatCount === 0) {
       Toast.show({ type: "error", text1: t("selectAtLeastOneSeat") });
       return;
     }
     
-    // Vérifier si le véhicule est réservé
     if (selectedVehicle?.isBooked) {
       Toast.show({ 
         type: "error", 
@@ -350,17 +342,20 @@ const togglePet = (type: string) => {
     
     setLoading(true);
     try {
+      // 🔹 Payload conforme au contrôleur BookingsController
       const payload = {
         ride_id: Number(trip.id),
         offer_id: offer ? Number(offer.id) : null,
         seats_reserved: selectedSeatCount,
         total_price: totalPrice,
-        status: "pending",
+        // 🔹 Statut "confirmed" directement (le contrôleur le met par défaut)
+        // On peut l'omettre ou le mettre explicitement
+        baby_on_board: babyOnBoard ? 1 : 0,      // 🔹 Correspond au champ dans le contrôleur
+        pets_on_board: petsOnBoard ? 1 : 0,      // 🔹 Correspond au champ dans le contrôleur
+        luggage_on_board: luggageOnBoard ? 1 : 0, // 🔹 Correspond au champ dans le contrôleur
+        // Champs supplémentaires pour l'UI (non requis par le contrôleur)
         vehicle_type: selectedVehicle?.type,
         selected_seats: selectedSeatIndexes,
-        baby_on_board: babyOnBoard ? 1 : 0,
-        pets_on_board: petsOnBoard ? 1 : 0,
-        luggage_on_board: luggageOnBoard ? 1 : 0,
       };
 
       const baseURL = Platform.OS === "android" ? "http://10.0.2.2:8080" : "http://localhost:8080";
@@ -372,11 +367,19 @@ const togglePet = (type: string) => {
 
       const text = await response.text();
       let data: any = {};
-      try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+      try { 
+        data = text ? JSON.parse(text) : {}; 
+      } catch { 
+        data = {}; 
+      }
 
-      if (!response.ok) throw new Error(data.message || t("serverError"));
+      if (!response.ok) {
+        // 🔹 Gestion des erreurs du contrôleur
+        const errorMessage = data.messages?.error || data.message || t("serverError");
+        throw new Error(errorMessage);
+      }
 
-      // Marquer le véhicule comme réservé après confirmation
+      // 🔹 Mise à jour locale du véhicule comme réservé
       setVehicles(prev => 
         prev.map(v => 
           v.label === selectedVehicle?.label 
@@ -386,7 +389,11 @@ const togglePet = (type: string) => {
       );
 
       setShowSuccess(true);
-      Toast.show({ type: "success", text1: t("bookingSent") });
+      Toast.show({ 
+        type: "success", 
+        text1: t("bookingSuccess"), 
+        text2: t("bookingConfirmedMessage") 
+      });
       onBookingSuccess?.(trip);
     } catch (e: any) {
       Toast.show({ type: "error", text1: t("error"), text2: e.message });
@@ -395,15 +402,11 @@ const togglePet = (type: string) => {
     }
   };
 
-  // =========================================================
-  // 🔹 FONCTION POUR FORMATER LE TEXTE DU BOUTON
-  // =========================================================
   const getButtonText = () => {
     if (loading) return t("processing");
     if (selectedVehicle?.isBooked) return t("vehicleUnavailable");
     if (selectedSeatCount === 0) return t("confirmBooking");
     
-    // Formatage du prix avec séparateur de milliers
     const formattedPrice = totalPrice.toLocaleString('fr-FR');
     return `${t("confirmBooking")} ${selectedSeatCount} ${t("seat")}${selectedSeatCount > 1 ? 's' : ''} • ${formattedPrice} Ar`;
   };
@@ -415,7 +418,6 @@ const togglePet = (type: string) => {
       <Animated.View style={[styles.sheet, { transform: [{ translateY: slideAnim }] }]}>
         <View style={styles.handle} />
 
-        {/* HEADER */}
         <View style={styles.header}>
           <TouchableOpacity onPress={closeSheet}><ArrowLeft size={22} /></TouchableOpacity>
           <Text style={styles.headerTitle}>{t("bookTrip")}</Text>
@@ -423,7 +425,6 @@ const togglePet = (type: string) => {
         </View>
 
         <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
-          {/* TRAJET */}
           <View style={styles.card}>
             <Text style={styles.route}>{trip.departure} → {trip.arrival}</Text>
             <View style={styles.row}>
@@ -432,9 +433,6 @@ const togglePet = (type: string) => {
             </View>
           </View>
 
-          {/* ========================================================= */}
-          {/* 🔹 VEHICULES - AVEC MISE EN ÉVIDENCE DU VÉHICULE DE L'OFFRE */}
-          {/* ========================================================= */}
           <View style={styles.card}>
             <View style={styles.row}>
               <Car size={18} />
@@ -463,12 +461,11 @@ const togglePet = (type: string) => {
                         styles.glassCard,
                         selected && styles.glassCardSelected,
                         item.isBooked && styles.glassCardBooked,
-                        item.isOfferVehicle && !selected && styles.glassCardOffer, // 🔥 Style pour véhicule de l'offre
+                        item.isOfferVehicle && !selected && styles.glassCardOffer,
                       ]}
                     >
                       <View style={[styles.statusDot, { backgroundColor: item.is_active ? "#22C55E" : "#EF4444" }]} />
                       
-                      {/* Badge "Offre" si c'est le véhicule recommandé */}
                       {item.isOfferVehicle && (
                         <View style={styles.offerVehicleBadge}>
                           <Star size={10} color="#fff" />
@@ -476,7 +473,6 @@ const togglePet = (type: string) => {
                         </View>
                       )}
                       
-                      {/* Badge réservé si nécessaire */}
                       {item.isBooked && (
                         <View style={styles.bookedBadge}>
                           <Text style={styles.bookedBadgeText}>{t("booked")}</Text>
@@ -518,7 +514,6 @@ const togglePet = (type: string) => {
             )}
           </View>
 
-          {/* SEATS - Synchronisé avec le véhicule sélectionné */}
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>
               {t("chooseSeats")} • {selectedVehicle?.seats} {t("seats")}
@@ -554,7 +549,6 @@ const togglePet = (type: string) => {
             )}
           </View>
 
-          {/* OPTIONS */}
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>{t("options")}</Text>
 
@@ -573,10 +567,16 @@ const togglePet = (type: string) => {
               ))}
             </ScrollView>
 
-            {/* Luggage */}
+            {/* Luggage - Switch synchronisé */}
             <View style={styles.optionRow}>
               <Text>{t("luggageOnBoard")}</Text>
-              <Switch value={luggageOnBoard} onValueChange={setLuggageOnBoard} />
+              <Switch 
+                value={luggageOnBoard} 
+                onValueChange={(value) => {
+                  setLuggageOnBoard(value);
+                  // Pas besoin d'action supplémentaire, le contrôleur reçoit la valeur directement
+                }} 
+              />
             </View>
 
             {/* Pets */}
@@ -598,7 +598,6 @@ const togglePet = (type: string) => {
             </ScrollView>
           </View>
 
-          {/* TOTAL - Affichage amélioré */}
           <View style={styles.card}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>{t("total")}</Text>
@@ -612,9 +611,6 @@ const togglePet = (type: string) => {
           </View>
         </ScrollView>
 
-        {/* ========================================================= */}
-        {/* 🔹 BOUTON DE CONFIRMATION DYNAMIQUE */}
-        {/* ========================================================= */}
         <TouchableOpacity 
           style={[
             styles.confirmBtn, 
@@ -628,11 +624,10 @@ const togglePet = (type: string) => {
           </Text>
         </TouchableOpacity>
 
-        {/* SUCCESS */}
         <Modal visible={showSuccess} transparent animationType="fade">
           <Pressable style={styles.successOverlay} onPress={closeSheet}>
             <View style={styles.successBox}>
-              <Text style={styles.successTitle}>{t("bookingSent")} 🎉</Text>
+              <Text style={styles.successTitle}>{t("bookingConfirmed")} 🎉</Text>
               <TouchableOpacity style={styles.successBtn} onPress={closeSheet}>
                 <Text style={{ color: "#fff" }}>OK</Text>
               </TouchableOpacity>
@@ -661,9 +656,6 @@ const styles = StyleSheet.create({
   driverSeat: { backgroundColor: "#9CA3AF" },
   optionRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
   
-  // =========================================================
-  // 🔹 STYLES POUR LE TOTAL AMÉLIORÉ
-  // =========================================================
   totalRow: { 
     flexDirection: "row", 
     justifyContent: "space-between",
@@ -686,9 +678,6 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   
-  // =========================================================
-  // 🔹 BOUTON DE CONFIRMATION DYNAMIQUE
-  // =========================================================
   confirmBtn: { 
     position: "absolute", 
     bottom: Platform.OS === "android" ? 20 : 30, 
@@ -719,9 +708,6 @@ const styles = StyleSheet.create({
   successTitle: { fontSize: 18, fontWeight: "700" },
   successBtn: { marginTop: 16, backgroundColor: "#059669", paddingHorizontal: 30, paddingVertical: 10, borderRadius: 12 },
   
-  // =========================================================
-  // 🔹 STYLES POUR VÉHICULES (inchangés)
-  // =========================================================
   glassCard: { 
     backgroundColor: "hsla(0, 0%, 100%, 0.75)", 
     padding: 18, 
@@ -807,7 +793,6 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 12 },
   metaText: { fontSize: 12, color: "#4B5563" },
 
-  // Message pour véhicule réservé
   bookedMessage: {
     backgroundColor: "#FEF2F2",
     padding: 20,
@@ -844,7 +829,6 @@ const styles = StyleSheet.create({
   },
   petCardSelected: {
     backgroundColor: "#059669",
-    color: "#cbc7b7"
   },
   petLabel: {
     marginTop: 8,

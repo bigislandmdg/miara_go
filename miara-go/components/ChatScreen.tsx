@@ -1,4 +1,4 @@
-// ChatScreen.tsx - Version finale complète
+// ChatScreen.tsx - Version avec traductions pour le modal de contact
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -309,26 +309,25 @@ export function ChatScreen({
         let passengerInfo = null;
         
         for (const msg of formatted) {
-        // Dans la partie où on extrait driverInfo
-        if (msg.sender_role === "driver") {
-        driverInfo = {
-            id: parseInt(msg.sender_id || "0"),
-            nom: msg.sender_nom || "",
-            prenom: msg.sender_prenom || "",
-            phone: msg.sender_id === "1" ? "+261341234567" : "", // Numéro direct pour le conducteur
-            role: "driver" as "user" | "driver",
-            rating: 4.5,
-          };
-        } else if (msg.receiver_role === "driver") {
-        driverInfo = {
-          id: parseInt(msg.receiver_id || "0"),
-          nom: msg.receiver_nom || "",
-          prenom: msg.receiver_prenom || "",
-          phone: msg.receiver_id === "1" ? "+261341234567" : "",
-          role: "driver" as "user" | "driver",
-          rating: 4.5,
-        };
-       }
+          if (msg.sender_role === "driver") {
+            driverInfo = {
+              id: parseInt(msg.sender_id || "0"),
+              nom: msg.sender_nom || "",
+              prenom: msg.sender_prenom || "",
+              phone: msg.sender_id === "1" ? "+261341234567" : "",
+              role: "driver" as "user" | "driver",
+              rating: 4.5,
+            };
+          } else if (msg.receiver_role === "driver") {
+            driverInfo = {
+              id: parseInt(msg.receiver_id || "0"),
+              nom: msg.receiver_nom || "",
+              prenom: msg.receiver_prenom || "",
+              phone: msg.receiver_id === "1" ? "+261341234567" : "",
+              role: "driver" as "user" | "driver",
+              rating: 4.5,
+            };
+          }
           
           if (msg.sender_role === "user") {
             passengerInfo = {
@@ -406,54 +405,52 @@ export function ChatScreen({
   };
 
   /* ===================== FETCH OTHER USER PHONE ===================== */
-  /* ===================== FETCH OTHER USER PHONE ===================== */
-  /* ===================== FETCH OTHER USER PHONE ===================== */
-useEffect(() => {
-  const fetchOtherUserPhone = async () => {
-    if (!otherUser) return;
+  useEffect(() => {
+    const fetchOtherUserPhone = async () => {
+      if (!otherUser) return;
 
-    try {
-      console.log("🔍 Fetching phone for user ID:", otherUser.id);
-      const res = await fetch(`http://10.0.2.2:8080/users/${otherUser.id}`);
-      
-      if (res.ok) {
-        const text = await res.text();
-        console.log("📞 Raw response:", text);
+      try {
+        console.log("🔍 Fetching phone for user ID:", otherUser.id);
+        const res = await fetch(`http://10.0.2.2:8080/users/${otherUser.id}`);
         
-        if (!text || text.trim() === "") {
-          console.log("⚠️ Empty response");
-          return;
-        }
-        
-        const data = JSON.parse(text);
-        console.log("✅ Parsed user data:", data);
-        
-        const user = data.user || data;
-        if (user && user.phone) {
-          setOtherUser(prev => ({
-            id: prev?.id || 0,
-            nom: prev?.nom || "",
-            prenom: prev?.prenom || "",
-            phone: user.phone,
-            role: prev?.role || "driver",
-            rating: prev?.rating || 4.5,
-          }));
-          console.log("📞 Phone number set to:", user.phone);
+        if (res.ok) {
+          const text = await res.text();
+          console.log("📞 Raw response:", text);
+          
+          if (!text || text.trim() === "") {
+            console.log("⚠️ Empty response");
+            return;
+          }
+          
+          const data = JSON.parse(text);
+          console.log("✅ Parsed user data:", data);
+          
+          const user = data.user || data;
+          if (user && user.phone) {
+            setOtherUser(prev => ({
+              id: prev?.id || 0,
+              nom: prev?.nom || "",
+              prenom: prev?.prenom || "",
+              phone: user.phone,
+              role: prev?.role || "driver",
+              rating: prev?.rating || 4.5,
+            }));
+            console.log("📞 Phone number set to:", user.phone);
+          } else {
+            console.log("⚠️ No phone number found in response");
+          }
         } else {
-          console.log("⚠️ No phone number found in response");
+          console.log("❌ HTTP error:", res.status);
         }
-      } else {
-        console.log("❌ HTTP error:", res.status);
+      } catch (error) {
+        console.log("❌ Error fetching phone:", error);
       }
-    } catch (error) {
-      console.log("❌ Error fetching phone:", error);
-    }
-  };
+    };
 
-  if (otherUser && !otherUser.phone) {
-    fetchOtherUserPhone();
-  }
-}, [otherUser]);
+    if (otherUser && !otherUser.phone) {
+      fetchOtherUserPhone();
+    }
+  }, [otherUser]);
 
   /* ===================== START FETCHING ===================== */
   useEffect(() => {
@@ -945,7 +942,7 @@ useEffect(() => {
         </TouchableOpacity>
       </Animated.View>
 
-      {/* CONTACT MODAL */}
+      {/* CONTACT MODAL AVEC TRADUCTIONS */}
       <Modal
         visible={contactModalVisible}
         transparent
@@ -960,7 +957,7 @@ useEffect(() => {
           <View style={styles.contactModal}>
             <View style={styles.contactModalHeader}>
               <Text style={styles.contactModalTitle}>
-                Contacter {otherUser?.prenom} {otherUser?.nom}
+                {t("contact")} {otherUser?.prenom} {otherUser?.nom}
               </Text>
               <TouchableOpacity onPress={() => setContactModalVisible(false)}>
                 <X size={24} color="#6B7280" />
@@ -972,8 +969,8 @@ useEffect(() => {
                 <Phone size={22} color="#fff" />
               </View>
               <View style={styles.contactTextContainer}>
-                <Text style={styles.contactOptionTitle}>Appeler</Text>
-                <Text style={styles.contactOptionNumber}>{otherUser?.phone || "Numéro non disponible"}</Text>
+                <Text style={styles.contactOptionTitle}>{t("call")}</Text>
+                <Text style={styles.contactOptionNumber}>{otherUser?.phone || t("numberNotAvailable")}</Text>
               </View>
             </TouchableOpacity>
 
@@ -982,8 +979,8 @@ useEffect(() => {
                 <MessageCircle size={22} color="#fff" />
               </View>
               <View style={styles.contactTextContainer}>
-                <Text style={styles.contactOptionTitle}>WhatsApp</Text>
-                <Text style={styles.contactOptionNumber}>{otherUser?.phone || "Numéro non disponible"}</Text>
+                <Text style={styles.contactOptionTitle}>{t("whatsapp")}</Text>
+                <Text style={styles.contactOptionNumber}>{otherUser?.phone || t("numberNotAvailable")}</Text>
               </View>
             </TouchableOpacity>
 
@@ -992,13 +989,13 @@ useEffect(() => {
                 <MessageCircle size={22} color="#fff" />
               </View>
               <View style={styles.contactTextContainer}>
-                <Text style={styles.contactOptionTitle}>SMS</Text>
-                <Text style={styles.contactOptionNumber}>{otherUser?.phone || "Numéro non disponible"}</Text>
+                <Text style={styles.contactOptionTitle}>{t("sms")}</Text>
+                <Text style={styles.contactOptionNumber}>{otherUser?.phone || t("numberNotAvailable")}</Text>
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.contactCancel} onPress={() => setContactModalVisible(false)}>
-              <Text style={styles.contactCancelText}>Annuler</Text>
+              <Text style={styles.contactCancelText}>{t("cancel")}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -1132,9 +1129,10 @@ const styles = StyleSheet.create({
   },
   
   tripInfoClose: {
-    fontSize: 18,
+    fontSize: 14,
     color: "#9CA3AF",
     fontWeight: "600",
+    paddingLeft: 100,
   },
   
   tripInfoRow: {
@@ -1317,22 +1315,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   contactModal: {
-    backgroundColor: "#fff",
-    borderRadius: 24,
-    padding: 20,
-    width: "85%",
-    alignSelf: "center",
+     backgroundColor: "#fff",
+     borderRadius: 24,
+     padding: 20,
+     width: "90%",
+     alignSelf: "center",
   },
   contactModalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
+     flexDirection: "row",
+     justifyContent: "space-between",
+     alignItems: "center",
+     marginBottom: 20,
   },
   contactModalTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: "#111827",
+    flex: 1, // 🔹 Permet au titre de prendre l'espace disponible
+    flexWrap: "wrap", // 🔹 Permet au texte de passer à la ligne si nécessaire
+  },
+  contactModalClose: {
+    padding: 4, // 🔹 Réduit le padding
+    marginLeft: 8, // 🔹 Espace entre le titre et l'icône
   },
   contactOption: {
     flexDirection: "row",
@@ -1347,7 +1351,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 10
   },
   contactTextContainer: {
     flex: 1,
