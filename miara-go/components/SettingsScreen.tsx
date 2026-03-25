@@ -73,36 +73,36 @@ const SETTINGS_DATA: SettingItem[] = [
   {
     id: "personalInfo",
     titleKey: "personalInfo",
-    descriptionKey: "Vos informations personnelles",
+    descriptionKey: "personalInfoDesc",
     icon: "user",
     type: "info",
     section: "account",
-    info: "Voir mes informations",
+    info: "personalInfoInfo",
   },
   {
     id: "paymentMethods",
     titleKey: "paymentMethods",
-    descriptionKey: "Gérez vos moyens de paiement",
+    descriptionKey: "paymentMethodsDesc",
     icon: "credit-card",
     type: "info",
     section: "account",
-    info: "Cartes, Mobile Money, espèces",
+    info: "paymentMethodsInfo",
   },
   {
     id: "savedPlaces",
     titleKey: "savedPlaces",
-    descriptionKey: "Domicile, Travail, Lieux favoris",
+    descriptionKey: "savedPlacesDesc",
     icon: "map-pin",
     type: "info",
     section: "account",
-    info: "2 lieux enregistrés",
+    info: "savedPlacesInfo",
   },
 
   // PREFERENCES
   {
     id: "notifications",
     titleKey: "notifications",
-    descriptionKey: "Alertes et rappels",
+    descriptionKey: "notificationsDesc",
     icon: "bell",
     type: "toggle",
     section: "preferences",
@@ -110,25 +110,25 @@ const SETTINGS_DATA: SettingItem[] = [
   {
     id: "privacy",
     titleKey: "privacyPolicy",
-    descriptionKey: "Comment nous protégeons vos données",
+    descriptionKey: "privacyPolicyDesc",
     icon: "shield",
     type: "info",
     section: "preferences",
-    info: "Chiffrement, RGPD",
+    info: "privacyPolicyInfo",
   },
   {
     id: "security",
     titleKey: "security",
-    descriptionKey: "Authentification à deux facteurs",
+    descriptionKey: "securityDesc",
     icon: "lock",
     type: "info",
     section: "preferences",
-    info: "Sécurisez votre compte",
+    info: "securityInfo",
   },
   {
     id: "language",
     titleKey: "language",
-    descriptionKey: "Français, English, Malagasy",
+    descriptionKey: "languageDesc",
     icon: "globe",
     type: "language",
     section: "preferences",
@@ -138,16 +138,16 @@ const SETTINGS_DATA: SettingItem[] = [
   {
     id: "help",
     titleKey: "helpCenter",
-    descriptionKey: "FAQ, tutoriels, assistance",
+    descriptionKey: "helpCenterDesc",
     icon: "help-circle",
     type: "info",
     section: "support",
-    info: "support@miarago.com",
+    info: "helpCenterInfo",
   },
   {
     id: "contact",
     titleKey: "contact",
-    descriptionKey: "Contactez-nous",
+    descriptionKey: "contactDesc",
     icon: "phone",
     type: "contact",
     section: "support",
@@ -155,7 +155,7 @@ const SETTINGS_DATA: SettingItem[] = [
   {
     id: "invite",
     titleKey: "invite",
-    descriptionKey: "Partagez MiaraGo avec vos amis",
+    descriptionKey: "inviteDesc", // 🔹 Clé de traduction dynamique
     icon: "share-2",
     type: "share",
     section: "support",
@@ -222,7 +222,7 @@ export default function SettingsScreen({ onBack, onNavigate }: Props) {
   const shareApp = async () => {
     try {
       await Share.share({
-        message: t("supportActions.inviteMessage"),
+        message: t("inviteMessage"),
       });
     } catch (error) {
       console.log("Share error", error);
@@ -242,7 +242,7 @@ export default function SettingsScreen({ onBack, onNavigate }: Props) {
   const showPaymentMethods = () => {
     setSelectedInfo({
       title: t("paymentMethods"),
-      content: t("paymentMethodsInfo") + "\n\n• Carte bancaire\n• Mobile Money\n• Espèces\n\nAppuyez sur 'Ajouter' pour enregistrer un moyen de paiement",
+      content: t("paymentMethodsInfoContent") + "\n\n• Carte bancaire\n• Mobile Money\n• Espèces\n\n" + t("paymentMethodsAdd"),
     });
     setInfoModal(true);
   };
@@ -250,7 +250,7 @@ export default function SettingsScreen({ onBack, onNavigate }: Props) {
   const showSavedPlaces = () => {
     setSelectedInfo({
       title: t("savedPlaces"),
-      content: t("savedPlacesInfo") + "\n\n• Domicile\n• Travail\n• École\n\n2 lieux enregistrés",
+      content: t("savedPlacesInfoContent") + "\n\n• Domicile\n• Travail\n• École\n\n2 " + t("placesSaved"),
     });
     setInfoModal(true);
   };
@@ -258,7 +258,7 @@ export default function SettingsScreen({ onBack, onNavigate }: Props) {
   const showPrivacyPolicy = () => {
     setSelectedInfo({
       title: t("privacyPolicy"),
-      content: t("privacyPolicyInfo"),
+      content: t("privacyPolicyInfoContent"),
     });
     setInfoModal(true);
   };
@@ -266,7 +266,7 @@ export default function SettingsScreen({ onBack, onNavigate }: Props) {
   const showSecurity = () => {
     setSelectedInfo({
       title: t("security"),
-      content: t("securityInfo") + "\n\n• Authentification à deux facteurs\n• Historique des connexions\n• Appareils connectés",
+      content: t("securityInfoContent") + "\n\n• " + t("twoFactorAuth") + "\n• " + t("loginHistory") + "\n• " + t("connectedDevices"),
     });
     setInfoModal(true);
   };
@@ -274,7 +274,7 @@ export default function SettingsScreen({ onBack, onNavigate }: Props) {
   const showHelpCenter = () => {
     setSelectedInfo({
       title: t("helpCenter"),
-      content: t("helpCenterInfo") + "\n\n📧 support@miarago.com\n🌐 miarago.com/help",
+      content: t("helpCenterInfoContent") + "\n\n📧 support@miarago.com\n🌐 miarago.com/help",
     });
     setInfoModal(true);
   };
@@ -335,12 +335,12 @@ export default function SettingsScreen({ onBack, onNavigate }: Props) {
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>{t(item.titleKey)}</Text>
             {item.descriptionKey && (
-              <Text style={styles.description}>{item.descriptionKey}</Text>
+              <Text style={styles.description}>{t(item.descriptionKey)}</Text>
             )}
             {item.info && (
               <View style={styles.infoRow}>
                 <Info size={12} color="#9CA3AF" />
-                <Text style={styles.infoText}>{item.info}</Text>
+                <Text style={styles.infoText}>{t(item.info)}</Text>
               </View>
             )}
           </View>
@@ -693,4 +693,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-

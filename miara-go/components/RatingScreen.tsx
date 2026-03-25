@@ -308,7 +308,7 @@ const RatingScreen: React.FC<RatingScreenProps> = ({
   const renderStar = (index: number) => {
     const isActive = index < rating;
     const isHovered = index <= hoveredStar;
-    const starColor = isActive || isHovered ? "#F59E0B" : "#E5E7EB";
+    const starColor = isActive || isHovered ? "#F59E0B" : "#D1D5DB";
     const fillColor = isActive || isHovered ? "#F59E0B" : "none";
 
     return (
@@ -334,38 +334,27 @@ const RatingScreen: React.FC<RatingScreenProps> = ({
   /* ================== SKELETON UI ================== */
   if (loadingProfile) {
     return (
-      <LinearGradient
-        colors={["#f0fdf4", "#dcfce7"]}
-        style={styles.container}
-      >
+      <View style={styles.container}>
         <Animated.View style={[styles.skeletonCard, { opacity: skeletonOpacity }]} />
-      </LinearGradient>
+      </View>
     );
   }
 
   /* ================== UI ================== */
   return (
-    <LinearGradient
-      colors={["#f0fdf4", "#dcfce7"]}
-      style={styles.container}
-    >
-      {/* HEADER MODERNE */}
-      <LinearGradient
-        colors={["#047857", "#059669"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
+    <View style={styles.container}>
+      {/* HEADER */}
+      <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.headerButton}>
-          <Feather name="arrow-left" size={22} color="#fff" />
+          <Feather name="arrow-left" size={22} color="#f6f6f7" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("rateRide")}</Text>
         <View style={{ width: 40 }} />
-      </LinearGradient>
+      </View>
 
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#047857" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#059669" />
         }
         showsVerticalScrollIndicator={false}
       >
@@ -381,12 +370,9 @@ const RatingScreen: React.FC<RatingScreenProps> = ({
           {/* PROFIL DE L'UTILISATEUR CONNECTÉ */}
           {profile && (
             <View style={styles.profileSection}>
-              <LinearGradient
-                colors={["#ecfdf5", "#d1fae5"]}
-                style={styles.avatarContainer}
-              >
-                <User size={40} color="#047857" />
-              </LinearGradient>
+              <View style={styles.avatarContainer}>
+                <User size={40} color="#059669" />
+              </View>
               <View style={styles.profileInfo}>
                 <Text style={styles.name}>{profile.prenom} {profile.nom}</Text>
                 <View style={styles.roleBadge}>
@@ -406,12 +392,9 @@ const RatingScreen: React.FC<RatingScreenProps> = ({
             <Text style={styles.sectionLabel}>{t("youAreRating")}</Text>
             
             <View style={styles.ratedUserCard}>
-              <LinearGradient
-                colors={["#fef3c7", "#fde68a"]}
-                style={styles.ratedAvatar}
-              >
-                <User size={32} color="#92400E" />
-              </LinearGradient>
+              <View style={styles.ratedAvatar}>
+                <User size={32} color="#059669" />
+              </View>
               
               <View style={styles.ratedInfo}>
                 <Text style={styles.ratedName}>
@@ -474,7 +457,7 @@ const RatingScreen: React.FC<RatingScreenProps> = ({
                   { transform: [{ scale: successScale }] }
                 ]}
               >
-                <Award size={16} color="#92400E" />
+                <Award size={16} color="#F59E0B" />
                 <Text style={styles.highRatingText}>
                   {t("driverBonus")}
                 </Text>
@@ -538,16 +521,17 @@ const RatingScreen: React.FC<RatingScreenProps> = ({
           )}
         </Animated.View>
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 };
 
 export default RatingScreen;
 
-/* ================== STYLES AMÉLIORÉS ================== */
+/* ================== STYLES - FOND BLANC ================== */
 const styles = StyleSheet.create({
   container: { 
     flex: 1,
+    backgroundColor: "#FFFFFF",
   },
   
   header: {
@@ -557,40 +541,37 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "ios" ? 60 : 40,
     paddingBottom: 20,
     paddingHorizontal: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 10,
+    backgroundColor: "#059669",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
   },
   
   headerButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: "#059669",
     justifyContent: "center",
     alignItems: "center",
   },
   
   headerTitle: { 
     fontSize: 20, 
-    fontWeight: "800", 
-    color: "white",
-    letterSpacing: 0.5,
+    fontWeight: "700", 
+    color: "#f6f7fb",
   },
 
   card: {
     backgroundColor: "#ffffff",
-    margin: 20,
-    marginTop: 10,
-    borderRadius: 30,
-    padding: 24,
+    margin: 16,
+    marginTop: 8,
+    borderRadius: 24,
+    padding: 20,
     shadowColor: "#000",
     shadowOpacity: 0.05,
-    shadowRadius: 15,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 8,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
   },
 
   profileSection: {
@@ -600,17 +581,13 @@ const styles = StyleSheet.create({
   },
 
   avatarContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#F3F4F6",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
-    shadowColor: "#047857",
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
   },
 
   profileInfo: {
@@ -618,39 +595,39 @@ const styles = StyleSheet.create({
   },
 
   name: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 16,
+    fontWeight: "600",
     color: "#111827",
     marginBottom: 4,
   },
 
   roleBadge: {
-    backgroundColor: "#ecfdf5",
-    paddingHorizontal: 12,
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 20,
+    borderRadius: 16,
     alignSelf: "flex-start",
   },
 
   roleText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#047857",
+    fontSize: 11,
+    fontWeight: "500",
+    color: "#6B7280",
   },
 
   divider: {
     height: 1,
-    backgroundColor: "#f0f0f0",
-    marginVertical: 20,
+    backgroundColor: "#F3F4F6",
+    marginVertical: 16,
   },
 
   ratedUserSection: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
 
   sectionLabel: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "500",
     color: "#6B7280",
     marginBottom: 12,
     textTransform: "uppercase",
@@ -660,19 +637,20 @@ const styles = StyleSheet.create({
   ratedUserCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f9fafb",
-    padding: 16,
+    backgroundColor: "#F9FAFB",
+    padding: 14,
     borderRadius: 20,
-    marginBottom: 16,
+    marginBottom: 12,
   },
 
   ratedAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#F3F4F6",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
+    marginRight: 14,
   },
 
   ratedInfo: {
@@ -680,23 +658,23 @@ const styles = StyleSheet.create({
   },
 
   ratedName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
     color: "#111827",
     marginBottom: 4,
   },
 
   ratedRoleBadge: {
-    backgroundColor: "#fef3c7",
+    backgroundColor: "#F3F4F6",
   },
 
   ratedRoleText: {
-    color: "#92400E",
+    color: "#6B7280",
   },
 
   tripDetails: {
-    backgroundColor: "#f9fafb",
-    padding: 16,
+    backgroundColor: "#F9FAFB",
+    padding: 14,
     borderRadius: 16,
   },
 
@@ -708,7 +686,7 @@ const styles = StyleSheet.create({
   },
 
   tripDetailText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "500",
     color: "#374151",
   },
@@ -719,43 +697,43 @@ const styles = StyleSheet.create({
   },
 
   tripDetailSmall: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#6B7280",
   },
 
   ratingContainer: {
     alignItems: "center",
-    marginVertical: 24,
+    marginVertical: 20,
   },
 
   ratingLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#047857",
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#059669",
     marginBottom: 12,
   },
 
   stars: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 8,
+    gap: 6,
   },
 
   highRatingBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fef3c7",
-    paddingHorizontal: 16,
+    backgroundColor: "#FEF3C7",
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 30,
-    marginTop: 16,
-    gap: 8,
+    borderRadius: 24,
+    marginTop: 14,
+    gap: 6,
   },
 
   highRatingText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#92400E",
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#F59E0B",
   },
 
   commentContainer: {
@@ -764,45 +742,45 @@ const styles = StyleSheet.create({
 
   commentLabel: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "500",
     color: "#374151",
     marginBottom: 8,
   },
 
   input: {
-    backgroundColor: "#f9fafb",
+    backgroundColor: "#F9FAFB",
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 20,
-    padding: 16,
-    minHeight: 120,
-    fontSize: 15,
+    borderColor: "#E5E7EB",
+    borderRadius: 16,
+    padding: 14,
+    minHeight: 100,
+    fontSize: 14,
     color: "#111827",
     textAlignVertical: "top",
   },
 
   charCount: {
     textAlign: "right",
-    fontSize: 12,
+    fontSize: 11,
     color: "#9CA3AF",
     marginTop: 4,
-    marginBottom: 16,
+    marginBottom: 12,
   },
 
   submitButton: {
-    backgroundColor: "#047857",
-    paddingVertical: 18,
-    borderRadius: 30,
+    backgroundColor: "#059669",
+    paddingVertical: 16,
+    borderRadius: 28,
     alignItems: "center",
-    shadowColor: "#047857",
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 8,
+    shadowColor: "#059669",
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
   },
 
   submitButtonDisabled: {
-    backgroundColor: "#9ca3af",
+    backgroundColor: "#9CA3AF",
     shadowOpacity: 0.1,
   },
 
@@ -814,14 +792,14 @@ const styles = StyleSheet.create({
 
   submitButtonText: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
-    letterSpacing: 0.5,
+    fontSize: 15,
+    fontWeight: "600",
+    letterSpacing: 0.3,
   },
 
   hint: {
     textAlign: "center",
-    fontSize: 13,
+    fontSize: 12,
     color: "#9CA3AF",
     marginTop: 12,
   },
@@ -829,7 +807,7 @@ const styles = StyleSheet.create({
   skeletonCard: {
     height: 500,
     margin: 20,
-    borderRadius: 30,
-    backgroundColor: "#E5E7EB",
+    borderRadius: 24,
+    backgroundColor: "#F3F4F6",
   },
 });
