@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useMemo } from "react";
+// DriverHome.tsx - Version complète avec PopUpRatingScreen
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -10,6 +11,9 @@ import {
   RefreshControl,
   Modal,
   TextInput,
+  Animated,
+  Dimensions,
+  Platform,
 } from "react-native";
 import {
   Calendar,
@@ -31,6 +35,10 @@ import { SideMenu } from "./SideMenu";
 import { MainView } from "./Navigation";
 import { PublishScreen } from "./PublishScreen";
 import RideRequestScreen from "./RideRequestScreen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import PopUpRatingScreen from "./PopUpRatingScreen"; // 🔹 IMPORT DU COMPOSANT
+
+const { width, height } = Dimensions.get("window");
 
 /* ===================== TYPES ===================== */
 type TripStatus = "open" | "full" | "completed" | "cancelled";
@@ -92,18 +100,152 @@ export function DriverHome({
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
   const [selectedRideRequest, setSelectedRideRequest] = useState<RideRequest | null>(null);
   const [showPublishScreen, setShowPublishScreen] = useState(false);
-
-
   const [showRideRequestScreen, setShowRideRequestScreen] = useState(false);
- 
   const [totalCredits, setTotalCredits] = useState(0);
   const [menuVisible, setMenuVisible] = useState(false);
   
+  // =========================================================
+  // 🔹 ÉTAT POUR LE POPUP DE RATING VITA MALAGASY
+  // =========================================================
+  const [showVitaPopup, setShowVitaPopup] = useState(false);
+  const [hasShownPopup, setHasShownPopup] = useState(false);
+  
   const { t } = useTranslation();
+
+  /* ===================== EFFET POUR AFFICHER LE POPUP ===================== */
+  useEffect(() => {
+    const checkPopupStatus = async () => {
+      try {
+        const hasSeen = await AsyncStorage.getItem("hasSeenVitaPopup");
+        if (!hasSeen && !hasShownPopup) {
+          // Attendre 1 seconde après le chargement pour afficher le popup
+          setTimeout(() => {
+            setShowVitaPopup(true);
+            setHasShownPopup(true);
+          }, 1000);
+        }
+      } catch (error) {
+        console.log("Error checking popup status", error);
+      }
+    };
+    
+    checkPopupStatus();
+  }, []);
+
+  /* ===================== GESTION DU SUBMIT DU RATING ===================== */
+  const handleRatingSubmit = (rating: number, comment: string) => {
+    console.log("Rating submitted:", { rating, comment, userType: "driver" });
+    
+    // Bonus pour les notes élevées (≥ 4)
+    if (rating >= 4) {
+      console.log("Bonus credits awarded for high rating!");
+      Alert.alert(
+        t("vitaPopup.bonusTitle") || "Bonus ! 🎉",
+        t("vitaPopup.bonusMessage") || "+2 crédits offerts pour votre soutien à l'économie locale !",
+        [{ text: "Merci !" }]
+      );
+    }
+  };
+
+  /* ===================== FETCH ===================== */
+  useEffect(() => {
+    loadAll();
+  }, []);
+
+  const loadAll = async () => {
+    await Promise.all([fetchTrips(), fetchRideRequests(), fetchCredits()]);
+  };
+
+  const fetchTrips = async () => {
+    try {
+      setLoadingTrips(true);
+      const res = await fetch("http://10.0.2.2:8080/rides");
+      const data = await res.json();
+      if (Array.isArray(data?.rides)) setTrips(data.rides);
+      else setTrips([]);
+    } catch {
+      setTrips([]);
+    } finally {
+      setLoadingTrips(false);
+    }
+  };
+
+  const fetchRideRequests = async () => {
+    try {
+      setLoadingRequests(true);
+      setLoadingOffers(true);
+
+      const res = await fetch("http://10.0.2.2:8080/ride-requests");
+      const data = await res.json();
+
+      if (Array.isArray(data?.ride_requests)) {
+        setRideRequests(data.ride_requests);
+      } else {
+        setRideRequests([]);
+      }
+    } catch {
+      setRideRequests([]);
+    } finally {
+      setLoadingRequests(false);
+      setLoadingOffers(false);
+    }
+  };
+
+  const deleteTrip = async (id: string) => {
+    try {
+      const res = await fetch(`http://10.0.2.2:8080/rides/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.status) {
+        throw new Error("Delete failed");
+      }
+
+      setTrips(prev => prev.filter(t => t.id !== id));
+      Alert.alert("Succès", "Trajet supprimé.");
+    } catch (error) {
+      Alert.alert("Erreur", "Impossible de supprimer le trajet.");
+    }
+  };
+
+  const deleteRideRequest = async (id: string) => {
+    try {
+      const res = await fetch(`http://10.0.2.2:8080/ride-requests/${id}`, 
+        { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok || !data?.status) throw new Error("Delete failed");
+      setRideRequests(prev => prev.filter(r => r.id !== id));
+      Alert.alert("Succès", "Demande supprimée.");
+    } catch { 
+      Alert.alert("Erreur", "Impossible de supprimer la demande."); 
+    }
+  };
+
+  const fetchCredits = async () => {
+    try {
+      const res = await fetch("http://10.0.2.2:8080/credits/wallet/1");
+      const data = await res.json();
+      const valid = (data.credits || [])
+        .filter((c: any) => c.status === "valid")
+        .reduce((sum: number, c: any) => sum + Number(c.credit_amount), 0);
+      setTotalCredits(valid);
+    } catch {
+      setTotalCredits(0);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    setTripPage(1);
+    setRequestPage(1);
+    await loadAll();
+    setRefreshing(false);
+  };
 
   /* ===================== Filters & Modal ===================== */
   const [modalVisible, setModalVisible] = useState(false);
- 
   const [modalType, setModalType] = useState<
     | "date"
     | "departure"
@@ -208,9 +350,7 @@ export function DriverHome({
 
   const [loadingTrips, setLoadingTrips] = useState(true);
   const [loadingRequests, setLoadingRequests] = useState(true);
-  
   const [loadingOffers, setLoadingOffers] = useState(true);
-
   const [refreshing, setRefreshing] = useState(false);
 
   const normalizeDate = (date: string) => {
@@ -219,103 +359,6 @@ export function DriverHome({
     } catch {
       return null;
     }
-  };
- 
-  /* ===================== FETCH ===================== */
-  useEffect(() => {
-    loadAll();
-  }, []);
-
-  const loadAll = async () => {
-    await Promise.all([fetchTrips(), fetchRideRequests(), fetchCredits()]);
-  };
-
-  const fetchTrips = async () => {
-    try {
-      setLoadingTrips(true);
-      const res = await fetch("http://10.0.2.2:8080/rides");
-      const data = await res.json();
-      if (Array.isArray(data?.rides)) setTrips(data.rides);
-      else setTrips([]);
-    } catch {
-      setTrips([]);
-    } finally {
-      setLoadingTrips(false);
-    }
-  };
-
-  const fetchRideRequests = async () => {
-    try {
-      setLoadingRequests(true);
-      setLoadingOffers(true);
-
-      const res = await fetch("http://10.0.2.2:8080/ride-requests");
-      const data = await res.json();
-
-      if (Array.isArray(data?.ride_requests)) {
-        setRideRequests(data.ride_requests);
-      } else {
-        setRideRequests([]);
-      }
-    } catch {
-      setRideRequests([]);
-    } finally {
-      setLoadingRequests(false);
-      setLoadingOffers(false);
-    }
-  };
-
-  const deleteTrip = async (id: string) => {
-    try {
-      const res = await fetch(`http://10.0.2.2:8080/rides/${id}`, {
-        method: "DELETE",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data?.status) {
-        throw new Error("Delete failed");
-      }
-
-      setTrips(prev => prev.filter(t => t.id !== id));
-      Alert.alert("Succès", "Trajet supprimé.");
-    } catch (error) {
-      Alert.alert("Erreur", "Impossible de supprimer le trajet.");
-    }
-  };
-
-  const deleteRideRequest = async (id: string) => {
-    try {
-      const res = await fetch(`http://10.0.2.2:8080/ride-requests/${id}`, 
-        { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok || !data?.status) throw new Error("Delete failed");
-      setRideRequests(prev => prev.filter(r => r.id !== id));
-      Alert.alert("Succès", "Demande supprimée.");
-    } catch { 
-      Alert.alert("Erreur", "Impossible de supprimer la demande."); 
-    }
-  };
-
-  const fetchCredits = async () => {
-    try {
-      const res = await fetch("http://10.0.2.2:8080/credits/wallet/1");
-      const data = await res.json();
-      const valid = (data.credits || [])
-        .filter((c: any) => c.status === "valid")
-        .reduce((sum: number, c: any) => sum + Number(c.credit_amount), 0);
-      setTotalCredits(valid);
-    } catch {
-      setTotalCredits(0);
-    }
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    setTripPage(1);
-    setRequestPage(1);
-    await loadAll();
-    setRefreshing(false);
   };
 
   /* ===================== FILTER LOGIC ===================== */
@@ -395,20 +438,6 @@ export function DriverHome({
         ]
       );
     };
-
-    if (showPublishScreen && selectedRideRequest) {
-      return (
-        <PublishScreen
-          rideRequestId={selectedRideRequest.id}
-          userType="driver"
-          userId={1}
-          onBack={() => {
-            setShowPublishScreen(false);
-            setSelectedRideRequest(null);
-          }}
-        />
-      );
-    }
 
     return (
       <TouchableOpacity
@@ -653,6 +682,15 @@ export function DriverHome({
   /* ===================== UI ===================== */
   return (
     <View style={styles.container}>
+      {/* POPUP VITA MALAGASY - COMPOSANT IMPORTÉ */}
+      <PopUpRatingScreen
+        visible={showVitaPopup}
+        onClose={() => setShowVitaPopup(false)}
+        onRatingSubmit={handleRatingSubmit}
+        userType="driver"
+        userId={1}
+      />
+
       <Header
         title="MiaraGo"
         onNotifications={onNotifications}
@@ -1084,7 +1122,7 @@ const styles = StyleSheet.create({
   },
 
   // =========================================================
-  // 🔹 NOUVEAUX STYLES POUR L'EN-TÊTE DES SECTIONS
+  // 🔹 STYLES POUR L'EN-TÊTE DES SECTIONS
   // =========================================================
   sectionHeader: {
     flexDirection: "row",

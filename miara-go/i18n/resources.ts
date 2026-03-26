@@ -538,6 +538,31 @@ export const resources = {
     question3: "Comment payer ?",
     answer3: "Vous pouvez payer par carte bancaire, Mobile Money ou espèces."
   },
+
+  vitaPopup: {
+        title: "Soutenez l'économie locale ! 🇲🇬",
+        message: "En choisissant MiaraGo, vous contribuez au développement du transport malgache. Chaque trajet partagé fait vivre notre communauté !",
+        titleMg: "Fiaraha-miasa ho an'i Madagasikara ! 🇲🇬",
+        messageMg: "MiaraGo dia manampy ny toekarena eto an-toerana. Misaotra anao nisafidy ny fitaterana malagasy !",
+        titleGreen: "Ensemble pour un Madagascar plus vert ! 🌱",
+        messageGreen: "Moins de voitures, moins de pollution. Vous contribuez à un avenir plus durable pour notre île.",
+        ratingLabel: "Comment soutenez-vous MiaraGo ?",
+        ratingPlaceholder: "Partagez votre expérience avec MiaraGo...",
+        rateUs: "Noter MiaraGo",
+        supportEconomy: "Soutenir l'économie malagasy",
+        bonusMessage: "Merci ! +2 crédits offerts pour votre soutien à l'économie locale 🎉",
+        thanksTitle: "Misaotra ! 🙏",
+        thanksMessage: "Votre soutien à l'économie malagasy est précieux. MiaraGo continuera à vous servir avec cœur.",
+        thanksButton: "MiaraGo 💚",
+        rating5Title: "Misaotra betsaka ! 🙏",
+        rating5Message: "Votre soutien nous touche beaucoup. Ensemble, faisons grandir MiaraGo !",
+        rating5Button: "Merci !",
+        ratingError: "Notez votre expérience",
+        ratingErrorDesc: "Dites-nous ce que vous pensez de MiaraGo !",
+        howDoYouLike: "Comment soutenez-vous MiaraGo ?",
+        shareYourThoughts: "Partagez votre expérience avec MiaraGo...",
+  },
+
   },
   },
 
@@ -1073,6 +1098,32 @@ export const resources = {
     question3: "How to pay?",
     answer3: "You can pay by bank card, Mobile Money or cash."
   },
+  // =========================================================
+      // 🔹 POPUP VITA MALAGASY - ENGLISH TRANSLATIONS
+      // =========================================================
+      vitaPopup: {
+        title: "Support the local economy! 🇲🇬",
+        message: "By choosing MiaraGo, you contribute to the development of Malagasy transport. Every shared ride helps our community thrive!",
+        titleMg: "Let's work together for Madagascar! 🇲🇬",
+        messageMg: "MiaraGo helps the local economy. Thank you for choosing Malagasy transport!",
+        titleGreen: "Together for a greener Madagascar! 🌱",
+        messageGreen: "Fewer cars, less pollution. You're contributing to a more sustainable future for our island.",
+        ratingLabel: "How do you support MiaraGo?",
+        ratingPlaceholder: "Share your experience with MiaraGo...",
+        rateUs: "Rate MiaraGo",
+        supportEconomy: "Support the Malagasy economy",
+        bonusMessage: "Thank you! +2 credits offered for supporting the local economy 🎉",
+        thanksTitle: "Thank you! 🙏",
+        thanksMessage: "Your support for the Malagasy economy is precious. MiaraGo will continue to serve you with heart.",
+        thanksButton: "MiaraGo 💚",
+        rating5Title: "Thank you so much! 🙏",
+        rating5Message: "Your support means a lot to us. Together, let's make MiaraGo grow!",
+        rating5Button: "Thank you!",
+        ratingError: "Rate your experience",
+        ratingErrorDesc: "Tell us what you think about MiaraGo!",
+        howDoYouLike: "How do you support MiaraGo?",
+        shareYourThoughts: "Share your experience with MiaraGo...",
+      },
     },
   },
 
@@ -1611,6 +1662,34 @@ export const resources = {
         question3: "Ahoana no fomba fandoavana?",
         answer3: "Afaka mandoa amin'ny carte bancaire, Mobile Money na vola madinika ianao."
       },
+
+      // 🔹 POPUP VITA MALAGASY - MALAGASY TRANSLATIONS
+      // =========================================================
+      vitaPopup: {
+      title: "Tohano ny toekarena eto an-toerana ! 🇲🇬",
+      message: "Amin'ny fisafidianana an'i MiaraGo, ianao dia manampy ny fampandrosoana ny fitaterana malagasy. Ny dia tsirairay zaraina dia manome aina ny fiaraha-monina misy antsika !",
+      titleMg: "Fiaraha-miasa ho an'i Madagasikara ! 🇲🇬",
+      messageMg: "MiaraGo dia manampy ny toekarena eto an-toerana. Misaotra anao nisafidy ny fitaterana malagasy !",
+      titleGreen: "Hiara-hiasa amin'ny Madagasikara maitso kokoa isika ! 🌱",
+      messageGreen: "Vitsy kokoa ny fiara, vitsy kokoa ny fandotoana. Mandray anjara amin'ny hoavy maharitra kokoa ho an'ny nosintsika ianao.",
+      ratingLabel: "Ahoana ny fanohananao an'i MiaraGo?",
+      ratingPlaceholder: "Zarao ny traikefanao amin'i MiaraGo...",
+      rateUs: "Hanome naoty an'i MiaraGo",
+      supportEconomy: "Manohana ny toekarena malagasy",
+      bonusMessage: "Misaotra! +2 crédits omena ho fanohanana ny toekarena eo an-toerana 🎉",
+      thanksTitle: "Misaotra betsaka ! 🙏",
+      thanksMessage: "Ny fanohananao ny toekarena malagasy dia sarobidy tokoa. MiaraGo dia hanohy hanompo anao am-pitiavana sy am-pahatokiana.",
+      thanksButton: "MiaraGo 💚",
+      rating5Title: "Misaotra indrindra ! 🙏",
+      rating5Message: "Ny fanohananao dia hery lehibe ho anay. Miaraha mitombo sy miroborobo ny MiaraGo isika !",
+      rating5Button: "Misaotra !",
+      ratingError: "Hanome naoty ny traikefanao",
+      ratingErrorDesc: "Lazao izay hevitrao sy ny fahatsapanao momba an'i MiaraGo !",
+      howDoYouLike: "Ahoana no fomba fanohananao an'i MiaraGo ?",
+      shareYourThoughts: "Zarao aminay ny traikefanao momba an'i MiaraGo...",
+      bonusTitle: "Bonus ! 🎉",
+  },
+
      }
   },
 };

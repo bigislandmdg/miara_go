@@ -1,4 +1,4 @@
-// PassengerHome.tsx (version avec "Voir plus" aligné à droite pour les deux sections)
+// PassengerHome.tsx (version avec PopUpRatingScreen)
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   View,
@@ -14,6 +14,7 @@ import {
   Animated,
   Easing,
   Modal,
+  Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { DollarSign, Users, Calendar, Clock, Sliders, Car, X, Filter, Star, ChevronRight } from "lucide-react-native";
@@ -21,6 +22,7 @@ import QRCode from "react-native-qrcode-svg";
 import { Header } from "../components/Header";
 import RideRequestScreen from "./RideRequestScreen";
 import RatingScreen from "./RatingScreen";
+import PopUpRatingScreen from "./PopUpRatingScreen"; // 🔹 IMPORT DU COMPOSANT POPUP
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -99,6 +101,12 @@ export default function PassengerHome({
   const [loadingOffers, setLoadingOffers] = useState(true);
 
   // =========================================================
+  // 🔹 ÉTAT POUR LE POPUP VITA MALAGASY
+  // =========================================================
+  const [showVitaPopup, setShowVitaPopup] = useState(false);
+  const [hasShownPopup, setHasShownPopup] = useState(false);
+
+  // =========================================================
   // 🔹 ÉTATS POUR LES FILTRES AMÉLIORÉS
   // =========================================================
   const [filterVisible, setFilterVisible] = useState(false);
@@ -137,6 +145,41 @@ export default function PassengerHome({
   const PAGE_SIZE = 1;
   const [tripPage, setTripPage] = useState(1);
   const [offerPage, setOfferPage] = useState(1);
+
+  /* ===================== EFFET POUR AFFICHER LE POPUP ===================== */
+  useEffect(() => {
+    const checkPopupStatus = async () => {
+      try {
+        const hasSeen = await AsyncStorage.getItem("hasSeenVitaPopup");
+        if (!hasSeen && !hasShownPopup) {
+          // Attendre 1 seconde après le chargement pour afficher le popup
+          setTimeout(() => {
+            setShowVitaPopup(true);
+            setHasShownPopup(true);
+          }, 1000);
+        }
+      } catch (error) {
+        console.log("Error checking popup status", error);
+      }
+    };
+    
+    checkPopupStatus();
+  }, []);
+
+  /* ===================== GESTION DU SUBMIT DU RATING ===================== */
+  const handleRatingSubmit = (rating: number, comment: string) => {
+    console.log("Rating submitted:", { rating, comment, userType: "passenger" });
+    
+    // Bonus pour les notes élevées (≥ 4)
+    if (rating >= 4) {
+      console.log("Bonus credits awarded for high rating!");
+      Alert.alert(
+        t("vitaPopup.bonusTitle") || "Bonus ! 🎉",
+        t("vitaPopup.bonusMessage") || "+2 crédits offerts pour votre soutien à l'économie locale !",
+        [{ text: "Merci !" }]
+      );
+    }
+  };
 
   // Types de véhicules disponibles (extraits des trajets)
   const vehicleTypes = useMemo(() => {
@@ -535,6 +578,15 @@ export default function PassengerHome({
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
+      {/* POPUP VITA MALAGASY - COMPOSANT IMPORTÉ */}
+      <PopUpRatingScreen
+        visible={showVitaPopup}
+        onClose={() => setShowVitaPopup(false)}
+        onRatingSubmit={handleRatingSubmit}
+        userType="passenger"
+        userId={userId}
+      />
+
       <Header title="MiaraGo" onNotifications={onNotifications} onProfileClick={onProfileClick} />
 
       <View style={styles.searchWrapper}>
@@ -824,6 +876,7 @@ export default function PassengerHome({
     </View>
   );
 }
+
 
 /* ===================== STYLES AMÉLIORÉS ===================== */
 const styles = StyleSheet.create({
