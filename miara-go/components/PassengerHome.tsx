@@ -1,4 +1,4 @@
-// PassengerHome.tsx (version avec PopUpRatingScreen)
+// PassengerHome.tsx (version finale sans bouton de test)
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   View,
@@ -22,7 +22,7 @@ import QRCode from "react-native-qrcode-svg";
 import { Header } from "../components/Header";
 import RideRequestScreen from "./RideRequestScreen";
 import RatingScreen from "./RatingScreen";
-import PopUpRatingScreen from "./PopUpRatingScreen"; // 🔹 IMPORT DU COMPOSANT POPUP
+import PopUpRatingScreen from "./PopUpRatingScreen";
 import { useTranslation } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -151,8 +151,8 @@ export default function PassengerHome({
     const checkPopupStatus = async () => {
       try {
         const hasSeen = await AsyncStorage.getItem("hasSeenVitaPopup");
-        if (!hasSeen && !hasShownPopup) {
-          // Attendre 1 seconde après le chargement pour afficher le popup
+        
+        if (hasSeen !== "true" && !hasShownPopup) {
           setTimeout(() => {
             setShowVitaPopup(true);
             setHasShownPopup(true);
@@ -160,6 +160,13 @@ export default function PassengerHome({
         }
       } catch (error) {
         console.log("Error checking popup status", error);
+        // En cas d'erreur, afficher quand même le popup pour la première fois
+        if (!hasShownPopup) {
+          setTimeout(() => {
+            setShowVitaPopup(true);
+            setHasShownPopup(true);
+          }, 1000);
+        }
       }
     };
     
@@ -172,7 +179,6 @@ export default function PassengerHome({
     
     // Bonus pour les notes élevées (≥ 4)
     if (rating >= 4) {
-      console.log("Bonus credits awarded for high rating!");
       Alert.alert(
         t("vitaPopup.bonusTitle") || "Bonus ! 🎉",
         t("vitaPopup.bonusMessage") || "+2 crédits offerts pour votre soutien à l'économie locale !",
@@ -578,10 +584,12 @@ export default function PassengerHome({
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
-      {/* POPUP VITA MALAGASY - COMPOSANT IMPORTÉ */}
+      {/* POPUP VITA MALAGASY */}
       <PopUpRatingScreen
         visible={showVitaPopup}
-        onClose={() => setShowVitaPopup(false)}
+        onClose={() => {
+          setShowVitaPopup(false);
+        }}
         onRatingSubmit={handleRatingSubmit}
         userType="passenger"
         userId={userId}
