@@ -545,7 +545,7 @@ export default function RideRequestScreen({
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
   sheet: { backgroundColor: "#F9FAFB", borderTopLeftRadius: 28, borderTopRightRadius: 28 },
-  handle: { width: 48, height: 5, backgroundColor: "#D1D5DB", borderRadius: 3, alignSelf: "center", marginVertical: 10 },
+  handle: { width: 49, height: 5, backgroundColor: "#D1D5DB", borderRadius: 3, alignSelf: "center", marginVertical: 10 },
   headerRow: { flexDirection: "row", paddingHorizontal: 16, alignItems: "center" },
   headerTitle: { flex: 1, textAlign: "center", fontSize: 18, fontWeight: "600" },
   card: { backgroundColor: "#fff", margin: 16, padding: 16, borderRadius: 18 },
@@ -605,7 +605,7 @@ uberCard: {
   flexDirection: "row",
   alignItems: "center",
   backgroundColor: "#F9FAFB",
-  padding: 14,
+  padding: 12,
   borderRadius: 16,
   marginBottom: 12,
 },

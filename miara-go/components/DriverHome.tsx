@@ -7,7 +7,6 @@ import {
   FlatList,
   StyleSheet,
   ScrollView,
-  Alert,
   RefreshControl,
   Modal,
   TextInput,
@@ -37,6 +36,8 @@ import { PublishScreen } from "./PublishScreen";
 import RideRequestScreen from "./RideRequestScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PopUpRatingScreen from "./PopUpRatingScreen"; // 🔹 IMPORT DU COMPOSANT
+
+import { Alert } from "react-native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -113,32 +114,51 @@ export function DriverHome({
   const { t } = useTranslation();
 
   /* ===================== EFFET POUR AFFICHER LE POPUP ===================== */
-  useEffect(() => {
-    const checkPopupStatus = async () => {
-      try {
-        const hasSeen = await AsyncStorage.getItem("hasSeenVitaPopup");
-        if (!hasSeen && !hasShownPopup) {
-          // Attendre 1 seconde après le chargement pour afficher le popup
-          setTimeout(() => {
-            setShowVitaPopup(true);
-            setHasShownPopup(true);
-          }, 1000);
-        }
-      } catch (error) {
-        console.log("Error checking popup status", error);
+  /* ===================== EFFET POUR AFFICHER LE POPUP ===================== */
+useEffect(() => {
+  const checkPopupStatus = async () => {
+    try {
+      console.log("🔍 DriverHome - Vérification du popup Vita Malagasy...");
+      
+      // 🔹 DÉCOMMENTEZ POUR RÉINITIALISER ET TESTER
+      await AsyncStorage.removeItem("hasSeenVitaPopup");
+      
+      const hasSeen = await AsyncStorage.getItem("hasSeenVitaPopup");
+      console.log("DriverHome - hasSeenVitaPopup:", hasSeen);
+      console.log("DriverHome - hasShownPopup:", hasShownPopup);
+      
+      if (hasSeen !== "true" && !hasShownPopup) {
+        console.log("✅ DriverHome - Le popup va s'afficher dans 1 seconde...");
+        setTimeout(() => {
+          console.log("🎉 DriverHome - AFFICHAGE DU POPUP !");
+          setShowVitaPopup(true);
+          setHasShownPopup(true);
+        }, 1000);
+      } else {
+        console.log("❌ DriverHome - Popup non affiché car déjà vu ou hasShownPopup = true");
       }
-    };
-    
-    checkPopupStatus();
-  }, []);
+    } catch (error) {
+      console.log("DriverHome - Error checking popup status", error);
+      if (!hasShownPopup) {
+        setTimeout(() => {
+          console.log("🎉 DriverHome - AFFICHAGE DU POPUP (après erreur) !");
+          setShowVitaPopup(true);
+          setHasShownPopup(true);
+        }, 1000);
+      }
+    }
+  };
+  
+  checkPopupStatus();
+}, []);
 
   /* ===================== GESTION DU SUBMIT DU RATING ===================== */
   const handleRatingSubmit = (rating: number, comment: string) => {
-    console.log("Rating submitted:", { rating, comment, userType: "driver" });
+    console.log("DriverHome - Rating submitted:", { rating, comment, userType: "driver" });
     
     // Bonus pour les notes élevées (≥ 4)
     if (rating >= 4) {
-      console.log("Bonus credits awarded for high rating!");
+      console.log("DriverHome - Bonus credits awarded for high rating!");
       Alert.alert(
         t("vitaPopup.bonusTitle") || "Bonus ! 🎉",
         t("vitaPopup.bonusMessage") || "+2 crédits offerts pour votre soutien à l'économie locale !",

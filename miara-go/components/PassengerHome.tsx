@@ -585,16 +585,7 @@ export default function PassengerHome({
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
       {/* POPUP VITA MALAGASY */}
-      <PopUpRatingScreen
-        visible={showVitaPopup}
-        onClose={() => {
-          setShowVitaPopup(false);
-        }}
-        onRatingSubmit={handleRatingSubmit}
-        userType="passenger"
-        userId={userId}
-      />
-
+      
       <Header title="MiaraGo" onNotifications={onNotifications} onProfileClick={onProfileClick} />
 
       <View style={styles.searchWrapper}>

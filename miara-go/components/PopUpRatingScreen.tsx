@@ -1,4 +1,4 @@
-// PopUpRatingScreen.tsx - Version corrigée
+// PopUpRatingScreen.tsx
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -10,7 +10,6 @@ import {
   StyleSheet,
   Dimensions,
   Alert,
-  ActivityIndicator,
 } from "react-native";
 import { Heart, Star, X, Award } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
@@ -43,7 +42,6 @@ export default function PopUpRatingScreen({
   
   const [vitaRating, setVitaRating] = useState(0);
   const [vitaComment, setVitaComment] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Animations
   const popupScale = useRef(new Animated.Value(0)).current;
@@ -51,7 +49,6 @@ export default function PopUpRatingScreen({
   const starScales = useRef(Array.from({ length: 5 }, () => new Animated.Value(1))).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
   const heartBeat = useRef(new Animated.Value(1)).current;
-  const heartBeatAnimation = useRef<Animated.CompositeAnimation | null>(null);
   
   // Messages du popup
   const vitaMessages: VitaMessage[] = [
@@ -92,7 +89,6 @@ export default function PopUpRatingScreen({
   const resetState = () => {
     setVitaRating(0);
     setVitaComment("");
-    setIsSubmitting(false);
     popupScale.setValue(0);
     popupOpacity.setValue(0);
   };
@@ -113,10 +109,7 @@ export default function PopUpRatingScreen({
     ]).start();
     
     // Animation de battement de cœur
-    if (heartBeatAnimation.current) {
-      heartBeatAnimation.current.stop();
-    }
-    heartBeatAnimation.current = Animated.loop(
+    Animated.loop(
       Animated.sequence([
         Animated.timing(heartBeat, {
           toValue: 1.2,
@@ -129,8 +122,7 @@ export default function PopUpRatingScreen({
           useNativeDriver: true,
         }),
       ])
-    );
-    heartBeatAnimation.current.start();
+    ).start();
   };
 
   const animatePopupOut = () => {
@@ -147,9 +139,7 @@ export default function PopUpRatingScreen({
         useNativeDriver: true,
       }),
     ]).start(() => {
-      if (heartBeatAnimation.current) {
-        heartBeatAnimation.current.stop();
-      }
+      heartBeat.stopAnimation();
       onClose();
     });
   };
@@ -191,8 +181,6 @@ export default function PopUpRatingScreen({
       );
       return;
     }
-    
-    setIsSubmitting(true);
     
     // Animation du bouton
     Animated.sequence([
@@ -248,26 +236,12 @@ export default function PopUpRatingScreen({
       animatePopupOut();
     } catch (error) {
       console.log("Error saving rating", error);
-      Alert.alert(
-        "Erreur",
-        "Une erreur est survenue. Veuillez réessayer."
-      );
-      setIsSubmitting(false);
+      animatePopupOut();
     }
   };
 
-  // Si le popup n'est pas visible, ne pas rendre le contenu
-  if (!visible) {
-    return null;
-  }
-
   return (
-    <Modal 
-      visible={visible} 
-      transparent 
-      animationType="fade"
-      onRequestClose={animatePopupOut}
-    >
+    <Modal visible={visible} transparent animationType="none">
       <View style={styles.overlay}>
         <Animated.View 
           style={[
@@ -282,7 +256,6 @@ export default function PopUpRatingScreen({
           <TouchableOpacity 
             style={styles.closeButton}
             onPress={animatePopupOut}
-            disabled={isSubmitting}
           >
             <X size={20} color="#6B7280" />
           </TouchableOpacity>
@@ -312,7 +285,6 @@ export default function PopUpRatingScreen({
                   key={star}
                   onPress={() => handleRating(star)}
                   activeOpacity={0.7}
-                  disabled={isSubmitting}
                 >
                   <Animated.View style={{ transform: [{ scale: starScales[star - 1] }] }}>
                     <Star
@@ -328,45 +300,36 @@ export default function PopUpRatingScreen({
 
           {/* Commentaire optionnel */}
           <TextInput
-            style={[styles.commentInput, isSubmitting && styles.disabledInput]}
+            style={styles.commentInput}
             placeholder={t("vitaPopup.ratingPlaceholder") || "Partagez votre expérience avec MiaraGo..."}
             placeholderTextColor="#9CA3AF"
             multiline
             numberOfLines={3}
             value={vitaComment}
             onChangeText={setVitaComment}
-            editable={!isSubmitting}
           />
 
           {/* Bouton de soutien */}
-          <Animated.View style={{ transform: [{ scale: buttonScale }], width: "100%" }}>
+          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
             <TouchableOpacity
               style={[
                 styles.submitButton,
-                vitaRating > 0 && styles.submitButtonActive,
-                isSubmitting && styles.submitButtonDisabled
+                vitaRating > 0 && styles.submitButtonActive
               ]}
               onPress={handleSubmit}
               activeOpacity={0.8}
-              disabled={isSubmitting}
             >
-              {isSubmitting ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <>
-                  <Heart size={18} color="#fff" fill="#fff" />
-                  <Text style={styles.submitButtonText}>
-                    {vitaRating > 0 
-                      ? (t("vitaPopup.supportEconomy") || "Soutenir l'économie malagasy")
-                      : (t("vitaPopup.rateUs") || "Noter MiaraGo")}
-                  </Text>
-                </>
-              )}
+              <Heart size={18} color="#fff" fill="#fff" />
+              <Text style={styles.submitButtonText}>
+                {vitaRating > 0 
+                  ? (t("vitaPopup.supportEconomy") || "Soutenir l'économie malagasy")
+                  : (t("vitaPopup.rateUs") || "Noter MiaraGo")}
+              </Text>
             </TouchableOpacity>
           </Animated.View>
 
           {/* Message bonus pour les notes élevées */}
-          {vitaRating >= 4 && !isSubmitting && (
+          {vitaRating >= 4 && (
             <View style={styles.bonusMessage}>
               <Award size={14} color="#F59E0B" />
               <Text style={styles.bonusText}>
@@ -463,10 +426,6 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     marginBottom: 20,
   },
-  disabledInput: {
-    backgroundColor: "#F3F4F6",
-    opacity: 0.7,
-  },
   submitButton: {
     flexDirection: "row",
     backgroundColor: "#9CA3AF",
@@ -485,10 +444,6 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 5,
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#9CA3AF",
-    opacity: 0.7,
   },
   submitButtonText: {
     color: "#FFFFFF",
