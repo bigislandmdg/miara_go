@@ -1,4 +1,4 @@
-// DriverHome.tsx - Version complète avec PopUpRatingScreen
+// DriverHome.tsx - Version avec en-tête des actions rapides
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import {
   View,
@@ -26,6 +26,13 @@ import {
   Route,
   CreditCard,
   ChevronRight,
+  TrendingUp,
+  Navigation2,
+  Rocket,
+  Compass,
+  PlusCircle,
+  Wallet,
+  FileText,
 } from "lucide-react-native";
 
 import { Header } from "../components/Header";
@@ -35,7 +42,7 @@ import { MainView } from "./Navigation";
 import { PublishScreen } from "./PublishScreen";
 import RideRequestScreen from "./RideRequestScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import PopUpRatingScreen from "./PopUpRatingScreen"; // 🔹 IMPORT DU COMPOSANT
+import PopUpRatingScreen from "./PopUpRatingScreen";
 
 import { Alert } from "react-native";
 
@@ -114,49 +121,47 @@ export function DriverHome({
   const { t } = useTranslation();
 
   /* ===================== EFFET POUR AFFICHER LE POPUP ===================== */
-  /* ===================== EFFET POUR AFFICHER LE POPUP ===================== */
-useEffect(() => {
-  const checkPopupStatus = async () => {
-    try {
-      console.log("🔍 DriverHome - Vérification du popup Vita Malagasy...");
-      
-      // 🔹 DÉCOMMENTEZ POUR RÉINITIALISER ET TESTER
-      await AsyncStorage.removeItem("hasSeenVitaPopup");
-      
-      const hasSeen = await AsyncStorage.getItem("hasSeenVitaPopup");
-      console.log("DriverHome - hasSeenVitaPopup:", hasSeen);
-      console.log("DriverHome - hasShownPopup:", hasShownPopup);
-      
-      if (hasSeen !== "true" && !hasShownPopup) {
-        console.log("✅ DriverHome - Le popup va s'afficher dans 1 seconde...");
-        setTimeout(() => {
-          console.log("🎉 DriverHome - AFFICHAGE DU POPUP !");
-          setShowVitaPopup(true);
-          setHasShownPopup(true);
-        }, 1000);
-      } else {
-        console.log("❌ DriverHome - Popup non affiché car déjà vu ou hasShownPopup = true");
+  useEffect(() => {
+    const checkPopupStatus = async () => {
+      try {
+        console.log("🔍 DriverHome - Vérification du popup Vita Malagasy...");
+        
+        // 🔹 DÉCOMMENTEZ POUR RÉINITIALISER ET TESTER
+        // await AsyncStorage.removeItem("hasSeenVitaPopup");
+        
+        const hasSeen = await AsyncStorage.getItem("hasSeenVitaPopup");
+        console.log("DriverHome - hasSeenVitaPopup:", hasSeen);
+        console.log("DriverHome - hasShownPopup:", hasShownPopup);
+        
+        if (hasSeen !== "true" && !hasShownPopup) {
+          console.log("✅ DriverHome - Le popup va s'afficher dans 1 seconde...");
+          setTimeout(() => {
+            console.log("🎉 DriverHome - AFFICHAGE DU POPUP !");
+            setShowVitaPopup(true);
+            setHasShownPopup(true);
+          }, 1000);
+        } else {
+          console.log("❌ DriverHome - Popup non affiché car déjà vu ou hasShownPopup = true");
+        }
+      } catch (error) {
+        console.log("DriverHome - Error checking popup status", error);
+        if (!hasShownPopup) {
+          setTimeout(() => {
+            console.log("🎉 DriverHome - AFFICHAGE DU POPUP (après erreur) !");
+            setShowVitaPopup(true);
+            setHasShownPopup(true);
+          }, 1000);
+        }
       }
-    } catch (error) {
-      console.log("DriverHome - Error checking popup status", error);
-      if (!hasShownPopup) {
-        setTimeout(() => {
-          console.log("🎉 DriverHome - AFFICHAGE DU POPUP (après erreur) !");
-          setShowVitaPopup(true);
-          setHasShownPopup(true);
-        }, 1000);
-      }
-    }
-  };
-  
-  checkPopupStatus();
-}, []);
+    };
+    
+    checkPopupStatus();
+  }, []);
 
   /* ===================== GESTION DU SUBMIT DU RATING ===================== */
   const handleRatingSubmit = (rating: number, comment: string) => {
     console.log("DriverHome - Rating submitted:", { rating, comment, userType: "driver" });
     
-    // Bonus pour les notes élevées (≥ 4)
     if (rating >= 4) {
       console.log("DriverHome - Bonus credits awarded for high rating!");
       Alert.alert(
@@ -420,8 +425,8 @@ useEffect(() => {
 
   /* ===================== Status Config ===================== */
   const statusConfig: any = {
-    open: { bg: "#DBEAFE", text: "#1D4ED8", label: t("open") },
-    full: { bg: "#FEF3C7", text: "#B45309", label: t("full") },
+    open: { bg: "#DBEAFE", text: "#1b2a52", label: t("open") },
+    full: { bg: "#FEF3C7", text: "#60544a", label: t("full") },
     completed: { bg: "#D1FAE5", text: "#047857", label: t("completed") },
     cancelled: { bg: "#FECACA", text: "#B91C1C", label: t("cancelled") },
   };
@@ -429,7 +434,7 @@ useEffect(() => {
   const requestStatusConfig: any = {
     active: { bg: "#DCFCE7", text: "#047857", label: t("active") },
     closed: { bg: "#F3F4F6", text: "#6B7280", label: t("closed") },
-    completed: { bg: "#DBEAFE", text: "#1D4ED8", label: t("completed") },
+    completed: { bg: "#DBEAFE", text: "#1b2a52", label: t("completed") },
   };
 
   /* ===================== Skeleton ===================== */
@@ -702,7 +707,7 @@ useEffect(() => {
   /* ===================== UI ===================== */
   return (
     <View style={styles.container}>
-      {/* POPUP VITA MALAGASY - COMPOSANT IMPORTÉ */}
+      {/* POPUP VITA MALAGASY */}
       <PopUpRatingScreen
         visible={showVitaPopup}
         onClose={() => setShowVitaPopup(false)}
@@ -754,41 +759,122 @@ useEffect(() => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
-          {/* Vue d'ensemble */}
-          <Text style={styles.section}>{t("dashboardOverview")}</Text>
-          <View style={styles.statsRow}>
-            {/* TRIPS CARD */}
-            <TouchableOpacity
-              style={styles.statCard}
-              activeOpacity={0.85}
-              onPress={() => onViewChange?.("trip")}
-            >
-              <Route color="#047857" />
-              <Text style={styles.statValue}>{trips.length}</Text>
-              <Text style={styles.statLabel}>{t("trips")}</Text>
-            </TouchableOpacity>
+          {/* CARTE D'INFORMATIONS UNIFIÉE */}
+          <View style={styles.unifiedStatsCard}>
+            <View style={styles.unifiedStatsHeader}>
+              <View style={styles.unifiedStatsIcon}>
+                <TrendingUp size={20} color="#047857" />
+              </View>
+              <Text style={styles.unifiedStatsTitle}>{t("dashboardOverview")}</Text>
+            </View>
+            
+            <View style={styles.unifiedStatsRow}>
+              {/* Trajets */}
+              <TouchableOpacity
+                style={styles.unifiedStatItem}
+                activeOpacity={0.7}
+                onPress={() => onViewChange?.("trip")}
+              >
+                <View style={[styles.unifiedStatIcon, { backgroundColor: "#ECFDF5" }]}>
+                  <Compass size={24} color="#047857" />
+                </View>
+                <View style={styles.unifiedStatContent}>
+                  <Text style={styles.unifiedStatValue}>{trips.length}</Text>
+                  <Text style={styles.unifiedStatLabel}>{t("trips")}</Text>
+                </View>
+              </TouchableOpacity>
 
-            {/* RIDE REQUESTS CARD */}
-            <TouchableOpacity
-              style={styles.statCard}
-              activeOpacity={0.85}
-              onPress={() => setShowRideRequestScreen(true)}
-            >
-              <Car color="#1D4ED8" />
-              <Text style={styles.statValue}>{rideRequests.length}</Text>
-              <Text style={styles.statLabel}>{t("rideRequests")}</Text>
-            </TouchableOpacity>
+              {/* Séparateur vertical */}
+              <View style={styles.unifiedDivider} />
 
-            {/* CREDITS CARD */}
-            <TouchableOpacity
-              style={styles.statCard}
-              activeOpacity={0.85}
-              onPress={() => Alert.alert(t("credits"), `${totalCredits}`)}
-            >
-              <CreditCard color="#B45309" />
-              <Text style={styles.statValue}>{totalCredits}</Text>
-              <Text style={styles.statLabel}>{t("credits")}</Text>
-            </TouchableOpacity>
+              {/* Demandes de trajets */}
+              <TouchableOpacity
+                style={styles.unifiedStatItem}
+                activeOpacity={0.7}
+                onPress={() => setShowRideRequestScreen(true)}
+              >
+                <View style={[styles.unifiedStatIcon, { backgroundColor: "#EFF6FF" }]}>
+                  <Rocket size={24} color="#1b2a52" />
+                </View>
+                <View style={styles.unifiedStatContent}>
+                  <Text style={styles.unifiedStatValue}>{rideRequests.length}</Text>
+                  <Text style={styles.unifiedStatLabel}>{t("rideRequests")}</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* Séparateur vertical */}
+              <View style={styles.unifiedDivider} />
+
+              {/* Crédits */}
+              <TouchableOpacity
+                style={styles.unifiedStatItem}
+                activeOpacity={0.7}
+                onPress={() => Alert.alert(t("credits"), `${totalCredits}`)}
+              >
+                <View style={[styles.unifiedStatIcon, { backgroundColor: "#bcb7a3" }]}>
+                  <CreditCard size={24} color="#3b342f" />
+                </View>
+                <View style={styles.unifiedStatContent}>
+                  <Text style={styles.unifiedStatValue}>{totalCredits}</Text>
+                  <Text style={styles.unifiedStatLabel}>{t("credits")}</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* ACTIONS RAPIDES AVEC EN-TÊTE */}
+          <View style={styles.quickActionsSection}>
+            {/* En-tête des actions rapides */}
+            <View style={styles.quickActionsHeader}>
+              <Text style={styles.quickActionsTitle}>{t("quickActions") || "Actions rapides"}</Text>
+              <TouchableOpacity 
+                style={styles.quickActionsSeeAll}
+                onPress={() => {
+                  // Action pour voir toutes les actions rapides
+                  console.log("Voir toutes les actions rapides");
+                }}
+              >
+              </TouchableOpacity>
+            </View>
+
+            {/* Icônes des actions rapides */}
+            <View style={styles.quickActionsRow}>
+              {/* Créer un trajet */}
+              <TouchableOpacity
+                style={styles.quickActionItem}
+                activeOpacity={0.7}
+                onPress={() => onViewChange?.("trip")}
+              >
+                <View style={[styles.quickActionIcon, { backgroundColor: "#ECFDF5" }]}>
+                  <PlusCircle size={24} color="#047857" />
+                </View>
+                <Text style={styles.quickActionLabel}>{t("createTrip") || "Créer"}</Text>
+              </TouchableOpacity>
+
+              {/* Portefeuille */}
+              <TouchableOpacity
+                style={styles.quickActionItem}
+                activeOpacity={0.7}
+                onPress={() => onViewChange?.("wallet")}
+              >
+                <View style={[styles.quickActionIcon, { backgroundColor: "#bcb7a3" }]}>
+                  <Wallet size={24} color="#3b342f" />
+                </View>
+                <Text style={styles.quickActionLabel}>{t("wallet") || "Wallet"}</Text>
+              </TouchableOpacity>
+
+              {/* Demande de trajet */}
+              <TouchableOpacity
+                style={styles.quickActionItem}
+                activeOpacity={0.7}
+                onPress={() => setShowRideRequestScreen(true)}
+              >
+                <View style={[styles.quickActionIcon, { backgroundColor: "#EFF6FF" }]}>
+                  <FileText size={24} color="#1b2a52" />
+                </View>
+                <Text style={styles.quickActionLabel}>{t("rideRequests") || "Demande"}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* ========================================================= */}
@@ -1009,6 +1095,140 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F3F4F6" },
   section: { fontSize: 16, fontWeight: "700", margin: 16 },
 
+  // =========================================================
+  // 🔹 STYLES POUR LA CARTE UNIFIÉE
+  // =========================================================
+  unifiedStatsCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  unifiedStatsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  unifiedStatsIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#ECFDF5",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  unifiedStatsTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6B7280",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  unifiedStatsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  unifiedStatItem: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  unifiedStatIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  unifiedStatContent: {
+    flex: 1,
+  },
+  unifiedStatValue: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#111827",
+  },
+  unifiedStatLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginTop: 2,
+  },
+  unifiedDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: "#E5E7EB",
+  },
+
+  // =========================================================
+  // 🔹 STYLES POUR LES ACTIONS RAPIDES AVEC EN-TÊTE
+  // =========================================================
+  quickActionsSection: {
+    marginHorizontal: 16,
+    marginVertical: 12,
+  },
+  quickActionsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  quickActionsTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6B7280",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  quickActionsSeeAll: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  quickActionsSeeAllText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#059669",
+  },
+  quickActionsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  quickActionItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  quickActionIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  quickActionLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: "#6B7280",
+    textAlign: "center",
+  },
+
+  // Styles existants
   statsRow: { flexDirection: "row", gap: 12, paddingHorizontal: 16 },
   statCard: {
     flex: 1,
@@ -1141,9 +1361,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 
-  // =========================================================
-  // 🔹 STYLES POUR L'EN-TÊTE DES SECTIONS
-  // =========================================================
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",

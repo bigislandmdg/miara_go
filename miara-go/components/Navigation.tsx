@@ -9,10 +9,20 @@ import {
   Pressable,
   Dimensions,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../providers/LanguageProvider";
+import {
+  Home,
+  Clock,
+  LayoutGrid,
+  CreditCard,
+  Star,
+  Plus,
+  User,
+  MapPin,
+  X,
+} from "lucide-react-native";
 
 /* ===================== TYPES ===================== */
 export type MainView =
@@ -69,15 +79,15 @@ export function Navigation({
   };
 
   /* ===================== TABS ===================== */
-  const passengerTabs: { id: MainView; label: string; icon: any }[] = [
-    { id: "home", label: t("home", "Accueil"), icon: "home" },
-    { id: "history", label: t("history", "Historique"), icon: "clock" },
+  const passengerTabs: { id: MainView; label: string; icon: any; iconName?: string }[] = [
+    { id: "home", label: t("home", "Accueil"), icon: LayoutGrid },
+    { id: "history", label: t("history", "Historique"), icon: Clock },
   ];
 
-  const driverTabs: { id: MainView; label: string; icon: any }[] = [
-    { id: "home", label: t("trips", "Trajets"), icon: "truck" },
-    { id: "wallet", label: t("wallet", "Wallet"), icon: "credit-card" },
-    { id: "rating", label: t("rating", "Notes"), icon: "star" },
+  const driverTabs: { id: MainView; label: string; icon: any; iconName?: string }[] = [
+    { id: "home", label: t("home", "Accueil"), icon: LayoutGrid },
+    { id: "wallet", label: t("wallet", "Wallet"), icon: CreditCard },
+    { id: "rating", label: t("rating", "Notes"), icon: Star },
   ];
 
   const tabs =
@@ -112,6 +122,7 @@ export function Navigation({
 
   const renderTab = (tab: { id: MainView; label: string; icon: any }) => {
     const isActive = currentView === tab.id;
+    const IconComponent = tab.icon;
 
     return (
       <TouchableOpacity
@@ -121,10 +132,10 @@ export function Navigation({
         activeOpacity={0.7}
       >
         <View style={[styles.iconPill, isActive && styles.iconPillActive]}>
-          <Feather
-            name={tab.icon}
+          <IconComponent
             size={22}
             color={isActive ? "#fff" : "#6B7280"}
+            strokeWidth={1.8}
           />
         </View>
         <Text style={[styles.label, isActive && styles.labelActive]}>
@@ -147,7 +158,7 @@ export function Navigation({
               onPress={openModal}
               activeOpacity={0.85}
             >
-              <Feather name="plus" size={30} color="#fff" />
+              <Plus size={30} color="#fff" strokeWidth={2} />
             </TouchableOpacity>
           )}
 
@@ -167,10 +178,10 @@ export function Navigation({
               {avatarLetter ? (
                 <Text style={styles.avatarText}>{avatarLetter}</Text>
               ) : (
-                <Feather
-                  name="user"
+                <User
                   size={20}
                   color={currentView === "profile" ? "#fff" : "#6B7280"}
+                  strokeWidth={1.8}
                 />
               )}
             </View>
@@ -197,6 +208,12 @@ export function Navigation({
           ]}
         >
           <View style={styles.sheetHandle} />
+          
+          {/* Bouton de fermeture */}
+          <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+            <X size={20} color="#6B7280" />
+          </TouchableOpacity>
+          
           <Text style={styles.modalTitle}>
             {t("quickActions", "Action rapide")}
           </Text>
@@ -211,7 +228,7 @@ export function Navigation({
               }}
             >
               <View style={styles.iconCircle}>
-                <Feather name="map-pin" size={26} color="#047857" />
+                <MapPin size={26} color="#047857" strokeWidth={1.8} />
               </View>
               <Text style={styles.gridText}>
                 {t("createTrip", "Créer un trajet")}
@@ -285,8 +302,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: "100%",
     backgroundColor: "#fff",
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     paddingBottom: 30,
     paddingTop: 12,
   },
@@ -298,18 +315,31 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 12,
   },
+  closeButton: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#F3F4F6",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
   modalTitle: {
     fontSize: 16,
     fontWeight: "600",
     textAlign: "center",
     marginBottom: 20,
+    marginTop: 8,
   },
   grid: { flexDirection: "row", justifyContent: "space-around" },
   gridItem: { alignItems: "center", width: 120 },
   iconCircle: {
     width: 64,
     height: 64,
-    borderRadius: 12,
+    borderRadius: 16,
     backgroundColor: "#ECFDF5",
     justifyContent: "center",
     alignItems: "center",

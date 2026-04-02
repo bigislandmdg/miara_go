@@ -1,4 +1,4 @@
-// PassengerHome.tsx (version finale sans bouton de test)
+// PassengerHome.tsx (version avec actions rapides sous la barre de recherche)
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   View,
@@ -17,7 +17,25 @@ import {
   Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { DollarSign, Users, Calendar, Clock, Sliders, Car, X, Filter, Star, ChevronRight } from "lucide-react-native";
+import { 
+  DollarSign, 
+  Users, 
+  Calendar, 
+  Clock, 
+  Sliders, 
+  Car, 
+  X, 
+  Filter, 
+  Star, 
+  ChevronRight,
+  PlusCircle,
+  Wallet,
+  FileText,
+  TrendingUp,
+  Compass,
+  Rocket,
+  CreditCard,
+} from "lucide-react-native";
 import QRCode from "react-native-qrcode-svg";
 import { Header } from "../components/Header";
 import RideRequestScreen from "./RideRequestScreen";
@@ -138,10 +156,6 @@ export default function PassengerHome({
   const [selectedTripForRating, setSelectedTripForRating] = useState<Trip | null>(null);
   const [ratingToken, setRatingToken] = useState<string>("");
 
-  const [infoCards] = useState([
-    { id: 1, title: t("publishRideTitle"), description: t("publishRideDesc") },
-  ]);
-
   const PAGE_SIZE = 1;
   const [tripPage, setTripPage] = useState(1);
   const [offerPage, setOfferPage] = useState(1);
@@ -160,7 +174,6 @@ export default function PassengerHome({
         }
       } catch (error) {
         console.log("Error checking popup status", error);
-        // En cas d'erreur, afficher quand même le popup pour la première fois
         if (!hasShownPopup) {
           setTimeout(() => {
             setShowVitaPopup(true);
@@ -177,7 +190,6 @@ export default function PassengerHome({
   const handleRatingSubmit = (rating: number, comment: string) => {
     console.log("Rating submitted:", { rating, comment, userType: "passenger" });
     
-    // Bonus pour les notes élevées (≥ 4)
     if (rating >= 4) {
       Alert.alert(
         t("vitaPopup.bonusTitle") || "Bonus ! 🎉",
@@ -245,7 +257,6 @@ export default function PassengerHome({
       
       setTrips(fetchedTrips);
       
-      // Calculer les statistiques de prix
       if (fetchedTrips.length > 0) {
         const prices = fetchedTrips.map((t: Trip) => t.price);
         const maxPrice = Math.max(...prices);
@@ -475,7 +486,7 @@ export default function PassengerHome({
             <TouchableOpacity
               style={[
                 styles.ratingBadge,
-                { backgroundColor: item.hasRated ? "#D1FAE5" : "#FDE68A" },
+                { backgroundColor: item.hasRated ? "#D1FAE5" : "#bcb7a3" },
               ]}
               onPress={() => openRatingScreen(item)}
             >
@@ -523,7 +534,7 @@ export default function PassengerHome({
 
         {item.driver?.phone && (
           <TouchableOpacity
-            style={[styles.bookButton, { backgroundColor: "#2563EB" }]}
+            style={[styles.bookButton, { backgroundColor: "#1b2a52" }]}
             onPress={() => Linking.openURL(`tel:${item.driver.phone}`)}
           >
             <Text style={styles.bookText}>{t("callDriver") || 'Appeler'}</Text>
@@ -585,9 +596,17 @@ export default function PassengerHome({
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
       {/* POPUP VITA MALAGASY */}
-      
+      <PopUpRatingScreen
+        visible={showVitaPopup}
+        onClose={() => setShowVitaPopup(false)}
+        onRatingSubmit={handleRatingSubmit}
+        userType="passenger"
+        userId={userId}
+      />
+
       <Header title="MiaraGo" onNotifications={onNotifications} onProfileClick={onProfileClick} />
 
+      {/* BARRE DE RECHERCHE ET FILTRES */}
       <View style={styles.searchWrapper}>
         <View style={styles.searchBox}>
           <Feather name="search" size={18} color="#6B7280" style={{ marginRight: 8 }} />
@@ -650,26 +669,62 @@ export default function PassengerHome({
         </ScrollView>
       )}
 
+      {/* ACTIONS RAPIDES POUR PASSAGER - DÉPLACÉES SOUS LES FILTRES */}
+      <View style={styles.quickActionsSection}>
+        <View style={styles.quickActionsHeader}>
+          <Text style={styles.quickActionsTitle}>{t("quickActions") || "Actions rapides"}</Text>
+        </View>
+
+        <View style={styles.quickActionsRow}>
+          {/* Rechercher un trajet */}
+          <TouchableOpacity
+            style={styles.quickActionItem}
+            activeOpacity={0.7}
+            onPress={() => {
+              console.log("Rechercher un trajet");
+            }}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: "#ECFDF5" }]}>
+              <Compass size={24} color="#047857" />
+            </View>
+            <Text style={styles.quickActionLabel}>{t("searchTrip") || "Rechercher"}</Text>
+          </TouchableOpacity>
+
+          {/* Voir les offres */}
+          <TouchableOpacity
+            style={styles.quickActionItem}
+            activeOpacity={0.7}
+            onPress={() => {
+              console.log("Voir les offres");
+            }}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: "#bcb7a3" }]}>
+              <Rocket size={24} color="#3b342f" />
+            </View>
+            <Text style={styles.quickActionLabel}>{t("offers") || "Offres"}</Text>
+          </TouchableOpacity>
+
+          {/* Demander un trajet */}
+          <TouchableOpacity
+            style={styles.quickActionItem}
+            activeOpacity={0.7}
+            onPress={() => {
+              setSelectedRideRequestId(1);
+              setRideRequestModalVisible(true);
+            }}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: "#EFF6FF" }]}>
+              <FileText size={24} color="#1b2a52" />
+            </View>
+            <Text style={styles.quickActionLabel}>{t("rideRequests") || "Demander un trajet"}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
-          {infoCards.map((card) => (
-            <TouchableOpacity
-              key={card.id}
-              style={styles.infoCard}
-              onPress={() => {
-                setSelectedRideRequestId(card.id);
-                setRideRequestModalVisible(true);
-              }}
-            >
-              <Text style={styles.infoCardTitle}>{card.title}</Text>
-              <Text style={styles.infoCardDescription}>{card.description}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
         {/* SECTION TRAJETS AVEC "VOIR PLUS" ALIGNÉ À DROITE */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
@@ -798,8 +853,8 @@ export default function PassengerHome({
                   >
                     <Star 
                       size={16} 
-                      color={tempFilters.minRating >= rating ? "#fff" : "#F59E0B"} 
-                      fill={tempFilters.minRating >= rating ? "#fff" : "#F59E0B"}
+                      color={tempFilters.minRating >= rating ? "#fff" : "#3b342f"} 
+                      fill={tempFilters.minRating >= rating ? "#fff" : "#3b342f"}
                     />
                   </TouchableOpacity>
                 ))}
@@ -876,9 +931,52 @@ export default function PassengerHome({
   );
 }
 
-
-/* ===================== STYLES AMÉLIORÉS ===================== */
+/* ===================== STYLES ===================== */
 const styles = StyleSheet.create({
+  // =========================================================
+  // 🔹 STYLES POUR LES ACTIONS RAPIDES
+  // =========================================================
+  quickActionsSection: {
+    marginHorizontal: 16,
+    marginVertical: 12,
+  },
+  quickActionsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  quickActionsTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6B7280",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  quickActionsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  quickActionItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  quickActionIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  quickActionLabel: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: "#6B7280",
+    textAlign: "center",
+  },
+
   searchWrapper: { 
     flexDirection: "row", 
     marginHorizontal: 16, 
@@ -916,7 +1014,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#F59E0B",
+    backgroundColor: "#3b342f",
     borderWidth: 2,
     borderColor: "#fff",
   },
@@ -1046,22 +1144,6 @@ const styles = StyleSheet.create({
     textAlign: "center", 
     color: "#1d1f23", 
     marginBottom: 16 
-  },
-  infoCard: { 
-    backgroundColor: "#fff", 
-    padding: 16, 
-    borderRadius: 16, 
-    marginBottom: 12, 
-    elevation: 3 
-  },
-  infoCardTitle: { 
-    fontSize: 14, 
-    fontWeight: "700", 
-    marginBottom: 4 
-  },
-  infoCardDescription: { 
-    fontSize: 12, 
-    color: "#6B7280" 
   },
   overlay: { 
     flex: 1, 
@@ -1262,3 +1344,4 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start" 
   },
 });
+
