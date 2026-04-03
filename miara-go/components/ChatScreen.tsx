@@ -1,4 +1,4 @@
-// ChatScreen.tsx - Version avec traductions pour le modal de contact
+// ChatScreen.tsx - Version corrigée
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -191,7 +191,7 @@ export function ChatScreen({
             nom: parsed.nom,
             prenom: parsed.prenom,
             phone: parsed.phone,
-            role: parsed.role,
+            role: parsed.role === "driver" ? "driver" : "user",
             avatar: parsed.avatar,
             rating: parsed.rating || 4.5,
           });
@@ -204,19 +204,63 @@ export function ChatScreen({
     loadCurrentUser();
   }, []);
 
+  /* ===================== DÉTERMINER L'AUTRE UTILISATEUR ===================== */
+  useEffect(() => {
+    const determineOtherUser = async () => {
+      if (!currentUser) return;
+      
+      try {
+        // Récupérer les détails du trajet
+        const res = await fetch(`http://10.0.2.2:8080/rides/${trip.id}`);
+        const data = await res.json();
+        const ride = data.ride || data;
+        
+        let otherUserId = null;
+        
+        if (currentUser.role === "driver") {
+          // Si l'utilisateur actuel est le conducteur, l'autre est le passager
+          otherUserId = ride.passenger_id || ride.user_id;
+        } else {
+          // Si l'utilisateur actuel est le passager, l'autre est le conducteur
+          otherUserId = ride.driver_id || ride.driver?.id;
+        }
+        
+        if (otherUserId) {
+          // Récupérer les informations de l'autre utilisateur
+          const userRes = await fetch(`http://10.0.2.2:8080/users/${otherUserId}`);
+          const userData = await userRes.json();
+          const otherUserData = userData.user || userData;
+          
+          setOtherUser({
+            id: otherUserData.id,
+            nom: otherUserData.nom || "",
+            prenom: otherUserData.prenom || "",
+            phone: otherUserData.phone || "",
+            role: otherUserData.role === "driver" ? "driver" : "user",
+            rating: otherUserData.rating || 4.5,
+          });
+        }
+        setLoadingOtherUser(false);
+      } catch (error) {
+        console.log("Error determining other user:", error);
+        setLoadingOtherUser(false);
+      }
+    };
+    
+    if (currentUser && !otherUser) {
+      determineOtherUser();
+    }
+  }, [currentUser, trip.id]);
+
   /* ===================== FETCH MESSAGES ===================== */
   const fetchMessages = async (isInitial = false) => {
-    if (!currentUser || isFetching.current) return;
+    if (!currentUser || !otherUser || isFetching.current) return;
 
     try {
       isFetching.current = true;
       
-      let url;
-      if (otherUser && otherUser.id) {
-        url = `http://10.0.2.2:8080/messages?ride_id=${trip.id}&user_id=${currentUser.id}&other_id=${otherUser.id}&limit=50`;
-      } else {
-        url = `http://10.0.2.2:8080/messages?ride_id=${trip.id}&limit=50`;
-      }
+      // ✅ URL CORRIGÉE avec user_id
+      const url = `http://10.0.2.2:8080/messages?ride_id=${trip.id}&user_id=${currentUser.id}&other_id=${otherUser.id}&limit=50`;
       console.log("Fetching messages from:", url);
       
       const res = await fetch(url);
@@ -303,61 +347,6 @@ export function ChatScreen({
 
       setMessages(formatted);
       setApiError(null);
-      
-      if (formatted.length > 0 && !otherUser) {
-        let driverInfo = null;
-        let passengerInfo = null;
-        
-        for (const msg of formatted) {
-          if (msg.sender_role === "driver") {
-            driverInfo = {
-              id: parseInt(msg.sender_id || "0"),
-              nom: msg.sender_nom || "",
-              prenom: msg.sender_prenom || "",
-              phone: msg.sender_id === "1" ? "+261341234567" : "",
-              role: "driver" as "user" | "driver",
-              rating: 4.5,
-            };
-          } else if (msg.receiver_role === "driver") {
-            driverInfo = {
-              id: parseInt(msg.receiver_id || "0"),
-              nom: msg.receiver_nom || "",
-              prenom: msg.receiver_prenom || "",
-              phone: msg.receiver_id === "1" ? "+261341234567" : "",
-              role: "driver" as "user" | "driver",
-              rating: 4.5,
-            };
-          }
-          
-          if (msg.sender_role === "user") {
-            passengerInfo = {
-              id: parseInt(msg.sender_id || "0"),
-              nom: msg.sender_nom || "",
-              prenom: msg.sender_prenom || "",
-              phone: "",
-              role: "user" as "user" | "driver",
-              rating: 4.5,
-            };
-          } else if (msg.receiver_role === "user") {
-            passengerInfo = {
-              id: parseInt(msg.receiver_id || "0"),
-              nom: msg.receiver_nom || "",
-              prenom: msg.receiver_prenom || "",
-              phone: "",
-              role: "user" as "user" | "driver",
-              rating: 4.5,
-            };
-          }
-        }
-        
-        if (currentUser.role === "user" && driverInfo) {
-          setOtherUser(driverInfo);
-        } else if (currentUser.role === "driver" && passengerInfo) {
-          setOtherUser(passengerInfo);
-        }
-        
-        setLoadingOtherUser(false);
-      }
 
       const hasUnread = messagesArray.some(m => 
         m.receiver_id === String(currentUser.id) && m.read === "0"
@@ -404,64 +393,16 @@ export function ChatScreen({
     }
   };
 
-  /* ===================== FETCH OTHER USER PHONE ===================== */
-  useEffect(() => {
-    const fetchOtherUserPhone = async () => {
-      if (!otherUser) return;
-
-      try {
-        console.log("🔍 Fetching phone for user ID:", otherUser.id);
-        const res = await fetch(`http://10.0.2.2:8080/users/${otherUser.id}`);
-        
-        if (res.ok) {
-          const text = await res.text();
-          console.log("📞 Raw response:", text);
-          
-          if (!text || text.trim() === "") {
-            console.log("⚠️ Empty response");
-            return;
-          }
-          
-          const data = JSON.parse(text);
-          console.log("✅ Parsed user data:", data);
-          
-          const user = data.user || data;
-          if (user && user.phone) {
-            setOtherUser(prev => ({
-              id: prev?.id || 0,
-              nom: prev?.nom || "",
-              prenom: prev?.prenom || "",
-              phone: user.phone,
-              role: prev?.role || "driver",
-              rating: prev?.rating || 4.5,
-            }));
-            console.log("📞 Phone number set to:", user.phone);
-          } else {
-            console.log("⚠️ No phone number found in response");
-          }
-        } else {
-          console.log("❌ HTTP error:", res.status);
-        }
-      } catch (error) {
-        console.log("❌ Error fetching phone:", error);
-      }
-    };
-
-    if (otherUser && !otherUser.phone) {
-      fetchOtherUserPhone();
-    }
-  }, [otherUser]);
-
   /* ===================== START FETCHING ===================== */
   useEffect(() => {
-    if (currentUser && !initialFetchDone.current) {
+    if (currentUser && otherUser && !initialFetchDone.current) {
       fetchMessages(true);
     }
-  }, [currentUser]);
+  }, [currentUser, otherUser]);
 
   /* ===================== POLLING FOR NEW MESSAGES ===================== */
   useEffect(() => {
-    if (!currentUser || !initialFetchDone.current) return;
+    if (!currentUser || !otherUser || !initialFetchDone.current) return;
 
     if (pollingInterval.current) {
       clearInterval(pollingInterval.current);
@@ -478,34 +419,7 @@ export function ChatScreen({
         clearInterval(pollingInterval.current);
       }
     };
-  }, [currentUser, initialFetchDone.current]);
-
-  /* ===================== FETCH UNREAD COUNT ===================== */
-  const fetchUnreadCount = async () => {
-    if (!currentUser) return;
-
-    try {
-      const res = await fetch(`http://10.0.2.2:8080/messages/unread/${currentUser.id}`);
-      const text = await res.text();
-      
-      if (!text || text.trim() === "") {
-        setUnreadCount(0);
-        return;
-      }
-      
-      const data = JSON.parse(text);
-      setUnreadCount(data.unread_count || 0);
-    } catch (error) {
-      console.log("Error fetching unread count:", error);
-      setUnreadCount(0);
-    }
-  };
-
-  useEffect(() => {
-    fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 10000);
-    return () => clearInterval(interval);
-  }, [currentUser]);
+  }, [currentUser, otherUser, initialFetchDone.current]);
 
   /* ===================== SEND ===================== */
   const handleSend = async () => {
@@ -617,14 +531,7 @@ export function ChatScreen({
 
   const getAvatarColor = (name: string) => {
     const colors = [
-      "#10B981", // vert
-      "#3B82F6", // bleu
-      "#F59E0B", // orange
-      "#EF4444", // rouge
-      "#8B5CF6", // violet
-      "#EC4899", // rose
-      "#14B8A6", // turquoise
-      "#F97316", // orange foncé
+      "#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#14B8A6", "#F97316",
     ];
     
     let hash = 0;
@@ -748,7 +655,6 @@ export function ChatScreen({
           onPress={() => setShowTripInfo(!showTripInfo)}
           activeOpacity={0.7}
         >
-          {/* Avatar lettre */}
           <View style={[styles.avatarLetter, { backgroundColor: otherUserAvatarColor }]}>
             <Text style={styles.avatarLetterText}>{otherUserAvatarLetters}</Text>
           </View>
@@ -763,11 +669,6 @@ export function ChatScreen({
                 </Text>
                 <View style={styles.ratingContainer}>
                   <Text style={styles.ratingText}>⭐ {otherUserRating.toFixed(1)} • {otherUserRole}</Text>
-                  {unreadCount > 0 && (
-                    <View style={styles.unreadBadge}>
-                      <Text style={styles.unreadText}>{unreadCount}</Text>
-                    </View>
-                  )}
                 </View>
               </>
             )}
@@ -942,7 +843,7 @@ export function ChatScreen({
         </TouchableOpacity>
       </Animated.View>
 
-      {/* CONTACT MODAL AVEC TRADUCTIONS */}
+      {/* CONTACT MODAL */}
       <Modal
         visible={contactModalVisible}
         transparent
@@ -1132,7 +1033,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#9CA3AF",
     fontWeight: "600",
-    paddingLeft: 100,
   },
   
   tripInfoRow: {
@@ -1331,12 +1231,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: "#111827",
-    flex: 1, // 🔹 Permet au titre de prendre l'espace disponible
-    flexWrap: "wrap", // 🔹 Permet au texte de passer à la ligne si nécessaire
-  },
-  contactModalClose: {
-    padding: 4, // 🔹 Réduit le padding
-    marginLeft: 8, // 🔹 Espace entre le titre et l'icône
+    flex: 1,
+    flexWrap: "wrap",
   },
   contactOption: {
     flexDirection: "row",
@@ -1379,3 +1275,4 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
 });
+

@@ -137,7 +137,7 @@ export default function App() {
     price: t.price,
     meetingPoints: t.meetingPoints ? t.meetingPoints.map(mp => mp.name) : ["Point de rencontre non spécifié"],
     driver: t.driver ?? { name: "Conducteur", rating: 4.7, avatar: "", contact: "" },
-    //vehicle: t.vehicle,
+    driver_id: 0
   });
 
   // MAIN VIEW
@@ -392,6 +392,9 @@ export default function App() {
                   setUserType(role === "driver" ? "driver" : "passenger");
                   setUserId(id);
                   setCurrentView("home");
+                }}
+                 onExpired={() => {
+                 setAuthView("login");
                 }}
               />
             )}
