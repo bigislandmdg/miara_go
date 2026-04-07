@@ -1,4 +1,4 @@
-// PassengerHome.tsx (version avec actions rapides sous la barre de recherche)
+// PassengerHome.tsx (version avec actions rapides améliorées - défilement vers les sections)
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   View,
@@ -156,9 +156,20 @@ export default function PassengerHome({
   const [selectedTripForRating, setSelectedTripForRating] = useState<Trip | null>(null);
   const [ratingToken, setRatingToken] = useState<string>("");
 
-  const PAGE_SIZE = 1;
+  const PAGE_SIZE = 10;
   const [tripPage, setTripPage] = useState(1);
   const [offerPage, setOfferPage] = useState(1);
+
+  // =========================================================
+  // 🔹 REFS POUR LE DÉFILEMENT
+  // =========================================================
+  const scrollViewRef = useRef<ScrollView>(null);
+  const tripsSectionRef = useRef<View>(null);
+  const offersSectionRef = useRef<View>(null);
+  
+  // Positions des sections pour le défilement
+  const [tripsSectionY, setTripsSectionY] = useState(0);
+  const [offersSectionY, setOffersSectionY] = useState(0);
 
   /* ===================== EFFET POUR AFFICHER LE POPUP ===================== */
   useEffect(() => {
@@ -456,6 +467,85 @@ export default function PassengerHome({
     setSelectedTripForRating(trip);
   };
 
+  /* ===================== NOUVEAUX HANDLERS POUR ACTIONS RAPIDES AVEC DÉFILEMENT ===================== */
+  
+  // Fonction pour faire défiler vers la section des trajets
+  const scrollToTripsSection = () => {
+    if (tripsSectionRef.current && scrollViewRef.current) {
+      // Mesurer la position de la section des trajets
+      tripsSectionRef.current.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => {
+          // Faire défiler avec un offset pour ne pas coller au bord
+          scrollViewRef.current?.scrollTo({ y: y - 80, animated: true });
+        },
+        () => {
+          // Fallback: utiliser scrollTo avec une valeur approximative
+          scrollViewRef.current?.scrollTo({ y: 400, animated: true });
+        }
+      );
+    } else {
+      // Fallback simple
+      scrollViewRef.current?.scrollTo({ y: 400, animated: true });
+    }
+  };
+
+  // Fonction pour faire défiler vers la section des offres
+  const scrollToOffersSection = () => {
+    if (offersSectionRef.current && scrollViewRef.current) {
+      // Mesurer la position de la section des offres
+      offersSectionRef.current.measureLayout(
+        scrollViewRef.current as any,
+        (x, y) => {
+          // Faire défiler avec un offset pour ne pas coller au bord
+          scrollViewRef.current?.scrollTo({ y: y - 80, animated: true });
+        },
+        () => {
+          // Fallback: utiliser scrollTo avec une valeur approximative
+          scrollViewRef.current?.scrollTo({ y: 800, animated: true });
+        }
+      );
+    } else {
+      // Fallback simple
+      scrollViewRef.current?.scrollTo({ y: 800, animated: true });
+    }
+  };
+
+  // Fonction pour rechercher un trajet (avec défilement)
+  const handleSearchTrip = () => {
+    // Si aucun trajet n'est disponible, afficher un message
+    if (filteredTrips.length === 0) {
+      Alert.alert(
+        t("noTrips") || "Aucun trajet",
+        t("noTripsMessage") || "Aucun trajet disponible pour le moment",
+        [{ text: t("ok") || "OK" }]
+      );
+      return;
+    }
+    
+    // Faire défiler vers la section des trajets
+    scrollToTripsSection();
+    
+    // Optionnel: afficher un petit toast ou feedback
+    // Vous pouvez ajouter un ToastMessage ici si vous avez le composant
+  };
+
+  // Fonction pour voir les offres (avec défilement)
+  const handleViewOffers = () => {
+    // Si aucune offre n'est disponible, afficher un message
+    if (filteredOffers.length === 0) {
+      Alert.alert(
+        t("noOffers") || "Aucune offre",
+        t("noOffersMessage") || "Aucune offre disponible pour le moment",
+        [{ text: t("ok") || "OK" }]
+      );
+      return;
+    }
+    
+    // Faire défiler vers la section des offres
+    scrollToOffersSection();
+  };
+
   /* ===================== RENDER ===================== */
   const renderTrip = ({ item }: { item: Trip }) => {
     if (!item) return null;
@@ -669,107 +759,149 @@ export default function PassengerHome({
         </ScrollView>
       )}
 
-      {/* ACTIONS RAPIDES POUR PASSAGER - DÉPLACÉES SOUS LES FILTRES */}
+      {/* ACTIONS RAPIDES POUR PASSAGER - AMÉLIORÉES AVEC DÉFILEMENT */}
       <View style={styles.quickActionsSection}>
-        <View style={styles.quickActionsHeader}>
-          <Text style={styles.quickActionsTitle}>{t("quickActions") || "Actions rapides"}</Text>
-        </View>
+  <View style={styles.quickActionsHeader}>
+    <Text style={styles.quickActionsTitle}>{t("quickActions")}</Text>
+    <Text style={styles.quickActionsHint}>
+      {filteredTrips.length} {t("tripsCount")} • {filteredOffers.length} {t("offersCount")}
+    </Text>
+  </View>
 
-        <View style={styles.quickActionsRow}>
-          {/* Rechercher un trajet */}
-          <TouchableOpacity
-            style={styles.quickActionItem}
-            activeOpacity={0.7}
-            onPress={() => {
-              console.log("Rechercher un trajet");
-            }}
-          >
-            <View style={[styles.quickActionIcon, { backgroundColor: "#ECFDF5" }]}>
-              <Compass size={24} color="#047857" />
-            </View>
-            <Text style={styles.quickActionLabel}>{t("searchTrip") || "Rechercher"}</Text>
-          </TouchableOpacity>
-
-          {/* Voir les offres */}
-          <TouchableOpacity
-            style={styles.quickActionItem}
-            activeOpacity={0.7}
-            onPress={() => {
-              console.log("Voir les offres");
-            }}
-          >
-            <View style={[styles.quickActionIcon, { backgroundColor: "#bcb7a3" }]}>
-              <Rocket size={24} color="#3b342f" />
-            </View>
-            <Text style={styles.quickActionLabel}>{t("offers") || "Offres"}</Text>
-          </TouchableOpacity>
-
-          {/* Demander un trajet */}
-          <TouchableOpacity
-            style={styles.quickActionItem}
-            activeOpacity={0.7}
-            onPress={() => {
-              setSelectedRideRequestId(1);
-              setRideRequestModalVisible(true);
-            }}
-          >
-            <View style={[styles.quickActionIcon, { backgroundColor: "#EFF6FF" }]}>
-              <FileText size={24} color="#1b2a52" />
-            </View>
-            <Text style={styles.quickActionLabel}>{t("rideRequests") || "Demander un trajet"}</Text>
-          </TouchableOpacity>
-        </View>
+  <View style={styles.quickActionsRow}>
+    <TouchableOpacity
+      style={styles.quickActionItem}
+      activeOpacity={0.7}
+      onPress={handleSearchTrip}
+    >
+      <View style={[styles.quickActionIcon, { backgroundColor: "#ECFDF5" }]}>
+        <Compass size={24} color="#047857" />
       </View>
+      <Text style={styles.quickActionLabel}>{t("searchTrip")}</Text>
+      <Text style={styles.quickActionCount}>{filteredTrips.length} {t("tripsCount")}</Text>
+    </TouchableOpacity>
 
+    <TouchableOpacity
+      style={styles.quickActionItem}
+      activeOpacity={0.7}
+      onPress={handleViewOffers}
+    >
+      <View style={[styles.quickActionIcon, { backgroundColor: "#bcb7a3" }]}>
+        <Rocket size={24} color="#3b342f" />
+      </View>
+      <Text style={styles.quickActionLabel}>{t("offers")}</Text>
+      <Text style={styles.quickActionCount}>{filteredOffers.length} {t("offersCount")}</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={styles.quickActionItem}
+      activeOpacity={0.7}
+      onPress={() => {
+        setSelectedRideRequestId(1);
+        setRideRequestModalVisible(true);
+      }}
+    >
+      <View style={[styles.quickActionIcon, { backgroundColor: "#EFF6FF" }]}>
+        <FileText size={24} color="#1b2a52" />
+      </View>
+      <Text style={styles.quickActionLabel}>{t("rideRequests")}</Text>
+      <Text style={styles.quickActionCount}>{t("newBadge")}</Text>
+    </TouchableOpacity>
+  </View>
+   </View>
+
+      {/* ScrollView principale avec ref pour le défilement */}
       <ScrollView
+        ref={scrollViewRef}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       >
-        {/* SECTION TRAJETS AVEC "VOIR PLUS" ALIGNÉ À DROITE */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {t("availableTrips") || 'Trajets disponibles'} ({filteredTrips.length})
-          </Text>
-          {paginatedTrips.length < filteredTrips.length && (
-            <TouchableOpacity 
-              style={styles.seeMoreButton}
-              onPress={() => setTripPage((p) => p + 1)}
-            >
-              <Text style={styles.seeMoreText}>{t("seeMore") || 'Voir plus'}</Text>
-              <ChevronRight size={16} color="#047857" />
-            </TouchableOpacity>
+        {/* SECTION TRAJETS - AVEC REF POUR LE DÉFILEMENT */}
+        <View 
+          ref={tripsSectionRef}
+          onLayout={(event) => {
+            // Enregistrer la position Y de la section des trajets
+            const layout = event.nativeEvent.layout;
+            setTripsSectionY(layout.y);
+          }}
+        >
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>
+              {t("availableTrips") || 'Trajets disponibles'} ({filteredTrips.length})
+            </Text>
+            {paginatedTrips.length < filteredTrips.length && (
+              <TouchableOpacity 
+                style={styles.seeMoreButton}
+                onPress={() => setTripPage((p) => p + 1)}
+              >
+                <Text style={styles.seeMoreText}>{t("seeMore") || 'Voir plus'}</Text>
+                <ChevronRight size={16} color="#047857" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {loadingTrips && filteredTrips.length === 0 ? (
+            <Text style={styles.loadingText}>{t("loading") || "Chargement..."}</Text>
+          ) : filteredTrips.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Compass size={48} color="#9CA3AF" />
+              <Text style={styles.emptyStateText}>{t("noTripsFound") || "Aucun trajet trouvé"}</Text>
+              <Text style={styles.emptyStateSubtext}>{t("tryAdjustingFilters") || "Essayez d'ajuster vos filtres"}</Text>
+            </View>
+          ) : (
+            <FlatList 
+              data={paginatedTrips} 
+              keyExtractor={(i) => i?.id || Math.random().toString()} 
+              renderItem={renderTrip} 
+              scrollEnabled={false} 
+            />
           )}
         </View>
 
-        <FlatList 
-          data={paginatedTrips} 
-          keyExtractor={(i) => i?.id || Math.random().toString()} 
-          renderItem={renderTrip} 
-          scrollEnabled={false} 
-        />
+        {/* SECTION OFFRES - AVEC REF POUR LE DÉFILEMENT */}
+        <View 
+          ref={offersSectionRef}
+          onLayout={(event) => {
+            // Enregistrer la position Y de la section des offres
+            const layout = event.nativeEvent.layout;
+            setOffersSectionY(layout.y);
+          }}
+        >
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>
+              {t("offers") || 'Offres'} ({filteredOffers.length})
+            </Text>
+            {paginatedOffers.length < filteredOffers.length && (
+              <TouchableOpacity 
+                style={styles.seeMoreButton}
+                onPress={() => setOfferPage((p) => p + 1)}
+              >
+                <Text style={styles.seeMoreText}>{t("seeMore") || 'Voir plus'}</Text>
+                <ChevronRight size={16} color="#047857" />
+              </TouchableOpacity>
+            )}
+          </View>
 
-        {/* SECTION OFFRES AVEC "VOIR PLUS" ALIGNÉ À DROITE */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {t("offers") || 'Offres'} ({filteredOffers.length})
-          </Text>
-          {paginatedOffers.length < filteredOffers.length && (
-            <TouchableOpacity 
-              style={styles.seeMoreButton}
-              onPress={() => setOfferPage((p) => p + 1)}
-            >
-              <Text style={styles.seeMoreText}>{t("seeMore") || 'Voir plus'}</Text>
-              <ChevronRight size={16} color="#047857" />
-            </TouchableOpacity>
+          {loadingOffers && filteredOffers.length === 0 ? (
+            <Text style={styles.loadingText}>{t("loading") || "Chargement..."}</Text>
+          ) : filteredOffers.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Rocket size={48} color="#9CA3AF" />
+              <Text style={styles.emptyStateText}>{t("noOffersFound") || "Aucune offre trouvée"}</Text>
+              <Text style={styles.emptyStateSubtext}>{t("checkBackLater") || "Revenez plus tard"}</Text>
+            </View>
+          ) : (
+            <FlatList 
+              data={paginatedOffers} 
+              keyExtractor={(i) => String(i?.id || Math.random())} 
+              renderItem={renderOffer} 
+              scrollEnabled={false} 
+            />
           )}
         </View>
-
-        <FlatList 
-          data={paginatedOffers} 
-          keyExtractor={(i) => String(i?.id || Math.random())} 
-          renderItem={renderOffer} 
-          scrollEnabled={false} 
-        />
+        
+        {/* Espace en bas */}
+        <View style={{ height: 20 }} />
       </ScrollView>
 
       {rideRequestModalVisible && (
@@ -953,6 +1085,10 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
+  quickActionsHint: {
+    fontSize: 12,
+    color: "#9CA3AF",
+  },
   quickActionsRow: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -975,6 +1111,39 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#6B7280",
     textAlign: "center",
+  },
+  quickActionCount: {
+    fontSize: 10,
+    color: "#9CA3AF",
+    marginTop: 2,
+  },
+  
+  // États vides
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+    marginHorizontal: 16,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    marginBottom: 16,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#6B7280",
+    marginTop: 12,
+  },
+  emptyStateSubtext: {
+    fontSize: 13,
+    color: "#9CA3AF",
+    marginTop: 4,
+    textAlign: "center",
+  },
+  loadingText: {
+    textAlign: "center",
+    color: "#6B7280",
+    marginVertical: 20,
   },
 
   searchWrapper: { 

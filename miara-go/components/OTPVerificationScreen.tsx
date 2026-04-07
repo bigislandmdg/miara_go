@@ -1,4 +1,4 @@
-// OTPVerificationScreen.tsx — Version corrigée sans erreur de navigation
+// OTPVerificationScreen.tsx — Version corrigée avec traductions complètes
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -36,7 +36,7 @@ interface OTPVerificationScreenProps {
   otpFromLogin?: string;
   onBack?: () => void;
   onVerified?: (role: "driver" | "passenger", userId: number, token: string) => void;
-  onExpired?: () => void; // Callback pour signaler l'expiration au parent
+  onExpired?: () => void;
 }
 
 export default function OTPVerificationScreen({
@@ -195,9 +195,7 @@ export default function OTPVerificationScreen({
         {
           text: t("ok", "OK"),
           onPress: async () => {
-            // Nettoyer les données stockées
             await AsyncStorage.multiRemove(["token", "user", "role", "isLoggedIn"]);
-            // 🔥 CORRECTION : Utiliser le callback onExpired au lieu de navigation.navigate
             if (onExpired) {
               onExpired();
             } else if (onBack) {
@@ -325,13 +323,13 @@ export default function OTPVerificationScreen({
             disabled={isVerifying || otpExpired}
           >
             <Text style={styles.buttonText}>
-              {isVerifying ? t("verifying") : t("continueBtn")}
+              {isVerifying ? t("verifying", "Vérification...") : t("continueBtn", "Continuer")}
             </Text>
           </TouchableOpacity>
 
           {timer > 0 && !otpExpired ? (
             <Text style={styles.timerText}>
-              {t("resendIn")} {formatTimer(timer)}
+              {t("resendIn", "Renvoyer dans")} {formatTimer(timer)}
             </Text>
           ) : (
             <TouchableOpacity onPress={handleResend} disabled={isResending} style={styles.resendButton}>
@@ -341,7 +339,7 @@ export default function OTPVerificationScreen({
                 <>
                   <RefreshCw size={16} color="#047857" />
                   <Text style={styles.resendText}>
-                    {otpExpired ? t("resendNewCode", "Renvoyer un nouveau code") : t("resendOTP")}
+                    {otpExpired ? t("resendNewCode", "Renvoyer un nouveau code") : t("resendOTP", "Renvoyer le code")}
                   </Text>
                 </>
               )}
@@ -349,12 +347,16 @@ export default function OTPVerificationScreen({
           )}
 
           <TouchableOpacity onPress={redirectToLogin} style={styles.backToLoginButton}>
-            <Text style={styles.backToLoginText}>{t("backToLogin", "Retour à la connexion")}</Text>
+            <Text style={styles.backToLoginText}>
+              {t("backToLogin", "Retour à la connexion")}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.securityBox}>
             <Shield size={22} color="#059669" />
-            <Text style={styles.securityText}>{t("secureLoginNote")}</Text>
+            <Text style={styles.securityText}>
+              {t("secureLoginNote", "Connexion sécurisée - Code à usage unique")}
+            </Text>
           </View>
         </Animated.View>
       </ScrollView>
@@ -403,3 +405,4 @@ const styles = StyleSheet.create({
   expiredWarning: { backgroundColor: "#FEF2F2", padding: 12, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: "#FECACA" },
   expiredWarningText: { color: "#B91C1C", textAlign: "center", fontSize: 13, fontWeight: "500" },
 });
+

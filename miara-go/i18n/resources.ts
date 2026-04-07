@@ -82,14 +82,27 @@ export const resources = {
 
       // ================= OTP VERIFICATION =================
       otpVerification: "Vérification OTP",
-      codeSentTo: "Code envoyé à",
-      resendIn: "Renvoyer",
-      invalidOTP: "❌ Code OTP invalide",
-      otpIncorrect: "❌ OTP incorrect",
-      loginSuccess: "✅ Connexion réussie",
-      networkError: "❌ Erreur réseau",
+      codeSentTo: "Code envoyé au",
+      otpExpired: "Code OTP expiré",
+      otpIncorrect: "OTP incorrect",
+      loginSuccess: "Connexion réussie",
+      networkError: "Erreur réseau",
+      sessionExpired: "Session expirée",
+      otpExpiredMessage: "Votre code OTP a expiré. Veuillez vous reconnecter.",
+      otpExpiredResend: "Code expiré, veuillez vous reconnecter",
+      otpResent: "Nouveau code envoyé",
+      error: "Erreur",
+      resendFailed: "Impossible de renvoyer le code. Voulez-vous réessayer ?",
+      retry: "Réessayer",
+      backToLogin: "Retour à la connexion",
       verifying: "Vérification...",
       continueBtn: "Continuer",
+      resendIn: "Renvoyer dans",
+      resendOTP: "Renvoyer le code",
+      resendNewCode: "Renvoyer un nouveau code",
+      sending: "Envoi...",
+      otpExpiredWarning: "Code OTP expiré. Veuillez renvoyer un nouveau code.",
+
 
     // ================= NAVIGATION =================
     hello: "Bonjour",
@@ -125,7 +138,7 @@ export const resources = {
     enableError: "Erreur activation biométrie",
     loginFailed: "Échec login biométrique",
     success: "✅ Authentification réussie",
-    error: "Erreur biométrique",
+
     faceIdDescription: "Utilisez la reconnaissance faciale pour vous connecter",
     fingerprintDescription: "Utilisez votre empreinte digitale pour vous connecter",
     biometricSecure: "Sécurisé et rapide",
@@ -158,6 +171,22 @@ export const resources = {
     rateTrip: "Evaluer un trajet",
     publishRideTitle: "Comment publier une course ?",
     publishRideDesc: "Cliquez ici pour créer une demande de course rapidement.",
+    tripsCount: "trajets",
+    offersCount: "offres",
+    newBadge: "Nouveau",
+    noTrips: "Aucun trajet",
+    noTripsMessage: "Aucun trajet disponible pour le moment",
+    noOffers: "Aucune offre",
+    noOffersMessage: "Aucune offre disponible pour le moment",
+    noOffersFound: "Aucune offre trouvée",
+    tryAdjustingFilters: "Essayez d'ajuster vos filtres",
+    checkBackLater: "Revenez plus tard",
+    loading: "Chargement...",
+    sortBy: "Trier par",
+    sortByRating: "Note",
+    priceRange: "Fourchette de prix",
+    minRating: "Note minimum",
+    vehicleTypes: "Types de véhicules",
 
     // ================= PASSENGER HISTORY =================
     passengerHistoryTitle: "Mes trajets", // FR
@@ -451,28 +480,28 @@ export const resources = {
            
   
         // ==== ABOUT ==================
-  noContent: "Aucun contenu disponible",
-  aboutSection: {
-    miaraGo: {
-      title: "MiaraGo",
-      description: "MiaraGo est une plateforme de covoiturage moderne qui connecte efficacement les conducteurs et les passagers.",
-      content: "MiaraGo a été fondée en 2026 avec pour mission de révolutionner le covoiturage à Madagascar."
-    },
-    features: {
-      title: "Fonctionnalités",
-      description: "Profitez de la réservation simplifiée, paiements sécurisés, suivi en temps réel et plus encore.",
-      content: "Découvrez toutes les fonctionnalités qui rendent MiaraGo unique."
-    },
-    security: {
-      title: "Sécurité",
-      description: "Nous garantissons une sécurité maximale pour les conducteurs et les passagers.",
-      content: "La sécurité de nos utilisateurs est notre priorité absolue."
-    },
-    contact: {
-      title: "Contact",
-      description: "Contactez-nous à tout moment à support@miarago.com",
-      content: "Notre équipe est disponible 24/7 pour répondre à toutes vos questions."
-    }
+        noContent: "Aucun contenu disponible",
+        aboutSection: {
+            miaraGo: {
+              title: "MiaraGo",
+              description: "MiaraGo est une plateforme de covoiturage moderne qui connecte efficacement les conducteurs et les passagers.",
+              content: "MiaraGo a été fondée en 2026 avec pour mission de révolutionner le covoiturage à Madagascar."
+            },
+            features: {
+              title: "Fonctionnalités",
+              description: "Profitez de la réservation simplifiée, paiements sécurisés, suivi en temps réel et plus encore.",
+              content: "Découvrez toutes les fonctionnalités qui rendent MiaraGo unique."
+            },
+            security: {
+              title: "Sécurité",
+              description: "Nous garantissons une sécurité maximale pour les conducteurs et les passagers.",
+              content: "La sécurité de nos utilisateurs est notre priorité absolue."
+            },
+            contact: {
+                title: "Contact",
+                description: "Contactez-nous à tout moment à support@miarago.com",
+                content: "Notre équipe est disponible 24/7 pour répondre à toutes vos questions."
+            }
   },
   abouts: {
     mission: "Notre mission",
@@ -670,13 +699,24 @@ export const resources = {
       // ================= OTP VERIFICATION =================
       otpVerification: "OTP Verification",
       codeSentTo: "Code sent to",
-      invalidOTP: "❌ Invalid OTP",
-      otpIncorrect: "❌ OTP incorrect",
-      loginSuccess: "✅ Login successful",
-      networkError: "❌ Network error",
+      otpExpired: "OTP code expired",
+      otpIncorrect: "Incorrect OTP",
+      loginSuccess: "Login successful",
+      networkError: "Network error",
+      sessionExpired: "Session expired",
+      otpExpiredMessage: "Your OTP code has expired. Please login again.",
+      otpExpiredResend: "Code expired, please reconnect",
+      otpResent: "New code sent",
+      resendFailed: "Unable to resend code. Would you like to try again?",
+      retry: "Try again",
+      backToLogin: "Back to login",
       verifying: "Verifying...",
       continueBtn: "Continue",
-      resendIn: "Resend",
+      resendIn: "Resend in",
+      resendOTP: "Resend OTP code",
+      resendNewCode: "Resend a new code",
+      sending: "Sending...",
+      otpExpiredWarning: "OTP code expired. Please resend a new code.",
 
       // ================= NAVIGATION =================
       hello: "Hello",
@@ -745,6 +785,24 @@ export const resources = {
       tripLabel: "Trip",
       publishRideTitle: "How to publish a ride?",
       publishRideDesc: "Click here to quickly create a ride request.",
+      tripsCount: "trips",
+      offersCount: "offers",
+      newBadge: "New",
+      noTrips: "No trips",
+      noTripsMessage: "No trips available at the moment",
+      noOffers: "No offers",
+      noOffersMessage: "No offers available at the moment",
+      noOffersFound: "No offers found",
+      tryAdjustingFilters: "Try adjusting your filters",
+      checkBackLater: "Come back later",
+      loading: "Loading...",
+      sortBy: "Sort by",
+      sortByRating: "Rating",
+      priceRange: "Price range",
+      minRating: "Minimum rating",
+      vehicleTypes: "Vehicle types",
+      reset: "Reset",
+  
 
     // ================= PASSENGER HISTORY =================
     passengerHistoryTitle: "My Trips",
@@ -1253,15 +1311,26 @@ export const resources = {
        operator: "Mpandraharaha",
 
        // ================= OTP VERIFICATION =================
-       otpVerification: "Fanamarinana OTP",
-       codeSentTo: "Kaody nalefa ho an'i",
-       invalidOTP: "❌ Kaody OTP tsy mety",
-       otpIncorrect: "❌ OTP diso",
-       loginSuccess: "✅ Fidirana nahomby",
-       networkError: "❌ Hadisoana tambajotra",
-       verifying: "Fanamarinana...",
-       continueBtn: "Tohizo",
-       resendIn:"Averina alefa...",
+      otpVerification: "Fanamarinana OTP",
+      codeSentTo: "Kaody nalefa tany amin'ny",
+      otpExpired: "Lany daty ny kaody OTP",
+      otpIncorrect: "Diso ny OTP",
+      loginSuccess: "Tafiditra soa aman-tsara",
+      networkError: "Hadisoana tambajotra",
+      sessionExpired: "Lany daty ny fotoam-pidirana",
+      otpExpiredMessage: "Lany daty ny kaody OTP. Azafady mamerina midira indray.",
+      otpExpiredResend: "Lany daty ny kaody, azafady mamerina midira",
+      otpResent: "Nandefasana kaody vaovao",
+      resendFailed: "Tsy afaka nandefa kaody indray. Te-hanandrana indray ve?",
+      retry: "Hanandrana indray",
+      backToLogin: "Hiverina any amin'ny fidirana",
+      verifying: "Fanamarinana...",
+      continueBtn: "Hanohy",
+      resendIn: "Handefa indray ao anatin'ny",
+      resendOTP: "Handefa kaody OTP indray",
+      resendNewCode: "Handefa kaody vaovao",
+      sending: "Mandefa...",
+      otpExpiredWarning: "Lany daty ny kaody OTP. Azafady mba mandefa kaody vaovao.",
 
        // ================= NAVIGATION =================
       hello: "Salama",
@@ -1327,9 +1396,28 @@ export const resources = {
         filterSort: "Sivana & Fikarohana",
         sortByPrice: "Vidiny",
         sortByDate: "Daty",
-        onlyAvailable: "Hita ihany",
+        onlyAvailable: "Hita ihany", 
+        tripsCount: "isan'ny dia",
+        offersCount: "tolotra",
+        newBadge: "Vaovao",
+        noTrips: "Tsy misy dian-dia",
+        noTripsMessage: "Tsy misy dian-dia amin'izao fotoana izao",
+        noOffers: "Tsy misy tolotra",
+        noOffersMessage: "Tsy misy tolotra amin'izao fotoana izao",
+        noTripsFound: "Tsy nisy dia hita",
+        noOffersFound: "Tsy nisy tolotra hita",
+        tryAdjustingFilters: "Andramo hanitsy ny sivana",
+        checkBackLater: "Miverena any aoriana any",
+        loading: "Famakiana...",
+        rated: "Voamarina",
+        rateTrip: "Manamarina",
+        sortBy: "Karohina araka ny",
+        sortByRating: "Naoty",
+        priceRange: "Vidin'ny",
+        minRating: "Naoty farany ambany",
+        vehicleTypes: "Karazan fiara",
+        reset: "Averina",
         apply: "Ampiharo",
-        rateTrip: "Manome naoty ny dia",
         publishRideTitle: "Ahoana no hamoahana dia?",
         publishRideDesc: "Tsindrio eto hamoronana fangatahana dia haingana.",
 
@@ -1339,7 +1427,6 @@ export const resources = {
         passengerHistoryDefaultDriver: "Mpamily",
         pending: "Miandry",
         completed: "Vita",
-        noTripsFound: "Tsy misy dia hita",
         seeDetails: "Jereo ny antsipiriany",
 
       // ================= MESSAGES =================
