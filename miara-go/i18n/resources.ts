@@ -105,24 +105,24 @@ export const resources = {
 
 
     // ================= NAVIGATION =================
-    hello: "Bonjour",
-    helloProfile: "Bonjour {{prenom}} 👋", // 🔹 pour Header/ProfileScreen
-    home: "Accueil",
-    history: "Historique",
-    trips: "Trajets",
-    wallet: "Wallet",
-    rating: "Notes",
-    profile: "Profil",
-    settings: "Paramètres",
-    about: "À propos",
-    principal: "Principal",
-    support: "Support",
-    help: "Aide et Commentaires",
-    user: "Utilisateur",
-    quickActions: "Action rapide",
-    createTrip: "Créer un trajet",
-    searchTrip: "Recherche un trajet",
-    publishTrip: "Publier",
+       hello: "Bonjour",
+       helloProfile: "Bonjour {{prenom}} 👋", // 🔹 pour Header/ProfileScreen
+       home: "Accueil",
+       history: "Historique",
+       trips: "Trajets",
+       wallet: "Wallet",
+       rating: "Notes",
+       profile: "Profil",
+       settings: "Paramètres",
+       about: "À propos",
+       principal: "Principal",
+       support: "Support",
+       help: "Aide et Commentaires",
+       user: "Utilisateur",
+       quickActions: "Action rapide",
+       createTrip: "Créer un trajet",
+       searchTrip: "Recherche un trajet",
+       publishTrip: "Publier",
     
     // =================  BIOMETRIC SCREEN =================
     title: "Connexion biométrique",
@@ -195,6 +195,17 @@ export const resources = {
     completed: "Terminés",
     noTripsFound: "Aucun trajet trouvé",
     seeDetails: "Voir les détails",
+
+    // =============== TICKET SCREEN ==============
+    ticketTitle: "TICKET DE TRANSPORT",
+    thanksTicket: "Merci d'avoir voyagé avec MiaraGo",
+    shareError: "Impossible de partager le ticket",
+    bookingRef: "N° de réservation",
+    tripRoute: "Trajet",
+    shareSuccess: "Ticket partagé avec succès",
+    qrLabel: "Présentez ce QR code au conducteur",
+    share: "Partager",
+    download: "Télécharger",
 
     // ================= MESSAGES =================
      noDriverNumber: "Numéro non disponible", // FR
@@ -812,6 +823,17 @@ export const resources = {
     noTripsFound: "No trips found",
     seeDetails: "View Details",
 
+    // ================= TICKET SCREEN =============
+    ticketTitle: "TRANSPORT TICKET",
+    thanksTicket: "Thank you for traveling with MiaraGo",
+    shareError: "Unable to share ticket",
+    bookingRef: "Booking reference",
+    tripRoute: "Trip",
+    shareSuccess: "Ticket shared successfully",
+    qrLabel: "Show this QR code to the driver",
+    share: "Share",
+    download: "Download",
+
     // ================= MESSAGES =================
     typeMessage: "Type your message…", // EN
     noDriverNumber: "Number not available", // EN
@@ -845,8 +867,8 @@ export const resources = {
     twoBigBags: "2 large suitcases",
     largeLuggage: "Large luggage",
 
-     // ================= BOOKING SCREEN =================
-     /* ================= BOOKING SCREEN ================= */
+    
+    /* ================= BOOKING SCREEN ================= */
       bookTrip: "Book the trip",
       bookingTitle: "Book a trip",
       vehicle: "Vehicle",
@@ -1428,6 +1450,17 @@ export const resources = {
         pending: "Miandry",
         completed: "Vita",
         seeDetails: "Jereo ny antsipiriany",
+
+      // ============== TICKET SCREEN ===============
+      ticketTitle: "TAPAKILA FITATERANA",
+      thanksTicket: "Misaotra nandeha niaraka tamin'i MiaraGo",
+      shareError: "Tsy afaka nizara ny tapakila",
+      bookingRef: "Laharana famandrihana",
+      tripRoute: "Dia",
+      shareSuccess: "Tapakila nozaraina soa aman-tsara",
+      qrLabel: "Aseho ity QR code ity amin'ny mpamily",
+      share: "Zarao",
+      download: "Sintomy",
 
       // ================= MESSAGES =================
         typeMessage: "Soraty ny hafatrao…", // MG

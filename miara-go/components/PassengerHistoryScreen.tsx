@@ -1,4 +1,4 @@
-// PassengerHistoryScreen.tsx - Version avec traductions complètes
+// PassengerHistoryScreen.tsx - Version avec modal ticket extrait
 import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import {
   View,
@@ -13,7 +13,6 @@ import {
   ActivityIndicator,
   Animated,
   Platform,
-  Modal,
   Share,
   Alert,
 } from "react-native";
@@ -31,8 +30,6 @@ import {
   Share2,
   Ticket,
   Receipt,
-  QrCode,
-  Download,
   X,
   Users,
 } from "lucide-react-native";
@@ -40,7 +37,8 @@ import {
 import type { Trip } from "./PassengerHome";
 import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
-import QRCode from "react-native-qrcode-svg";
+import TicketModal from "./TicketScreen";
+import TicketScreen from "./TicketScreen";
 
 type PassengerHistoryProps = {
   onBack: () => void;
@@ -89,15 +87,13 @@ export default function PassengerHistoryScreen({
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   
-  // États pour le modal ticket
+  // États pour le modal ticket - SIMPLIFIÉS
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [selectedTicketItem, setSelectedTicketItem] = useState<HistoryItem | null>(null);
   
   // Animations principales
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
-  const ticketScale = useRef(new Animated.Value(0.9)).current;
-  const ticketOpacity = useRef(new Animated.Value(0)).current;
   
   // Stockage des animations pour les items
   const itemAnimationsRef = useRef<{ fade: Animated.Value; slide: Animated.Value; started: boolean }[]>([]);
@@ -255,91 +251,15 @@ export default function PassengerHistoryScreen({
     }, 300);
   };
 
-  /* ================= TICKET FUNCTIONS ================= */
-  const generateTicketNumber = (id: string) => {
-    const prefix = "MGR";
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const shortId = id.slice(-6);
-    return `${prefix}-${year}${month}-${shortId}`;
-  };
-
-  const formatDateForTicket = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("fr-FR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
+  /* ================= TICKET FUNCTIONS SIMPLIFIÉES ================= */
   const openTicketModal = (item: HistoryItem) => {
     setSelectedTicketItem(item);
     setShowTicketModal(true);
-    Animated.parallel([
-      Animated.spring(ticketScale, { toValue: 1, friction: 8, tension: 40, useNativeDriver: true }),
-      Animated.timing(ticketOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-    ]).start();
   };
 
   const closeTicketModal = () => {
-    Animated.parallel([
-      Animated.spring(ticketScale, { toValue: 0.9, friction: 8, tension: 40, useNativeDriver: true }),
-      Animated.timing(ticketOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-    ]).start(() => {
-      setShowTicketModal(false);
-      setSelectedTicketItem(null);
-    });
-  };
-
-  const shareTicket = async (item: HistoryItem) => {
-    const ticketNumber = generateTicketNumber(item.id);
-    try {
-      await Share.share({
-        message: `🎫 ${t("ticketTitle") || "TICKET MIARAGO"}\n\n` +
-          `📅 ${formatDateForTicket(item.trip.date)} ${t("at") || "à"} ${item.trip.time}\n` +
-          `📍 ${item.trip.departure} → ${item.trip.arrival}\n` +
-          `👤 ${t("driver") || "Conducteur"}: ${item.trip.driver?.name}\n` +
-          `⭐ ${t("rating") || "Note"}: ${item.trip.driver?.rating.toFixed(1)}/5\n` +
-          `💰 ${t("amount") || "Montant"}: ${item.totalPrice.toLocaleString()} Ar\n` +
-          `🎟️ ${t("reference") || "Réf"}: ${ticketNumber}\n` +
-          `🪑 ${t("seats") || "Places"}: ${item.seats}\n\n` +
-          `${t("thanksTicket") || "Merci d'avoir voyagé avec MiaraGo !"}`,
-        title: `${t("ticketTitle") || "Ticket MiaraGo"} - ${ticketNumber}`,
-      });
-    } catch (error) {
-      console.log("Share error:", error);
-      Alert.alert(t("error") || "Erreur", t("shareError") || "Impossible de partager le ticket");
-    }
-  };
-
-  const downloadTicket = async (item: HistoryItem) => {
-    const ticketNumber = generateTicketNumber(item.id);
-    const ticketText = `${t("ticketTitle") || "MIARAGO - TICKET DE TRANSPORT"}\n${"=".repeat(40)}\n\n` +
-      `${t("bookingRef") || "N° de réservation"}: ${ticketNumber}\n` +
-      `${t("date") || "Date"}: ${formatDateForTicket(item.trip.date)}\n` +
-      `${t("time") || "Heure"}: ${item.trip.time}\n` +
-      `${t("tripRoute") || "Trajet"}: ${item.trip.departure} → ${item.trip.arrival}\n` +
-      `${t("driver") || "Conducteur"}: ${item.trip.driver?.name}\n` +
-      `${t("rating") || "Note"}: ${item.trip.driver?.rating.toFixed(1)}/5\n` +
-      `${t("seats") || "Places"}: ${item.seats}\n` +
-      `${t("amount") || "Montant"}: ${item.totalPrice.toLocaleString()} Ar\n` +
-      `${t("vehicle") || "Véhicule"}: ${item.vehicleModel}\n\n` +
-      `${"=".repeat(40)}\n${t("thanksTicket") || "Merci d'avoir voyagé avec MiaraGo !"}\n` +
-      `support@miarago.com | www.miarago.com`;
-
-    try {
-      await Share.share({
-        message: ticketText,
-        title: `${t("ticketTitle") || "Ticket MiaraGo"} - ${ticketNumber}`,
-      });
-      Alert.alert(t("success") || "Succès", t("shareSuccess") || "Ticket partagé avec succès !");
-    } catch (error) {
-      console.log("Download error:", error);
-      Alert.alert(t("error") || "Erreur", t("shareError") || "Impossible de partager le ticket");
-    }
+    setShowTicketModal(false);
+    setSelectedTicketItem(null);
   };
 
   const shareReceipt = async (item: HistoryItem) => {
@@ -467,157 +387,6 @@ export default function PassengerHistoryScreen({
     );
   };
 
-  /* ================= TICKET MODAL ================= */
-  const TicketModalComponent = () => {
-    if (!selectedTicketItem) return null;
-    
-    const ticketNumber = generateTicketNumber(selectedTicketItem.id);
-    
-    return (
-      <Modal visible={showTicketModal} transparent animationType="none">
-        <View style={styles.ticketOverlay}>
-          <TouchableOpacity style={styles.ticketBackdrop} activeOpacity={1} onPress={closeTicketModal} />
-          <Animated.View 
-            style={[
-              styles.ticketContainer,
-              {
-                transform: [{ scale: ticketScale }],
-                opacity: ticketOpacity,
-              }
-            ]}
-          >
-            <LinearGradient
-              colors={["#059669", "#047857"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.ticketHeader}
-            >
-              <View style={styles.ticketLogoContainer}>
-                <Ticket size={28} color="#fff" />
-                <Text style={styles.ticketLogoText}>MiaraGo</Text>
-              </View>
-              <View style={styles.ticketBadge}>
-                <Text style={styles.ticketBadgeText}>{t("ticketTitle") || "TICKET DE TRANSPORT"}</Text>
-              </View>
-            </LinearGradient>
-
-            <View style={styles.ticketPerforation} />
-            <View style={styles.ticketPerforationLine} />
-
-            <View style={styles.ticketBody}>
-              <View style={styles.ticketNumberRow}>
-                <Receipt size={14} color="#6B7280" />
-                <Text style={styles.ticketNumberLabel}>{t("bookingRef") || "N° de réservation"}</Text>
-                <Text style={styles.ticketNumberValue}>{ticketNumber}</Text>
-              </View>
-              
-              <View style={styles.ticketDivider} />
-
-              <View style={styles.ticketRoute}>
-                <View style={styles.ticketRoutePoint}>
-                  <View style={styles.ticketRouteDotStart} />
-                  <Text style={styles.ticketRouteCity}>{selectedTicketItem.trip.departure}</Text>
-                </View>
-                <View style={styles.ticketRouteLine} />
-                <View style={styles.ticketRoutePoint}>
-                  <View style={styles.ticketRouteDotEnd} />
-                  <Text style={styles.ticketRouteCity}>{selectedTicketItem.trip.arrival}</Text>
-                </View>
-              </View>
-
-              <View style={styles.ticketInfoGrid}>
-                <View style={styles.ticketInfoItem}>
-                  <Calendar size={16} color="#6B7280" />
-                  <Text style={styles.ticketInfoLabel}>{t("date")}</Text>
-                  <Text style={styles.ticketInfoValue}>{formatDateForTicket(selectedTicketItem.trip.date)}</Text>
-                </View>
-                <View style={styles.ticketInfoItem}>
-                  <Clock size={16} color="#6B7280" />
-                  <Text style={styles.ticketInfoLabel}>{t("time")}</Text>
-                  <Text style={styles.ticketInfoValue}>{selectedTicketItem.trip.time}</Text>
-                </View>
-              </View>
-
-              <View style={styles.ticketInfoRow}>
-                <View style={styles.ticketInfoItem}>
-                  <Users size={16} color="#6B7280" />
-                  <Text style={styles.ticketInfoLabel}>{t("seats")}</Text>
-                  <Text style={styles.ticketInfoValue}>{selectedTicketItem.seats}</Text>
-                </View>
-                <View style={styles.ticketInfoItem}>
-                  <Car size={16} color="#6B7280" />
-                  <Text style={styles.ticketInfoLabel}>{t("vehicle")}</Text>
-                  <Text style={styles.ticketInfoValue} numberOfLines={1}>{selectedTicketItem.vehicleModel}</Text>
-                </View>
-              </View>
-
-              <View style={styles.ticketDriver}>
-                <Image source={{ uri: selectedTicketItem.trip.driver?.avatar || "https://via.placeholder.com/80" }} style={styles.ticketDriverAvatar} />
-                <View>
-                  <Text style={styles.ticketDriverLabel}>{t("driver")}</Text>
-                  <Text style={styles.ticketDriverName}>{selectedTicketItem.trip.driver?.name}</Text>
-                </View>
-                <View style={styles.ticketDriverRating}>
-                  <Star size={14} color="#F59E0B" fill="#F59E0B" />
-                  <Text style={styles.ticketDriverRatingText}>{selectedTicketItem.trip.driver?.rating.toFixed(1)}</Text>
-                </View>
-              </View>
-
-              <View style={styles.ticketPriceContainer}>
-                <Text style={styles.ticketPriceLabel}>{t("total")}</Text>
-                <Text style={styles.ticketPriceValue}>{selectedTicketItem.totalPrice.toLocaleString()} Ar</Text>
-              </View>
-
-              <View style={styles.ticketQRContainer}>
-                <View style={styles.ticketQRBorder}>
-                  <QRCode 
-                    value={JSON.stringify({ 
-                      id: selectedTicketItem.id, 
-                      ticketNumber,
-                      departure: selectedTicketItem.trip.departure, 
-                      arrival: selectedTicketItem.trip.arrival,
-                      date: selectedTicketItem.trip.date,
-                      seats: selectedTicketItem.seats
-                    })} 
-                    size={80} 
-                  />
-                </View>
-                <View style={styles.ticketQRText}>
-                  <QrCode size={12} color="#6B7280" />
-                  <Text style={styles.ticketQRLabel}>{t("qrLabel") || "Présentez ce QR code au conducteur"}</Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.ticketFooter}>
-              <Text style={styles.ticketFooterText}>{t("thanksTicket") || "Merci de voyager avec MiaraGo"}</Text>
-              <Text style={styles.ticketFooterSubtext}>support@miarago.com | www.miarago.com</Text>
-            </View>
-
-            <View style={styles.ticketCutLine} />
-
-            <View style={styles.ticketActions}>
-              <TouchableOpacity style={styles.ticketActionButton} onPress={() => shareTicket(selectedTicketItem)}>
-                <Share2 size={18} color="#059669" />
-                <Text style={styles.ticketActionText}>{t("share") || "Partager"}</Text>
-              </TouchableOpacity>
-              <View style={styles.ticketActionDivider} />
-              <TouchableOpacity style={styles.ticketActionButton} onPress={() => downloadTicket(selectedTicketItem)}>
-                <Download size={18} color="#059669" />
-                <Text style={styles.ticketActionText}>{t("download") || "Télécharger"}</Text>
-              </TouchableOpacity>
-              <View style={styles.ticketActionDivider} />
-              <TouchableOpacity style={styles.ticketActionButton} onPress={closeTicketModal}>
-                <X size={18} color="#059669" />
-                <Text style={styles.ticketActionText}>{t("close") || "Fermer"}</Text>
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
-        </View>
-      </Modal>
-    );
-  };
-
   /* ================= UI ================= */
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
@@ -703,7 +472,12 @@ export default function PassengerHistoryScreen({
         />
       )}
 
-      <TicketModalComponent />
+      {/* Ticket Modal - Composant extrait */}
+       <TicketScreen
+        visible={showTicketModal}
+        item={selectedTicketItem}
+         onClose={closeTicketModal}
+      />
     </View>
   );
 }
@@ -751,53 +525,6 @@ const styles = StyleSheet.create({
   detailsButtonText: { color: "#fff", fontSize: 12, fontWeight: "600" },
   ticketButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#FEF3C7", justifyContent: "center", alignItems: "center" },
   shareButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#ECFDF5", justifyContent: "center", alignItems: "center" },
-  ticketOverlay: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.6)" },
-  ticketBackdrop: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-  ticketContainer: { width: width - 32, backgroundColor: "#fff", borderRadius: 20, overflow: "hidden", shadowColor: "#000", shadowOpacity: 0.25, shadowRadius: 24, shadowOffset: { width: 0, height: 8 }, elevation: 16 },
-  ticketHeader: { paddingHorizontal: 20, paddingVertical: 16, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  ticketLogoContainer: { flexDirection: "row", alignItems: "center", gap: 8 },
-  ticketLogoText: { fontSize: 18, fontWeight: "800", color: "#fff" },
-  ticketBadge: { backgroundColor: "rgba(255,255,255,0.2)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  ticketBadgeText: { fontSize: 10, fontWeight: "600", color: "#fff", letterSpacing: 0.5 },
-  ticketPerforation: { position: "absolute", top: 68, left: 0, right: 0, height: 20, overflow: "hidden" },
-  ticketPerforationLine: { position: "absolute", top: 78, left: 0, right: 0, height: 1, backgroundColor: "#E5E7EB", borderStyle: "dashed" },
-  ticketCutLine: { height: 1, backgroundColor: "#E5E7EB", marginVertical: 0 },
-  ticketBody: { padding: 20 },
-  ticketNumberRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 },
-  ticketNumberLabel: { fontSize: 12, color: "#6B7280", flex: 1 },
-  ticketNumberValue: { fontSize: 14, fontWeight: "700", color: "#059669", fontFamily: Platform.OS === "ios" ? "Courier" : "monospace" },
-  ticketDivider: { height: 1, backgroundColor: "#F3F4F6", marginVertical: 16 },
-  ticketRoute: { marginBottom: 20 },
-  ticketRoutePoint: { flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 6 },
-  ticketRouteDotStart: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#10B981" },
-  ticketRouteDotEnd: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#EF4444" },
-  ticketRouteLine: { width: 2, height: 20, backgroundColor: "#E5E7EB", marginLeft: 4, marginVertical: 2 },
-  ticketRouteCity: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  ticketInfoGrid: { flexDirection: "row", gap: 16, marginBottom: 16 },
-  ticketInfoRow: { flexDirection: "row", gap: 16, marginBottom: 16 },
-  ticketInfoItem: { flex: 1, backgroundColor: "#F9FAFB", padding: 12, borderRadius: 12, alignItems: "center", gap: 6 },
-  ticketInfoLabel: { fontSize: 10, color: "#6B7280", textTransform: "uppercase", letterSpacing: 0.5 },
-  ticketInfoValue: { fontSize: 13, fontWeight: "600", color: "#111827", textAlign: "center" },
-  ticketDriver: { flexDirection: "row", alignItems: "center", backgroundColor: "#F9FAFB", padding: 12, borderRadius: 12, marginBottom: 16, gap: 12 },
-  ticketDriverAvatar: { width: 44, height: 44, borderRadius: 22 },
-  ticketDriverLabel: { fontSize: 10, color: "#6B7280" },
-  ticketDriverName: { fontSize: 14, fontWeight: "600", color: "#111827" },
-  ticketDriverRating: { flexDirection: "row", alignItems: "center", gap: 4, marginLeft: "auto" },
-  ticketDriverRatingText: { fontSize: 12, fontWeight: "600", color: "#F59E0B" },
-  ticketPriceContainer: { backgroundColor: "#ECFDF5", padding: 16, borderRadius: 12, alignItems: "center", marginBottom: 16 },
-  ticketPriceLabel: { fontSize: 12, color: "#059669", marginBottom: 4 },
-  ticketPriceValue: { fontSize: 22, fontWeight: "800", color: "#047857" },
-  ticketQRContainer: { alignItems: "center", gap: 8 },
-  ticketQRBorder: { padding: 8, backgroundColor: "#fff", borderRadius: 12, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
-  ticketQRText: { flexDirection: "row", alignItems: "center", gap: 6 },
-  ticketQRLabel: { fontSize: 10, color: "#6B7280" },
-  ticketFooter: { backgroundColor: "#F9FAFB", padding: 16, alignItems: "center", borderTopWidth: 1, borderTopColor: "#F3F4F6" },
-  ticketFooterText: { fontSize: 12, fontWeight: "500", color: "#059669", marginBottom: 4 },
-  ticketFooterSubtext: { fontSize: 10, color: "#6B7280" },
-  ticketActions: { flexDirection: "row", padding: 16, gap: 16, borderTopWidth: 1, borderTopColor: "#F3F4F6" },
-  ticketActionButton: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 10, borderRadius: 30, backgroundColor: "#F3F4F6" },
-  ticketActionText: { fontSize: 14, fontWeight: "500", color: "#059669" },
-  ticketActionDivider: { width: 1, backgroundColor: "#E5E7EB" },
   emptyContainer: { alignItems: "center", justifyContent: "center", paddingVertical: 60 },
   emptyIconContainer: { width: 80, height: 80, borderRadius: 40, backgroundColor: "#F3F4F6", justifyContent: "center", alignItems: "center", marginBottom: 16 },
   emptyTitle: { fontSize: 18, fontWeight: "600", color: "#111827", marginBottom: 8 },

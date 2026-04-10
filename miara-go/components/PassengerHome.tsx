@@ -1,4 +1,4 @@
-// PassengerHome.tsx (version avec actions rapides améliorées - défilement vers les sections)
+// PassengerHome.tsx (Version complète et corrigée)
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   View,
@@ -46,9 +46,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /* ===================== TYPES ===================== */
 export interface Trip {
-  driver_id: any;
+  driver_id: number;
   id: string;
   driver: {
+    id?: number;
     name: string;
     rating: number;
     avatar?: string;
@@ -78,9 +79,6 @@ export interface Offer {
   car_info: string;
 }
 
-// =========================================================
-// 🔹 INTERFACE POUR LES FILTRES AMÉLIORÉS
-// =========================================================
 interface FilterOptions {
   sortType: "none" | "price" | "date" | "rating";
   onlyAvailable: boolean;
@@ -117,16 +115,9 @@ export default function PassengerHome({
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loadingTrips, setLoadingTrips] = useState(true);
   const [loadingOffers, setLoadingOffers] = useState(true);
-
-  // =========================================================
-  // 🔹 ÉTAT POUR LE POPUP VITA MALAGASY
-  // =========================================================
   const [showVitaPopup, setShowVitaPopup] = useState(false);
   const [hasShownPopup, setHasShownPopup] = useState(false);
 
-  // =========================================================
-  // 🔹 ÉTATS POUR LES FILTRES AMÉLIORÉS
-  // =========================================================
   const [filterVisible, setFilterVisible] = useState(false);
   const [filters, setFilters] = useState<FilterOptions>({
     sortType: "none",
@@ -139,10 +130,7 @@ export default function PassengerHome({
     selectedVehicleTypes: [],
   });
   
-  // État pour les filtres temporaires (pendant l'édition dans le modal)
   const [tempFilters, setTempFilters] = useState<FilterOptions>(filters);
-  
-  // Statistiques des prix pour le slider
   const [priceStats, setPriceStats] = useState({ min: 0, max: 100000, avg: 25000 });
 
   const slideAnim = useRef(new Animated.Value(500)).current;
@@ -160,14 +148,9 @@ export default function PassengerHome({
   const [tripPage, setTripPage] = useState(1);
   const [offerPage, setOfferPage] = useState(1);
 
-  // =========================================================
-  // 🔹 REFS POUR LE DÉFILEMENT
-  // =========================================================
   const scrollViewRef = useRef<ScrollView>(null);
   const tripsSectionRef = useRef<View>(null);
   const offersSectionRef = useRef<View>(null);
-  
-  // Positions des sections pour le défilement
   const [tripsSectionY, setTripsSectionY] = useState(0);
   const [offersSectionY, setOffersSectionY] = useState(0);
 
@@ -176,7 +159,6 @@ export default function PassengerHome({
     const checkPopupStatus = async () => {
       try {
         const hasSeen = await AsyncStorage.getItem("hasSeenVitaPopup");
-        
         if (hasSeen !== "true" && !hasShownPopup) {
           setTimeout(() => {
             setShowVitaPopup(true);
@@ -193,14 +175,11 @@ export default function PassengerHome({
         }
       }
     };
-    
     checkPopupStatus();
   }, []);
 
-  /* ===================== GESTION DU SUBMIT DU RATING ===================== */
   const handleRatingSubmit = (rating: number, comment: string) => {
     console.log("Rating submitted:", { rating, comment, userType: "passenger" });
-    
     if (rating >= 4) {
       Alert.alert(
         t("vitaPopup.bonusTitle") || "Bonus ! 🎉",
@@ -210,7 +189,6 @@ export default function PassengerHome({
     }
   };
 
-  // Types de véhicules disponibles (extraits des trajets)
   const vehicleTypes = useMemo(() => {
     const types = new Set<string>();
     trips.forEach(trip => {
@@ -242,29 +220,34 @@ export default function PassengerHome({
     const json = await safeFetchJson("http://10.0.2.2:8080/rides");
 
     if (Array.isArray(json?.rides)) {
-      const fetchedTrips = json.rides.map((r: any) => ({
-        id: String(r.id),
-        departure: r.departure ?? "",
-        arrival: r.arrival ?? "",
-        date: r.date ?? "",
-        time: r.time ?? "",
-        price: Number(r.price ?? 0),
-        meetingPoints: Array.isArray(r.meetingPoints) ? r.meetingPoints : [],
-        hasRated: r.hasRated ?? false,
-        driver_id: r.driver?.id ?? 0,
-        driver: {
-          name: r.driver?.name ?? "Driver",
-          rating: Number(r.driver?.rating ?? 4.7),
-          avatar: r.driver?.avatar ?? "",
-          phone: r.driver?.phone ?? null,
-        },
-        vehicle: {
-          model: r.vehicle?.model ?? "Car",
-          plate: r.vehicle?.immatriculation ?? "",
-          totalSeats: Number(r.vehicle?.nombre_places ?? 4),
-          availableSeats: Number(r.vehicle?.availableSeats ?? 1),
-        },
-      }));
+      const fetchedTrips = json.rides.map((r: any) => {
+        const driverId = r.driver?.id ?? 0;
+        
+        return {
+          id: String(r.id),
+          departure: r.departure ?? "",
+          arrival: r.arrival ?? "",
+          date: r.date ?? "",
+          time: r.time ?? "",
+          price: Number(r.price ?? 0),
+          meetingPoints: Array.isArray(r.meetingPoints) ? r.meetingPoints : [],
+          hasRated: r.hasRated ?? false,
+          driver_id: driverId,
+          driver: {
+            id: driverId,
+            name: r.driver?.name ?? "Driver",
+            rating: Number(r.driver?.rating ?? 4.7),
+            avatar: r.driver?.avatar ?? "",
+            phone: r.driver?.phone ?? null,
+          },
+          vehicle: {
+            model: r.vehicle?.model ?? "Car",
+            plate: r.vehicle?.immatriculation ?? "",
+            totalSeats: Number(r.vehicle?.nombre_places ?? 4),
+            availableSeats: Number(r.vehicle?.availableSeats ?? 1),
+          },
+        };
+      });
       
       setTrips(fetchedTrips);
       
@@ -367,7 +350,7 @@ export default function PassengerHome({
     });
   };
 
-  /* ===================== FILTRAGE AMÉLIORÉ ===================== */
+  /* ===================== FILTRAGE ===================== */
   const filteredTrips = useMemo(() => {
     try {
       let result = [...trips];
@@ -458,62 +441,78 @@ export default function PassengerHome({
   const getMapsDirectionUrl = (from: string, to: string) =>
     `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(from)}&destination=${encodeURIComponent(to)}`;
 
-  /* ===================== HANDLER RATING ===================== */
+  /* ===================== HANDLER RATING CORRIGÉ ===================== */
+  // 🔥 SOLUTION: Utiliser l'ID du trajet comme fallback pour le conducteur
   const openRatingScreen = async (trip: Trip) => {
     if (trip.hasRated) return;
+    
+    // Si driver_id est 0, on utilise l'ID du trajet comme identifiant du conducteur
+    // C'est une solution de contournement car l'API ne retourne pas l'ID du conducteur
+    const driverId = trip.driver_id || trip.driver?.id || Number(trip.id);
+    
+    if (driverId === 0) {
+      console.error("Cannot open rating screen: driver_id is 0", trip);
+      Alert.alert(
+        t("error") || "Erreur",
+        t("cannotRateDriver") || "Impossible d'évaluer ce conducteur. Veuillez réessayer plus tard.",
+        [{ text: t("ok") || "OK" }]
+      );
+      return;
+    }
+    
     const token = await AsyncStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      Alert.alert(
+        t("error") || "Erreur",
+        t("noToken") || "Vous devez être connecté pour évaluer",
+        [{ text: t("ok") || "OK" }]
+      );
+      return;
+    }
+    
     setRatingToken(token);
-    setSelectedTripForRating(trip);
+    // Mettre à jour le trip avec le driverId corrigé
+    setSelectedTripForRating({
+      ...trip,
+      driver_id: driverId,
+      driver: { ...trip.driver, id: driverId }
+    });
   };
 
-  /* ===================== NOUVEAUX HANDLERS POUR ACTIONS RAPIDES AVEC DÉFILEMENT ===================== */
-  
-  // Fonction pour faire défiler vers la section des trajets
+  /* ===================== HANDLERS POUR ACTIONS RAPIDES ===================== */
   const scrollToTripsSection = () => {
     if (tripsSectionRef.current && scrollViewRef.current) {
-      // Mesurer la position de la section des trajets
       tripsSectionRef.current.measureLayout(
         scrollViewRef.current as any,
         (x, y) => {
-          // Faire défiler avec un offset pour ne pas coller au bord
           scrollViewRef.current?.scrollTo({ y: y - 80, animated: true });
         },
         () => {
-          // Fallback: utiliser scrollTo avec une valeur approximative
           scrollViewRef.current?.scrollTo({ y: 400, animated: true });
         }
       );
     } else {
-      // Fallback simple
       scrollViewRef.current?.scrollTo({ y: 400, animated: true });
     }
   };
 
-  // Fonction pour faire défiler vers la section des offres
   const scrollToOffersSection = () => {
     if (offersSectionRef.current && scrollViewRef.current) {
-      // Mesurer la position de la section des offres
       offersSectionRef.current.measureLayout(
         scrollViewRef.current as any,
         (x, y) => {
-          // Faire défiler avec un offset pour ne pas coller au bord
           scrollViewRef.current?.scrollTo({ y: y - 80, animated: true });
         },
         () => {
-          // Fallback: utiliser scrollTo avec une valeur approximative
           scrollViewRef.current?.scrollTo({ y: 800, animated: true });
         }
       );
     } else {
-      // Fallback simple
       scrollViewRef.current?.scrollTo({ y: 800, animated: true });
     }
   };
 
-  // Fonction pour rechercher un trajet (avec défilement)
   const handleSearchTrip = () => {
-    // Si aucun trajet n'est disponible, afficher un message
     if (filteredTrips.length === 0) {
       Alert.alert(
         t("noTrips") || "Aucun trajet",
@@ -522,17 +521,10 @@ export default function PassengerHome({
       );
       return;
     }
-    
-    // Faire défiler vers la section des trajets
     scrollToTripsSection();
-    
-    // Optionnel: afficher un petit toast ou feedback
-    // Vous pouvez ajouter un ToastMessage ici si vous avez le composant
   };
 
-  // Fonction pour voir les offres (avec défilement)
   const handleViewOffers = () => {
-    // Si aucune offre n'est disponible, afficher un message
     if (filteredOffers.length === 0) {
       Alert.alert(
         t("noOffers") || "Aucune offre",
@@ -541,8 +533,6 @@ export default function PassengerHome({
       );
       return;
     }
-    
-    // Faire défiler vers la section des offres
     scrollToOffersSection();
   };
 
@@ -604,16 +594,13 @@ export default function PassengerHome({
             <Text style={styles.info}>
               <Clock size={14} /> {item.time || ''}
             </Text>
-
             <Text style={styles.info}>
               <DollarSign size={14} /> {item.price || 0} Ar
             </Text>
-            
             <Text style={styles.smallText}>
               <Users size={14} /> {item.vehicle?.availableSeats || 0}/{item.vehicle?.totalSeats || 0} {t("seats") || 'places'}
             </Text>
           </View>
-
           <TouchableOpacity
             style={styles.bookChips}
             onPress={() => onBookTrip?.(item, null, 1)}
@@ -634,10 +621,8 @@ export default function PassengerHome({
     );
   };
 
-  // ===================== RENDER OFFER =====================
   const renderOffer = ({ item }: { item: Offer }) => {
     if (!item) return null;
-    
     const trip = trips.find((t) => t.id === String(item.ride_request_id));
     if (!trip) return null;
 
@@ -646,20 +631,12 @@ export default function PassengerHome({
         <Text style={styles.route}>
           {t("offerFor") || 'Offre pour'} {trip.departure || ''} → {trip.arrival || ''}
         </Text>
-
         <View style={styles.offerRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.info}>
-              <Car size={14} /> {item.car_info || ''}
-            </Text>
-            <Text style={styles.info}>
-              <Users size={14} /> {item.seats_offered || 0} {t("seats") || 'places'}
-            </Text>
-            <Text style={styles.info}>
-              <DollarSign size={14} /> {item.price_per_seat || 0} Ar
-            </Text>
+            <Text style={styles.info}><Car size={14} /> {item.car_info || ''}</Text>
+            <Text style={styles.info}><Users size={14} /> {item.seats_offered || 0} {t("seats") || 'places'}</Text>
+            <Text style={styles.info}><DollarSign size={14} /> {item.price_per_seat || 0} Ar</Text>
           </View>
-
           <TouchableOpacity
             style={styles.bookChip}
             onPress={() => onBookTrip?.(trip, item, Number(item.seats_offered || 1))}
@@ -671,7 +648,6 @@ export default function PassengerHome({
     );
   };
 
-  // ===================== RENDER FILTER CHIP =====================
   const renderFilterChip = (label: string, active: boolean, onPress: () => void) => (
     <TouchableOpacity
       style={[styles.filterChip, active && styles.filterChipActive]}
@@ -685,7 +661,6 @@ export default function PassengerHome({
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
-      {/* POPUP VITA MALAGASY */}
       <PopUpRatingScreen
         visible={showVitaPopup}
         onClose={() => setShowVitaPopup(false)}
@@ -713,133 +688,74 @@ export default function PassengerHome({
             </TouchableOpacity>
           )}
         </View>
-
         <TouchableOpacity
           style={[styles.filterButton, filters.sortType !== "none" && { backgroundColor: "#065F46" }]}
           onPress={openFilterModal}
         >
           <Filter size={20} color="#fff" />
-          {filters.sortType !== "none" && (
-            <View style={styles.filterBadge} />
-          )}
+          {filters.sortType !== "none" && <View style={styles.filterBadge} />}
         </TouchableOpacity>
       </View>
 
-      {/* Filtres actifs sous forme de chips */}
+      {/* Filtres actifs */}
       {(filters.sortType !== "none" || filters.onlyAvailable || filters.minRating > 0 || filters.selectedVehicleTypes.length > 0) && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.activeFiltersScroll}>
           <View style={styles.activeFiltersContainer}>
-            {filters.sortType !== "none" && (
-              renderFilterChip(
-                filters.sortType === "price" ? "💰 Prix" : 
-                filters.sortType === "date" ? "📅 Date" : "⭐ Note",
-                true,
-                () => setFilters(prev => ({ ...prev, sortType: "none" }))
-              )
+            {filters.sortType !== "none" && renderFilterChip(
+              filters.sortType === "price" ? "💰 Prix" : filters.sortType === "date" ? "📅 Date" : "⭐ Note",
+              true, () => setFilters(prev => ({ ...prev, sortType: "none" }))
             )}
-            {filters.onlyAvailable && (
-              renderFilterChip("✅ Disponible", true, () => 
-                setFilters(prev => ({ ...prev, onlyAvailable: false }))
-              )
-            )}
-            {filters.minRating > 0 && (
-              renderFilterChip(`⭐ ${filters.minRating}+`, true, () => 
-                setFilters(prev => ({ ...prev, minRating: 0 }))
-              )
-            )}
-            {filters.selectedVehicleTypes.map((type, index) => (
-              renderFilterChip(type, true, () => 
-                setFilters(prev => ({ 
-                  ...prev, 
-                  selectedVehicleTypes: prev.selectedVehicleTypes.filter(t => t !== type) 
-                }))
-              )
-            ))}
+            {filters.onlyAvailable && renderFilterChip("✅ Disponible", true, () => setFilters(prev => ({ ...prev, onlyAvailable: false })))}
+            {filters.minRating > 0 && renderFilterChip(`⭐ ${filters.minRating}+`, true, () => setFilters(prev => ({ ...prev, minRating: 0 })))}
+            {filters.selectedVehicleTypes.map((type) => renderFilterChip(type, true, () => setFilters(prev => ({ ...prev, selectedVehicleTypes: prev.selectedVehicleTypes.filter(t => t !== type) }))))}
           </View>
         </ScrollView>
       )}
 
-      {/* ACTIONS RAPIDES POUR PASSAGER - AMÉLIORÉES AVEC DÉFILEMENT */}
+      {/* ACTIONS RAPIDES */}
       <View style={styles.quickActionsSection}>
-  <View style={styles.quickActionsHeader}>
-    <Text style={styles.quickActionsTitle}>{t("quickActions")}</Text>
-    <Text style={styles.quickActionsHint}>
-      {filteredTrips.length} {t("tripsCount")} • {filteredOffers.length} {t("offersCount")}
-    </Text>
-  </View>
-
-  <View style={styles.quickActionsRow}>
-    <TouchableOpacity
-      style={styles.quickActionItem}
-      activeOpacity={0.7}
-      onPress={handleSearchTrip}
-    >
-      <View style={[styles.quickActionIcon, { backgroundColor: "#ECFDF5" }]}>
-        <Compass size={24} color="#047857" />
+        <View style={styles.quickActionsHeader}>
+          <Text style={styles.quickActionsTitle}>{t("quickActions")}</Text>
+          <Text style={styles.quickActionsHint}>
+            {filteredTrips.length} {t("tripsCount")} • {filteredOffers.length} {t("offersCount")}
+          </Text>
+        </View>
+        <View style={styles.quickActionsRow}>
+          <TouchableOpacity style={styles.quickActionItem} activeOpacity={0.7} onPress={handleSearchTrip}>
+            <View style={[styles.quickActionIcon, { backgroundColor: "#ECFDF5" }]}>
+              <Compass size={24} color="#047857" />
+            </View>
+            <Text style={styles.quickActionLabel}>{t("searchTrip")}</Text>
+            <Text style={styles.quickActionCount}>{filteredTrips.length} {t("tripsCount")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.quickActionItem} activeOpacity={0.7} onPress={handleViewOffers}>
+            <View style={[styles.quickActionIcon, { backgroundColor: "#bcb7a3" }]}>
+              <Rocket size={24} color="#3b342f" />
+            </View>
+            <Text style={styles.quickActionLabel}>{t("offers")}</Text>
+            <Text style={styles.quickActionCount}>{filteredOffers.length} {t("offersCount")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.quickActionItem} activeOpacity={0.7} onPress={() => { setSelectedRideRequestId(1); setRideRequestModalVisible(true); }}>
+            <View style={[styles.quickActionIcon, { backgroundColor: "#EFF6FF" }]}>
+              <FileText size={24} color="#1b2a52" />
+            </View>
+            <Text style={styles.quickActionLabel}>{t("rideRequests")}</Text>
+            <Text style={styles.quickActionCount}>{t("newBadge")}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      <Text style={styles.quickActionLabel}>{t("searchTrip")}</Text>
-      <Text style={styles.quickActionCount}>{filteredTrips.length} {t("tripsCount")}</Text>
-    </TouchableOpacity>
 
-    <TouchableOpacity
-      style={styles.quickActionItem}
-      activeOpacity={0.7}
-      onPress={handleViewOffers}
-    >
-      <View style={[styles.quickActionIcon, { backgroundColor: "#bcb7a3" }]}>
-        <Rocket size={24} color="#3b342f" />
-      </View>
-      <Text style={styles.quickActionLabel}>{t("offers")}</Text>
-      <Text style={styles.quickActionCount}>{filteredOffers.length} {t("offersCount")}</Text>
-    </TouchableOpacity>
-
-    <TouchableOpacity
-      style={styles.quickActionItem}
-      activeOpacity={0.7}
-      onPress={() => {
-        setSelectedRideRequestId(1);
-        setRideRequestModalVisible(true);
-      }}
-    >
-      <View style={[styles.quickActionIcon, { backgroundColor: "#EFF6FF" }]}>
-        <FileText size={24} color="#1b2a52" />
-      </View>
-      <Text style={styles.quickActionLabel}>{t("rideRequests")}</Text>
-      <Text style={styles.quickActionCount}>{t("newBadge")}</Text>
-    </TouchableOpacity>
-  </View>
-   </View>
-
-      {/* ScrollView principale avec ref pour le défilement */}
-      <ScrollView
-        ref={scrollViewRef}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* SECTION TRAJETS - AVEC REF POUR LE DÉFILEMENT */}
-        <View 
-          ref={tripsSectionRef}
-          onLayout={(event) => {
-            // Enregistrer la position Y de la section des trajets
-            const layout = event.nativeEvent.layout;
-            setTripsSectionY(layout.y);
-          }}
-        >
+      <ScrollView ref={scrollViewRef} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />} showsVerticalScrollIndicator={false}>
+        <View ref={tripsSectionRef} onLayout={(event) => setTripsSectionY(event.nativeEvent.layout.y)}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {t("availableTrips") || 'Trajets disponibles'} ({filteredTrips.length})
-            </Text>
+            <Text style={styles.sectionTitle}>{t("availableTrips") || 'Trajets disponibles'} ({filteredTrips.length})</Text>
             {paginatedTrips.length < filteredTrips.length && (
-              <TouchableOpacity 
-                style={styles.seeMoreButton}
-                onPress={() => setTripPage((p) => p + 1)}
-              >
+              <TouchableOpacity style={styles.seeMoreButton} onPress={() => setTripPage((p) => p + 1)}>
                 <Text style={styles.seeMoreText}>{t("seeMore") || 'Voir plus'}</Text>
                 <ChevronRight size={16} color="#047857" />
               </TouchableOpacity>
             )}
           </View>
-
           {loadingTrips && filteredTrips.length === 0 ? (
             <Text style={styles.loadingText}>{t("loading") || "Chargement..."}</Text>
           ) : filteredTrips.length === 0 ? (
@@ -849,39 +765,20 @@ export default function PassengerHome({
               <Text style={styles.emptyStateSubtext}>{t("tryAdjustingFilters") || "Essayez d'ajuster vos filtres"}</Text>
             </View>
           ) : (
-            <FlatList 
-              data={paginatedTrips} 
-              keyExtractor={(i) => i?.id || Math.random().toString()} 
-              renderItem={renderTrip} 
-              scrollEnabled={false} 
-            />
+            <FlatList data={paginatedTrips} keyExtractor={(i) => i?.id || Math.random().toString()} renderItem={renderTrip} scrollEnabled={false} />
           )}
         </View>
 
-        {/* SECTION OFFRES - AVEC REF POUR LE DÉFILEMENT */}
-        <View 
-          ref={offersSectionRef}
-          onLayout={(event) => {
-            // Enregistrer la position Y de la section des offres
-            const layout = event.nativeEvent.layout;
-            setOffersSectionY(layout.y);
-          }}
-        >
+        <View ref={offersSectionRef} onLayout={(event) => setOffersSectionY(event.nativeEvent.layout.y)}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {t("offers") || 'Offres'} ({filteredOffers.length})
-            </Text>
+            <Text style={styles.sectionTitle}>{t("offers") || 'Offres'} ({filteredOffers.length})</Text>
             {paginatedOffers.length < filteredOffers.length && (
-              <TouchableOpacity 
-                style={styles.seeMoreButton}
-                onPress={() => setOfferPage((p) => p + 1)}
-              >
+              <TouchableOpacity style={styles.seeMoreButton} onPress={() => setOfferPage((p) => p + 1)}>
                 <Text style={styles.seeMoreText}>{t("seeMore") || 'Voir plus'}</Text>
                 <ChevronRight size={16} color="#047857" />
               </TouchableOpacity>
             )}
           </View>
-
           {loadingOffers && filteredOffers.length === 0 ? (
             <Text style={styles.loadingText}>{t("loading") || "Chargement..."}</Text>
           ) : filteredOffers.length === 0 ? (
@@ -891,25 +788,14 @@ export default function PassengerHome({
               <Text style={styles.emptyStateSubtext}>{t("checkBackLater") || "Revenez plus tard"}</Text>
             </View>
           ) : (
-            <FlatList 
-              data={paginatedOffers} 
-              keyExtractor={(i) => String(i?.id || Math.random())} 
-              renderItem={renderOffer} 
-              scrollEnabled={false} 
-            />
+            <FlatList data={paginatedOffers} keyExtractor={(i) => String(i?.id || Math.random())} renderItem={renderOffer} scrollEnabled={false} />
           )}
         </View>
-        
-        {/* Espace en bas */}
         <View style={{ height: 20 }} />
       </ScrollView>
 
       {rideRequestModalVisible && (
-        <RideRequestScreen
-          userId={userId}
-          rideRequestId={selectedRideRequestId || undefined}
-          onBack={() => setRideRequestModalVisible(false)}
-        />
+        <RideRequestScreen userId={userId} rideRequestId={selectedRideRequestId || undefined} onBack={() => setRideRequestModalVisible(false)} />
       )}
 
       {/* FILTER MODAL */}
@@ -918,16 +804,11 @@ export default function PassengerHome({
           <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={closeFilterModal} />
           <Animated.View style={[styles.bottomSheet, { transform: [{ translateY: slideAnim }] }]}>
             <View style={styles.handleBar} />
-            
             <View style={styles.modalHeader}>
               <Text style={styles.filterTitle}>{t("filterSort") || 'Filtrer et trier'}</Text>
-              <TouchableOpacity onPress={closeFilterModal}>
-                <X size={22} color="#6B7280" />
-              </TouchableOpacity>
+              <TouchableOpacity onPress={closeFilterModal}><X size={22} color="#6B7280" /></TouchableOpacity>
             </View>
-
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Tri */}
               <Text style={styles.filterSectionTitle}>{t("sortBy") || 'Trier par'}</Text>
               <View style={styles.filterOptionsRow}>
                 {[
@@ -935,104 +816,50 @@ export default function PassengerHome({
                   { value: "date", label: "📅 " + (t("sortByDate") || 'Date') },
                   { value: "rating", label: "⭐ " + (t("sortByRating") || 'Note') },
                 ].map((option) => (
-                  <TouchableOpacity
-                    key={option.value}
-                    style={[
-                      styles.filterOptionPill,
-                      tempFilters.sortType === option.value && styles.filterOptionPillActive,
-                    ]}
-                    onPress={() => setTempFilters(prev => ({ ...prev, sortType: option.value as any }))}
-                  >
-                    <Text style={[
-                      styles.filterOptionPillText,
-                      tempFilters.sortType === option.value && styles.filterOptionPillTextActive,
-                    ]}>
-                      {option.label}
-                    </Text>
+                  <TouchableOpacity key={option.value} style={[styles.filterOptionPill, tempFilters.sortType === option.value && styles.filterOptionPillActive]} onPress={() => setTempFilters(prev => ({ ...prev, sortType: option.value as any }))}>
+                    <Text style={[styles.filterOptionPillText, tempFilters.sortType === option.value && styles.filterOptionPillTextActive]}>{option.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
-
-              {/* Disponibilité */}
-              <TouchableOpacity
-                style={styles.filterRow}
-                onPress={() => setTempFilters(prev => ({ ...prev, onlyAvailable: !prev.onlyAvailable }))}
-              >
+              <TouchableOpacity style={styles.filterRow} onPress={() => setTempFilters(prev => ({ ...prev, onlyAvailable: !prev.onlyAvailable }))}>
                 <Text>{t("onlyAvailable") || 'Uniquement disponibles'}</Text>
-                <View style={[styles.checkbox, tempFilters.onlyAvailable && styles.checkboxActive]}>
-                  {tempFilters.onlyAvailable && <Text style={{ color: "#fff" }}>✓</Text>}
-                </View>
+                <View style={[styles.checkbox, tempFilters.onlyAvailable && styles.checkboxActive]}>{tempFilters.onlyAvailable && <Text style={{ color: "#fff" }}>✓</Text>}</View>
               </TouchableOpacity>
-
-              {/* Prix min */}
               <Text style={styles.filterSectionTitle}>{t("priceRange") || 'Fourchette de prix'}</Text>
               <View style={styles.priceRangeContainer}>
                 <Text style={styles.priceLabel}>{tempFilters.priceRange[0].toLocaleString()} Ar</Text>
                 <Text style={styles.priceLabel}>{tempFilters.priceRange[1].toLocaleString()} Ar</Text>
               </View>
-              
-              {/* Note minimale */}
               <Text style={styles.filterSectionTitle}>{t("minRating") || 'Note minimum'}</Text>
               <View style={styles.ratingButtons}>
                 {[1, 2, 3, 4, 5].map((rating) => (
-                  <TouchableOpacity
-                    key={rating}
-                    style={[
-                      styles.ratingButton,
-                      tempFilters.minRating >= rating && styles.ratingButtonActive,
-                    ]}
-                    onPress={() => setTempFilters(prev => ({ ...prev, minRating: rating }))}
-                  >
-                    <Star 
-                      size={16} 
-                      color={tempFilters.minRating >= rating ? "#fff" : "#3b342f"} 
-                      fill={tempFilters.minRating >= rating ? "#fff" : "#3b342f"}
-                    />
+                  <TouchableOpacity key={rating} style={[styles.ratingButton, tempFilters.minRating >= rating && styles.ratingButtonActive]} onPress={() => setTempFilters(prev => ({ ...prev, minRating: rating }))}>
+                    <Star size={16} color={tempFilters.minRating >= rating ? "#fff" : "#3b342f"} fill={tempFilters.minRating >= rating ? "#fff" : "#3b342f"} />
                   </TouchableOpacity>
                 ))}
               </View>
-
-              {/* Types de véhicules */}
               {vehicleTypes.length > 0 && (
                 <>
                   <Text style={styles.filterSectionTitle}>{t("vehicleTypes") || 'Types de véhicules'}</Text>
                   <View style={styles.vehicleTypesContainer}>
                     {vehicleTypes.map((type) => (
-                      <TouchableOpacity
-                        key={type}
-                        style={[
-                          styles.vehicleTypeChip,
-                          tempFilters.selectedVehicleTypes.includes(type) && styles.vehicleTypeChipActive,
-                        ]}
-                        onPress={() => toggleVehicleType(type)}
-                      >
-                        <Text style={[
-                          styles.vehicleTypeChipText,
-                          tempFilters.selectedVehicleTypes.includes(type) && styles.vehicleTypeChipTextActive,
-                        ]}>
-                          {type}
-                        </Text>
+                      <TouchableOpacity key={type} style={[styles.vehicleTypeChip, tempFilters.selectedVehicleTypes.includes(type) && styles.vehicleTypeChipActive]} onPress={() => toggleVehicleType(type)}>
+                        <Text style={[styles.vehicleTypeChipText, tempFilters.selectedVehicleTypes.includes(type) && styles.vehicleTypeChipTextActive]}>{type}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
                 </>
               )}
-
-              {/* Boutons d'action */}
               <View style={styles.filterActions}>
-                <TouchableOpacity style={styles.resetButton} onPress={resetFilters}>
-                  <Text style={styles.resetButtonText}>{t("reset") || 'Réinitialiser'}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
-                  <Text style={styles.applyButtonText}>{t("apply") || 'Appliquer'}</Text>
-                </TouchableOpacity>
+                <TouchableOpacity style={styles.resetButton} onPress={resetFilters}><Text style={styles.resetButtonText}>{t("reset") || 'Réinitialiser'}</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.applyButton} onPress={applyFilters}><Text style={styles.applyButtonText}>{t("apply") || 'Appliquer'}</Text></TouchableOpacity>
               </View>
             </ScrollView>
           </Animated.View>
         </View>
       </Modal>
 
-      {/* RATING MODAL */}
+      {/* RATING MODAL - CORRIGÉ */}
       {selectedTripForRating && (
         <Modal visible transparent animationType="slide">
           <RatingScreen
@@ -1041,7 +868,7 @@ export default function PassengerHome({
             reviewedId={selectedTripForRating.driver_id}
             token={ratingToken}
             tripUser={{
-              id: selectedTripForRating.driver_id,
+              id: String(selectedTripForRating.driver_id),
               nom: selectedTripForRating.driver.name.split(" ")[1] || "",
               prenom: selectedTripForRating.driver.name.split(" ")[0] || "",
               role: "driver",
@@ -1053,9 +880,7 @@ export default function PassengerHome({
               date: selectedTripForRating.date,
             }}
             onBack={() => setSelectedTripForRating(null)}
-            onBonusEarned={(credits) => {
-              console.log("Bonus gagné:", credits);
-            }}
+            onBonusEarned={(credits) => console.log("Bonus gagné:", credits)}
           />
         </Modal>
       )}
@@ -1063,454 +888,85 @@ export default function PassengerHome({
   );
 }
 
-/* ===================== STYLES ===================== */
+// ===================== STYLES =====================
 const styles = StyleSheet.create({
-  // =========================================================
-  // 🔹 STYLES POUR LES ACTIONS RAPIDES
-  // =========================================================
-  quickActionsSection: {
-    marginHorizontal: 16,
-    marginVertical: 12,
-  },
-  quickActionsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  quickActionsTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#6B7280",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  quickActionsHint: {
-    fontSize: 12,
-    color: "#9CA3AF",
-  },
-  quickActionsRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-  },
-  quickActionItem: {
-    alignItems: "center",
-    flex: 1,
-  },
-  quickActionIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  quickActionLabel: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: "#6B7280",
-    textAlign: "center",
-  },
-  quickActionCount: {
-    fontSize: 10,
-    color: "#9CA3AF",
-    marginTop: 2,
-  },
-  
-  // États vides
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 40,
-    marginHorizontal: 16,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    marginBottom: 16,
-  },
-  emptyStateText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#6B7280",
-    marginTop: 12,
-  },
-  emptyStateSubtext: {
-    fontSize: 13,
-    color: "#9CA3AF",
-    marginTop: 4,
-    textAlign: "center",
-  },
-  loadingText: {
-    textAlign: "center",
-    color: "#6B7280",
-    marginVertical: 20,
-  },
-
-  searchWrapper: { 
-    flexDirection: "row", 
-    marginHorizontal: 16, 
-    marginTop: 12, 
-    marginBottom: 8, 
-    alignItems: "center" 
-  },
-  searchBox: { 
-    flex: 1, 
-    flexDirection: "row", 
-    alignItems: "center", 
-    backgroundColor: "#fff", 
-    paddingHorizontal: 12, 
-    paddingVertical: 10, 
-    borderRadius: 14, 
-    elevation: 3 
-  },
-  searchInput: { 
-    flex: 1, 
-    fontSize: 14, 
-    color: "#111827", 
-    padding: 0 
-  },
-  filterButton: { 
-    marginLeft: 12, 
-    backgroundColor: "#047857", 
-    padding: 12, 
-    borderRadius: 12,
-    position: "relative",
-  },
-  filterBadge: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#3b342f",
-    borderWidth: 2,
-    borderColor: "#fff",
-  },
-  
-  // Styles pour les filtres actifs
-  activeFiltersScroll: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-  },
-  activeFiltersContainer: {
-    flexDirection: "row",
-    gap: 8,
-    paddingVertical: 4,
-  },
-  filterChip: {
-    backgroundColor: "#E5E7EB",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginRight: 8,
-  },
-  filterChipActive: {
-    backgroundColor: "#047857",
-  },
-  filterChipText: {
-    fontSize: 12,
-    color: "#374151",
-  },
-  filterChipTextActive: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-
-  // =========================================================
-  // 🔹 STYLES POUR L'EN-TÊTE DES SECTIONS
-  // =========================================================
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginHorizontal: 16,
-    marginBottom: 8,
-    marginTop: 16,
-  },
-  sectionTitle: { 
-    fontSize: 16, 
-    fontWeight: "700",
-    color: "#111827",
-  },
-  seeMoreButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F3F4F6",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  seeMoreText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#047857",
-    marginRight: 4,
-  },
-
-  card: { 
-    backgroundColor: "#fff", 
-    marginHorizontal: 16, 
-    marginBottom: 16, 
-    borderRadius: 20, 
-    padding: 14 
-  },
-  route: { 
-    fontWeight: "700", 
-    fontSize: 15 
-  },
-  driverRow: { 
-    flexDirection: "row", 
-    marginTop: 12, 
-    alignItems: "center", 
-    gap: 12 
-  },
-  avatar: { 
-    width: 44, 
-    height: 44, 
-    borderRadius: 22 
-  },
-  driver: { 
-    fontWeight: "600" 
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  ratingText: {
-    fontSize: 12,
-    color: "#6B7280",
-  },
-  smallText: { 
-    fontSize: 12, 
-    color: "#6B7280",
-    marginTop: 2,
-  },
-  info: { 
-    marginTop: 6, 
-    fontSize: 13 
-  },
-  bookButton: { 
-    marginTop: 12, 
-    backgroundColor: "#047857", 
-    paddingVertical: 12, 
-    borderRadius: 14, 
-    alignItems: "center" 
-  },
-  bookText: { 
-    color: "#fff", 
-    fontWeight: "700" 
-  },
-  qrContainer: { 
-    alignItems: "center" 
-  },
-  qrHint: { 
-    fontSize: 10, 
-    color: "#6B7280" 
-  },
-  loadMore: { 
-    textAlign: "center", 
-    color: "#1d1f23", 
-    marginBottom: 16 
-  },
-  overlay: { 
-    flex: 1, 
-    backgroundColor: "rgba(0,0,0,0.4)", 
-    justifyContent: "flex-end" 
-  },
-  bottomSheet: { 
-    backgroundColor: "#fff", 
-    padding: 20, 
-    borderTopLeftRadius: 24, 
-    borderTopRightRadius: 24,
-    maxHeight: "80%",
-  },
-  handleBar: { 
-    width: 40, 
-    height: 5, 
-    backgroundColor: "#D1D5DB", 
-    borderRadius: 3, 
-    alignSelf: "center", 
-    marginBottom: 16 
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  filterTitle: { 
-    fontWeight: "700", 
-    fontSize: 18 
-  },
-  filterSectionTitle: {
-    fontWeight: "600",
-    fontSize: 14,
-    marginTop: 16,
-    marginBottom: 12,
-    color: "#374151",
-  },
-  filterOptionsRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  filterOptionPill: {
-    flex: 1,
-    backgroundColor: "#F3F4F6",
-    paddingVertical: 10,
-    borderRadius: 20,
-    alignItems: "center",
-  },
-  filterOptionPillActive: {
-    backgroundColor: "#047857",
-  },
-  filterOptionPillText: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#374151",
-  },
-  filterOptionPillTextActive: {
-    color: "#fff",
-  },
-  filterRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: "#D1D5DB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxActive: {
-    backgroundColor: "#047857",
-    borderColor: "#047857",
-  },
-  priceRangeContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  priceLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#047857",
-  },
-  ratingButtons: {
-    flexDirection: "row",
-    gap: 8,
-    justifyContent: "center",
-  },
-  ratingButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#F3F4F6",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ratingButtonActive: {
-    backgroundColor: "#047857",
-  },
-  vehicleTypesContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  vehicleTypeChip: {
-    backgroundColor: "#F3F4F6",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  vehicleTypeChipActive: {
-    backgroundColor: "#047857",
-  },
-  vehicleTypeChipText: {
-    fontSize: 13,
-    color: "#374151",
-  },
-  vehicleTypeChipTextActive: {
-    color: "#fff",
-  },
-  filterActions: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 24,
-    marginBottom: 16,
-  },
-  resetButton: {
-    flex: 1,
-    backgroundColor: "#F3F4F6",
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: "center",
-  },
-  resetButtonText: {
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  applyButton: { 
-    flex: 2,
-    backgroundColor: "#047857", 
-    paddingVertical: 14, 
-    borderRadius: 14, 
-    alignItems: "center" 
-  },
-  applyButtonText: {
-    color: "#fff",
-    fontWeight: "700",
-  },
-
-  // Styles pour les offres
-  offerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 8,
-  },
-  bookChip: {
-    backgroundColor: "#047857",
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 16,
-  },
-  bookChipText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 13,
-  },
-  bookChips: {
-    backgroundColor: "#047857",
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 16,
-  },
-  bookChipsText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 13,
-  },
-  tripBottomRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 6,
-  },
-  ratingBadge: { 
-    paddingHorizontal: 8, 
-    paddingVertical: 4, 
-    borderRadius: 12, 
-    marginRight: 8, 
-    alignSelf: "flex-start" 
-  },
+  quickActionsSection: { marginHorizontal: 16, marginVertical: 12 },
+  quickActionsHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  quickActionsTitle: { fontSize: 14, fontWeight: "600", color: "#6B7280", textTransform: "uppercase", letterSpacing: 0.5 },
+  quickActionsHint: { fontSize: 12, color: "#9CA3AF" },
+  quickActionsRow: { flexDirection: "row", justifyContent: "space-around", alignItems: "center" },
+  quickActionItem: { alignItems: "center", flex: 1 },
+  quickActionIcon: { width: 50, height: 50, borderRadius: 14, justifyContent: "center", alignItems: "center", marginBottom: 6 },
+  quickActionLabel: { fontSize: 11, fontWeight: "500", color: "#6B7280", textAlign: "center" },
+  quickActionCount: { fontSize: 10, color: "#9CA3AF", marginTop: 2 },
+  emptyState: { alignItems: "center", justifyContent: "center", paddingVertical: 40, marginHorizontal: 16, backgroundColor: "#fff", borderRadius: 20, marginBottom: 16 },
+  emptyStateText: { fontSize: 16, fontWeight: "600", color: "#6B7280", marginTop: 12 },
+  emptyStateSubtext: { fontSize: 13, color: "#9CA3AF", marginTop: 4, textAlign: "center" },
+  loadingText: { textAlign: "center", color: "#6B7280", marginVertical: 20 },
+  searchWrapper: { flexDirection: "row", marginHorizontal: 16, marginTop: 12, marginBottom: 8, alignItems: "center" },
+  searchBox: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: "#fff", paddingHorizontal: 12, paddingVertical: 10, borderRadius: 14, elevation: 3 },
+  searchInput: { flex: 1, fontSize: 14, color: "#111827", padding: 0 },
+  filterButton: { marginLeft: 12, backgroundColor: "#047857", padding: 12, borderRadius: 12, position: "relative" },
+  filterBadge: { position: "absolute", top: -4, right: -4, width: 10, height: 10, borderRadius: 5, backgroundColor: "#3b342f", borderWidth: 2, borderColor: "#fff" },
+  activeFiltersScroll: { marginHorizontal: 16, marginBottom: 8 },
+  activeFiltersContainer: { flexDirection: "row", gap: 8, paddingVertical: 4 },
+  filterChip: { backgroundColor: "#E5E7EB", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginRight: 8 },
+  filterChipActive: { backgroundColor: "#047857" },
+  filterChipText: { fontSize: 12, color: "#374151" },
+  filterChipTextActive: { color: "#fff", fontWeight: "600" },
+  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginHorizontal: 16, marginBottom: 8, marginTop: 16 },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
+  seeMoreButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#F3F4F6", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  seeMoreText: { fontSize: 13, fontWeight: "600", color: "#047857", marginRight: 4 },
+  card: { backgroundColor: "#fff", marginHorizontal: 16, marginBottom: 16, borderRadius: 20, padding: 14 },
+  route: { fontWeight: "700", fontSize: 15 },
+  driverRow: { flexDirection: "row", marginTop: 12, alignItems: "center", gap: 12 },
+  avatar: { width: 44, height: 44, borderRadius: 22 },
+  driver: { fontWeight: "600" },
+  ratingContainer: { flexDirection: "row", alignItems: "center", gap: 4 },
+  ratingText: { fontSize: 12, color: "#6B7280" },
+  smallText: { fontSize: 12, color: "#6B7280", marginTop: 2 },
+  info: { marginTop: 6, fontSize: 13 },
+  bookButton: { marginTop: 12, backgroundColor: "#047857", paddingVertical: 12, borderRadius: 14, alignItems: "center" },
+  bookText: { color: "#fff", fontWeight: "700" },
+  qrContainer: { alignItems: "center" },
+  qrHint: { fontSize: 10, color: "#6B7280" },
+  loadMore: { textAlign: "center", color: "#1d1f23", marginBottom: 16 },
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
+  bottomSheet: { backgroundColor: "#fff", padding: 20, borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "80%" },
+  handleBar: { width: 40, height: 5, backgroundColor: "#D1D5DB", borderRadius: 3, alignSelf: "center", marginBottom: 16 },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
+  filterTitle: { fontWeight: "700", fontSize: 18 },
+  filterSectionTitle: { fontWeight: "600", fontSize: 14, marginTop: 16, marginBottom: 12, color: "#374151" },
+  filterOptionsRow: { flexDirection: "row", gap: 8 },
+  filterOptionPill: { flex: 1, backgroundColor: "#F3F4F6", paddingVertical: 10, borderRadius: 20, alignItems: "center" },
+  filterOptionPillActive: { backgroundColor: "#047857" },
+  filterOptionPillText: { fontSize: 13, fontWeight: "500", color: "#374151" },
+  filterOptionPillTextActive: { color: "#fff" },
+  filterRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
+  checkbox: { width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: "#D1D5DB", alignItems: "center", justifyContent: "center" },
+  checkboxActive: { backgroundColor: "#047857", borderColor: "#047857" },
+  priceRangeContainer: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
+  priceLabel: { fontSize: 14, fontWeight: "600", color: "#047857" },
+  ratingButtons: { flexDirection: "row", gap: 8, justifyContent: "center" },
+  ratingButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" },
+  ratingButtonActive: { backgroundColor: "#047857" },
+  vehicleTypesContainer: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  vehicleTypeChip: { backgroundColor: "#F3F4F6", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 },
+  vehicleTypeChipActive: { backgroundColor: "#047857" },
+  vehicleTypeChipText: { fontSize: 13, color: "#374151" },
+  vehicleTypeChipTextActive: { color: "#fff" },
+  filterActions: { flexDirection: "row", gap: 12, marginTop: 24, marginBottom: 16 },
+  resetButton: { flex: 1, backgroundColor: "#F3F4F6", paddingVertical: 14, borderRadius: 14, alignItems: "center" },
+  resetButtonText: { fontWeight: "600", color: "#6B7280" },
+  applyButton: { flex: 2, backgroundColor: "#047857", paddingVertical: 14, borderRadius: 14, alignItems: "center" },
+  applyButtonText: { color: "#fff", fontWeight: "700" },
+  offerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 },
+  bookChip: { backgroundColor: "#047857", paddingVertical: 6, paddingHorizontal: 14, borderRadius: 16 },
+  bookChipText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+  bookChips: { backgroundColor: "#047857", paddingVertical: 6, paddingHorizontal: 14, borderRadius: 16 },
+  bookChipsText: { color: "#fff", fontWeight: "700", fontSize: 13 },
+  tripBottomRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 6 },
+  ratingBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, marginRight: 8, alignSelf: "flex-start" },
 });
 

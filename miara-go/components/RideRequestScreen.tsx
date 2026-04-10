@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
   sheetItemText: { fontSize: 15, color: "#111827" },
   suggestionBox: { backgroundColor: "#fff", borderRadius: 12, marginTop: 4, paddingVertical: 6, elevation: 5, zIndex: 100 },
   suggestionItem: { paddingVertical: 10, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
-
+  
   uberSheet: {
   backgroundColor: "#FFFFFF",
   borderTopLeftRadius: 28,
