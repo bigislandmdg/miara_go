@@ -454,6 +454,13 @@ export const resources = {
         luggageSaved: "Bagage enregistré avec succès",
         updateLuggage: "Mettre à jour le bagage",
         saveLuggage: "Enregistrer le bagage",
+        selectLuggageType: "Sélectionnez un type de bagage",
+        customLuggage: "Autre (personnalisé)",
+        customLuggageDesc: "Saisir un type de bagage personnalisé",
+        customLuggageName: "Nom du bagage personnalisé",
+        customLuggagePlaceholder: "Ex: Instrument de musique, Matériel photo...",
+        descriptionPlaceholder: "Dimensions, couleur, marque...",
+        luggageInfoTip: "Choisissez le type de bagage qui correspond le mieux à votre équipement",
 
         // ================= MEETING POINT =================
            newMeetingPoint: "Nouveau point de rencontre",          // FR
@@ -1114,49 +1121,56 @@ export const resources = {
       luggageUpdated: "Luggage updated",
       updateLuggage: "Update luggage",
       saveLuggage: "Save luggage",
+      selectLuggageType: "Select a luggage type",
+      customLuggage: "Other (custom)",
+      customLuggageDesc: "Enter a custom luggage type",
+      customLuggageName: "Custom luggage name",
+      customLuggagePlaceholder: "Ex: Musical instrument, Camera equipment...",
+      descriptionPlaceholder: "Dimensions, color, brand...",
+      luggageInfoTip: "Choose the luggage type that best matches your equipment",
 
       // ====== ABOUT ======
-     noContent: "No content available",
-     aboutSection: {
-     miaraGo: {
-      title: "MiaraGo",
-      description: "MiaraGo is a modern carpooling platform that efficiently connects drivers and passengers.",
-      content: "MiaraGo was founded in 2026 with the mission to revolutionize carpooling in Madagascar."
+      noContent: "No content available",
+      aboutSection: {
+       miaraGo: {
+         title: "MiaraGo",
+         description: "MiaraGo is a modern carpooling platform that efficiently connects drivers and passengers.",
+         content: "MiaraGo was founded in 2026 with the mission to revolutionize carpooling in Madagascar."
+       },
+      features: {
+        title: "Features",
+        description: "Enjoy simplified booking, secure payments, real-time tracking and more.",
+        content: "Discover all the features that make MiaraGo unique."
+      },
+      security: {
+        title: "Security",
+        description: "We guarantee maximum security for both drivers and passengers.",
+        content: "The safety of our users is our top priority."
+      },
+      contact: {
+        title: "Contact",
+        description: "Contact us anytime at support@miarago.com",
+        content: "Our team is available 24/7 to answer all your questions."
+      }
+    },
+    abouts: {
+      mission: "Our Mission",
+      missionDesc: "Connecting travelers and drivers for shared journeys in Madagascar",
+      vision: "Our Vision",
+      visionDesc: "Becoming the leading carpooling platform in the Indian Ocean",
+      founded: "Founded in"
     },
     features: {
-      title: "Features",
-      description: "Enjoy simplified booking, secure payments, real-time tracking and more.",
-      content: "Discover all the features that make MiaraGo unique."
+      feature1: "Smart Search",
+      feature1Desc: "Quickly find trips that match your needs",
+      feature2: "Secure Payment",
+      feature2Desc: "Multiple payment options with built-in protection",
+      feature3: "User Ratings",
+      feature3Desc: "Rate and view reviews of drivers and passengers",
+      feature4: "Integrated Messaging",
+      feature4Desc: "Easily communicate with other users"
     },
-    security: {
-      title: "Security",
-      description: "We guarantee maximum security for both drivers and passengers.",
-      content: "The safety of our users is our top priority."
-    },
-    contact: {
-      title: "Contact",
-      description: "Contact us anytime at support@miarago.com",
-      content: "Our team is available 24/7 to answer all your questions."
-    }
-  },
-  abouts: {
-    mission: "Our Mission",
-    missionDesc: "Connecting travelers and drivers for shared journeys in Madagascar",
-    vision: "Our Vision",
-    visionDesc: "Becoming the leading carpooling platform in the Indian Ocean",
-    founded: "Founded in"
-  },
-  features: {
-    feature1: "Smart Search",
-    feature1Desc: "Quickly find trips that match your needs",
-    feature2: "Secure Payment",
-    feature2Desc: "Multiple payment options with built-in protection",
-    feature3: "User Ratings",
-    feature3Desc: "Rate and view reviews of drivers and passengers",
-    feature4: "Integrated Messaging",
-    feature4Desc: "Easily communicate with other users"
-  },
-  securities: {
+    securities: {
     security1: "Data Encryption",
     security1Desc: "All your personal data is encrypted and protected",
     security2: "Secure Authentication",
@@ -1710,6 +1724,13 @@ export const resources = {
         luggageSaved: "Entana voatahiry soa aman-tsara",
         updateLuggage: "Havaozina ny entana",
         saveLuggage: "Tehirizo ny entana",
+        selectLuggageType: "Misafidia karazana entana",
+        customLuggage: "Hafa (manokana)",
+        customLuggageDesc: "Ampidiro karazana entana manokana",
+        customLuggageName: "Anaran'ny entana manokana",
+        customLuggagePlaceholder: "Ohatra: Fitaovana mozika, Fitaovana fakana sary...",
+        descriptionPlaceholder: "Habe, loko, marika...",
+        luggageInfoTip: "Misafidia karazana entana mifanaraka amin'ny fitaovanao",
     
       // ============== MEETING-POINT SCREEN ============    
          newMeetingPoint: "Toerana fihaonana vaovao",
