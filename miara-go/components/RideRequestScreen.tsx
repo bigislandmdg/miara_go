@@ -11,7 +11,7 @@ import { TouchableWithoutFeedback } from "react-native";
 
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Toast from "react-native-toast-message";
-import { ArrowLeft, ChevronDown, Plus } from "lucide-react-native";
+import { ArrowLeft, ChevronDown, Plus, Minus, Users } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import  { LuggageScreen } from "./LuggageScreen";
 
@@ -175,13 +175,84 @@ export default function RideRequestScreen({
   const luggageTotalPages = Math.ceil(luggages.length / LUGGAGES_PER_PAGE);
   const paginatedLuggages = luggages.slice(0,luggagePage * LUGGAGES_PER_PAGE);
 
+  /* ===================== SEATS HANDLERS ===================== */
+  const handleSeatsChange = (value: string) => {
+    // Permettre uniquement les chiffres
+    const numericValue = value.replace(/[^0-9]/g, "");
+    if (numericValue === "") {
+      setSeats("");
+      return;
+    }
+    
+    const numValue = parseInt(numericValue, 10);
+    // Limiter à 28 places maximum
+    if (numValue <= 28) {
+      setSeats(numericValue);
+    } else {
+      setSeats("28");
+      Toast.show({
+        type: "info",
+        text1: t("maxSeatsTitle"),
+        text2: t("maxSeatsDesc", { max: 28 }),
+        visibilityTime: 2000,
+      });
+    }
+  };
+
+  const incrementSeats = () => {
+    const currentValue = seats === "" ? 1 : parseInt(seats, 10);
+    if (currentValue < 20) {
+      setSeats(String(currentValue + 1));
+    } else {
+      Toast.show({
+        type: "info",
+        text1: t("maxSeatsTitle"),
+        text2: t("maxSeatsDesc", { max: 20 }),
+        visibilityTime: 2000,
+      });
+    }
+  };
+
+  const decrementSeats = () => {
+    const currentValue = seats === "" ? 1 : parseInt(seats, 10);
+    if (currentValue > 1) {
+      setSeats(String(currentValue - 1));
+    } else if (currentValue === 1) {
+      // Optionnel : empêcher d'aller en dessous de 1
+      Toast.show({
+        type: "info",
+        text1: t("minSeatsTitle"),
+        text2: t("minSeatsDesc"),
+        visibilityTime: 2000,
+      });
+    }
+  };
+
+  const validateSeats = () => {
+    if (seats === "" || parseInt(seats, 10) < 1) {
+      setSeats("1");
+    } else if (parseInt(seats, 10) > 20) {
+      setSeats("20");
+    }
+  };
+
   /* ===================== SUBMIT ===================== */
   const submit = async () => {
-    if (!departureLocation || !arrivalLocation || !seats) {
+    if (!departureLocation || !arrivalLocation || !seats || parseInt(seats, 10) < 1) {
       Toast.show({
         type: "error",
         text1: t("missingFieldsTitle"),
         text2: t("missingFieldsDesc"),
+      });
+      return;
+    }
+
+    const seatsNumber = parseInt(seats, 10);
+    if (seatsNumber > 20) {
+      Toast.show({
+        type: "error",
+        text1: t("invalidSeatsTitle"),
+        text2: t("maxSeatsDesc", { max: 20 }),
       });
       return;
     }
@@ -191,7 +262,7 @@ export default function RideRequestScreen({
       arrival_location: arrivalLocation,
       desired_date: formatDate(date),
       desired_time: formatTime(time),
-      seats_needed: Number(seats),
+      seats_needed: seatsNumber,
       luggage_info: selectedLuggage,
       message,
       status: "active",
@@ -342,18 +413,46 @@ export default function RideRequestScreen({
                 />
               )}
 
-              {/* SEATS */}
-              <TextInput
-                style={styles.input}
-                placeholder={t("seatingCapacity")}
-                keyboardType="number-pad"
-                value={seats}
-                onChangeText={(t) => setSeats(t.replace(/[^0-9]/g, ""))}
-              />
+              {/* SEATS - AMÉLIORÉ */}
+              <View style={styles.seatsContainer}>
+                <View style={styles.seatsHeader}>
+                  <Users size={18} color="#6B7280" />
+                  <Text style={styles.seatsLabel}>{t("seatingCapacity")}</Text>
+                </View>
+                
+                <View style={styles.seatsControls}>
+                  <TouchableOpacity 
+                    style={[styles.seatsButton, (seats === "" || parseInt(seats, 10) <= 1) && styles.seatsButtonDisabled]} 
+                    onPress={decrementSeats}
+                    disabled={seats === "" || parseInt(seats, 10) <= 1}
+                  >
+                    <Minus size={20} color={(seats === "" || parseInt(seats, 10) <= 1) ? "#D1D5DB" : "#059669"} />
+                  </TouchableOpacity>
+                  
+                  <TextInput
+                    style={styles.seatsInput}
+                    keyboardType="number-pad"
+                    value={seats}
+                    onChangeText={handleSeatsChange}
+                    onBlur={validateSeats}
+                    maxLength={2}
+                  />
+                  
+                  <TouchableOpacity 
+                    style={[styles.seatsButton, parseInt(seats, 10) >= 20 && styles.seatsButtonDisabled]} 
+                    onPress={incrementSeats}
+                    disabled={seats !== "" && parseInt(seats, 10) >= 20}
+                  >
+                    <Plus size={20} color={parseInt(seats, 10) >= 20 ? "#D1D5DB" : "#059669"} />
+                  </TouchableOpacity>
+                </View>
+                
+                <Text style={styles.seatsHint}>{t("seatsHint", { min: 1, max: 20 })}</Text>
+              </View>
 
               {/* LUGGAGE */}
               <TouchableOpacity style={styles.select} onPress={() => setShowLuggagePicker(true)}>
-                <Text style={{ color: selectedLuggage ? "#111827" : "#6B7280" }}>{selectedLuggage ? t(selectedLuggage) : t("luggage")}</Text>
+                <Text style={{ color: selectedLuggage ? "#111827" : "#6B7280" }}>{selectedLuggage ? selectedLuggage : t("luggage")}</Text>
                 <ChevronDown size={18} />
               </TouchableOpacity>
 
@@ -673,4 +772,70 @@ emptyText: {
   fontSize: 14,
   color: "#6B7280",
 },
+
+// Nouveaux styles pour le champ seats
+seatsContainer: {
+  marginBottom: 12,
+  padding: 12,
+  backgroundColor: "#F1F5F9",
+  borderRadius: 12,
+},
+
+seatsHeader: {
+  flexDirection: "row",
+  alignItems: "center",
+  marginBottom: 12,
+  gap: 8,
+},
+
+seatsLabel: {
+  fontSize: 14,
+  fontWeight: "500",
+  color: "#374151",
+},
+
+seatsControls: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 16,
+},
+
+seatsButton: {
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  backgroundColor: "#FFFFFF",
+  justifyContent: "center",
+  alignItems: "center",
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.05,
+  shadowRadius: 2,
+  elevation: 1,
+},
+
+seatsButtonDisabled: {
+  backgroundColor: "#F3F4F6",
+},
+
+seatsInput: {
+  width: 70,
+  height: 50,
+  backgroundColor: "#FFFFFF",
+  borderRadius: 12,
+  textAlign: "center",
+  fontSize: 18,
+  fontWeight: "600",
+  color: "#111827",
+  padding: 0,
+},
+
+seatsHint: {
+  fontSize: 11,
+  color: "#6B7280",
+  textAlign: "center",
+  marginTop: 8,
+},
 });
+
