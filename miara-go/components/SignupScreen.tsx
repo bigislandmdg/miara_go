@@ -240,8 +240,8 @@ export function SignupScreen({ onSignup, onBackToLogin }: Props) {
         roles: [frontendRole],
       });
 
-      if (frontendRole === "driver") navigation.navigate("DriverHome");
-      else navigation.navigate("PassengerHome");
+      //if (frontendRole === "driver") navigation.navigate("DriverHome");
+      //else navigation.navigate("PassengerHome");
     } catch {
       setError(t("serverUnavailable", "Serveur inaccessible."));
       triggerShake();
