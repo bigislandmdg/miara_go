@@ -105,7 +105,7 @@ export default function App() {
    // Ajout de showSplash
     // 🔹 Cacher SplashScreen après 2 secondes
   useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 30000);
+    const timer = setTimeout(() => setShowSplash(false), 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -339,9 +339,7 @@ export default function App() {
      <LanguageProvider>
   <NavigationContainer>
     {showSplash ? (
-      <AppSplashScreen onFinish={function (): void {
-          throw new Error("Function not implemented.");
-        } } />
+      <AppSplashScreen onFinish={() => setShowSplash(false)} />
     ) : !isAuthenticated ? (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {authView === "get-started" && (
