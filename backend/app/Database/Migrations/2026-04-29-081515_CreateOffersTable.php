@@ -11,23 +11,23 @@ class CreateOffersTable extends Migration
     {
         $this->forge->addField([
             'id' => [
-                'type'           => 'SERIAL',
-                'auto_increment' => true,
+                'type' => 'SERIAL',  // PostgreSQL: SERIAL
             ],
             'ride_request_id' => [
-                'type'     => 'INT',
+                'type'     => 'INTEGER',  // PostgreSQL: INTEGER
                 'unsigned' => true,
             ],
             'driver_id' => [
-                'type'     => 'INT',
+                'type'     => 'INTEGER',
                 'unsigned' => true,
+                'comment'  => 'Référence vers users avec rôle driver',  // Commentaire pour PostgreSQL
             ],
             'price_per_seat' => [
                 'type'       => 'DECIMAL',
                 'constraint' => '10,2',
             ],
             'seats_offered' => [
-                'type'    => 'INT',
+                'type'    => 'INTEGER',
                 'default' => 1,
             ],
             'message' => [
@@ -36,12 +36,12 @@ class CreateOffersTable extends Migration
             ],
             'car_info' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '255',
+                'constraint' => 255,
                 'null'       => true,
             ],
             'status' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '20',
+                'constraint' => 20,
                 'default'    => 'pending',
             ],
             'created_at' => [
@@ -55,12 +55,23 @@ class CreateOffersTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
+        
+        // Index pour améliorer les performances
+        $this->forge->addKey('ride_request_id');
+        $this->forge->addKey('driver_id');
+        $this->forge->addKey('status');
 
         // Clés étrangères
         $this->forge->addForeignKey('ride_request_id', 'ride_requests', 'id', 'CASCADE', 'CASCADE');
         $this->forge->addForeignKey('driver_id', 'users', 'id', 'CASCADE', 'CASCADE');
 
         $this->forge->createTable('offers');
+        
+        // Note: La contrainte que driver_id doit avoir le rôle 'driver' 
+        // sera gérée au niveau de l'application ou par un trigger PostgreSQL
+        $this->db->query("
+            COMMENT ON COLUMN offers.driver_id IS 'Doit correspondre à un user avec le rôle driver'
+        ");
     }
 
     public function down()

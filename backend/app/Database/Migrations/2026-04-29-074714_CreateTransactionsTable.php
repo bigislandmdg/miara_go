@@ -11,16 +11,15 @@ class CreateTransactionsTable extends Migration
     {
         $this->forge->addField([
             'id' => [
-                'type'           => 'SERIAL',
-                'auto_increment' => true,
+                'type' => 'SERIAL',  // PostgreSQL: SERIAL (auto-incrément)
             ],
             'user_id' => [
-                'type'     => 'INT',
+                'type'     => 'INTEGER',  // PostgreSQL: INTEGER
                 'unsigned' => true,
             ],
             'type' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '50',
+                'constraint' => 50,
                 'comment'    => 'achat_credit, retrait, publication_trajet',
             ],
             'amount' => [
@@ -29,12 +28,12 @@ class CreateTransactionsTable extends Migration
             ],
             'payment_method' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '50',
+                'constraint' => 50,
                 'default'    => 'mobile_money',
             ],
             'status' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '20',
+                'constraint' => 20,
                 'default'    => 'pending',
             ],
             'reference' => [
@@ -51,6 +50,11 @@ class CreateTransactionsTable extends Migration
         $this->forge->addKey('id', true);
         $this->forge->addForeignKey('user_id', 'users', 'id', 'CASCADE', 'CASCADE');
         $this->forge->createTable('transactions');
+        
+        // Ajouter un index pour améliorer les performances des requêtes
+        $this->db->query('CREATE INDEX idx_transactions_user_id ON transactions(user_id)');
+        $this->db->query('CREATE INDEX idx_transactions_status ON transactions(status)');
+        $this->db->query('CREATE INDEX idx_transactions_created_at ON transactions(created_at)');
     }
 
     public function down()

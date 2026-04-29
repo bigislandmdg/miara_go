@@ -41,6 +41,6 @@ class CreateOtpVerificationsTable extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('otp_verifications');
+         $this->forge->dropTable('otp_verifications');
     }
 }

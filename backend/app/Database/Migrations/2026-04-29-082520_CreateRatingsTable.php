@@ -11,19 +11,18 @@ class CreateRatingsTable extends Migration
     {
         $this->forge->addField([
             'id' => [
-                'type'           => 'SERIAL',
-                'auto_increment' => true,
+                'type' => 'SERIAL',  // PostgreSQL: SERIAL
             ],
             'ride_id' => [
-                'type'     => 'INT',
+                'type'     => 'INTEGER',  // PostgreSQL: INTEGER
                 'unsigned' => true,
             ],
             'reviewer_id' => [
-                'type'     => 'INT',
+                'type'     => 'INTEGER',
                 'unsigned' => true,
             ],
             'reviewed_id' => [
-                'type'     => 'INT',
+                'type'     => 'INTEGER',
                 'unsigned' => true,
             ],
             'average_score' => [
@@ -39,11 +38,20 @@ class CreateRatingsTable extends Migration
                 'type'    => 'TIMESTAMP',
                 'default' => new RawSql('CURRENT_TIMESTAMP'),
             ],
+            'updated_at' => [  // Ajout de updated_at
+                'type' => 'TIMESTAMP',
+                'null' => true,
+            ],
         ]);
 
         // Clé primaire
         $this->forge->addKey('id', true);
-
+        
+        // Index pour améliorer les performances
+        $this->forge->addKey('ride_id');
+        $this->forge->addKey('reviewer_id');
+        $this->forge->addKey('reviewed_id');
+        
         // Clés étrangères
         $this->forge->addForeignKey('ride_id', 'rides', 'id', 'CASCADE', 'CASCADE');
         $this->forge->addForeignKey('reviewer_id', 'users', 'id', 'CASCADE', 'CASCADE');
@@ -51,6 +59,10 @@ class CreateRatingsTable extends Migration
 
         // Création de la table
         $this->forge->createTable('ratings');
+        
+        // Index supplémentaires pour les recherches fréquentes
+        $this->db->query('CREATE INDEX idx_ratings_reviewer_reviewed ON ratings(reviewer_id, reviewed_id)');
+        $this->db->query('CREATE INDEX idx_ratings_average_score ON ratings(average_score)');
     }
 
     public function down()

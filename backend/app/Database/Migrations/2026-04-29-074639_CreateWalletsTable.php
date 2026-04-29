@@ -11,11 +11,10 @@ class CreateWalletsTable extends Migration
     {
         $this->forge->addField([
             'id' => [
-                'type'           => 'SERIAL',
-                'auto_increment' => true,
+                'type' => 'SERIAL',  // PostgreSQL: SERIAL (auto-incrément automatique)
             ],
             'user_id' => [
-                'type'     => 'INT',
+                'type'     => 'INTEGER',  // PostgreSQL: INTEGER au lieu de INT
                 'unsigned' => true,
             ],
             'balance' => [
@@ -24,12 +23,12 @@ class CreateWalletsTable extends Migration
                 'default'    => 0.00,
             ],
             'last_transaction_id' => [
-                'type'     => 'INT',
+                'type'     => 'INTEGER',
                 'unsigned' => true,
                 'null'     => true,
             ],
             'updated_at' => [
-                'type'    => 'TIMESTAMP',
+                'type'    => 'TIMESTAMP',  // PostgreSQL: TIMESTAMP
                 'default' => new RawSql('CURRENT_TIMESTAMP'),
             ],
         ]);

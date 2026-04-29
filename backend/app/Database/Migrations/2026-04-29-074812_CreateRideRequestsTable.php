@@ -11,36 +11,30 @@ class CreateRideRequestsTable extends Migration
     {
         $this->forge->addField([
             'id' => [
-                'type'           => 'SERIAL',
-                'auto_increment' => true,
-            ],
-            'passenger_id' => [
-                'type'     => 'INT',
-                'unsigned' => true,
+                'type' => 'SERIAL',  // PostgreSQL: SERIAL
             ],
             'departure_location' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '100',
+                'constraint' => 100,
             ],
             'arrival_location' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '100',
+                'constraint' => 100,
             ],
             'desired_date' => [
-                'type' => 'TIMESTAMP',
+                'type' => 'DATE',  // PostgreSQL: DATE
             ],
             'desired_time' => [
-                'type'       => 'VARCHAR',
-                'constraint' => '20',
-                'null'       => true,
+                'type' => 'TIME',  // PostgreSQL: TIME
+                'null' => true,
             ],
             'seats_needed' => [
-                'type'    => 'INT',
+                'type'    => 'INTEGER',  // PostgreSQL: INTEGER
                 'default' => 1,
             ],
             'luggage_info' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '255',
+                'constraint' => 255,
                 'null'       => true,
             ],
             'message' => [
@@ -49,7 +43,7 @@ class CreateRideRequestsTable extends Migration
             ],
             'status' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '20',
+                'constraint' => 20,
                 'default'    => 'active',
             ],
             'is_notified' => [
@@ -57,7 +51,7 @@ class CreateRideRequestsTable extends Migration
                 'default' => false,
             ],
             'created_at' => [
-                'type'    => 'TIMESTAMP',
+                'type'    => 'TIMESTAMP',  // PostgreSQL: TIMESTAMP
                 'default' => new RawSql('CURRENT_TIMESTAMP'),
             ],
             'updated_at' => [
@@ -67,11 +61,15 @@ class CreateRideRequestsTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-
-        // Clé étrangère vers users.id
-        $this->forge->addForeignKey('passenger_id', 'users', 'id', 'CASCADE', 'CASCADE');
-
+        
+        // Optionnel: Ajouter des indexes pour les recherches fréquentes
+        $this->forge->addKey('status');
+        $this->forge->addKey('desired_date');
+        
         $this->forge->createTable('ride_requests');
+        
+        // Index pour optimiser les recherches par lieu
+        $this->db->query('CREATE INDEX idx_ride_requests_locations ON ride_requests(departure_location, arrival_location)');
     }
 
     public function down()
