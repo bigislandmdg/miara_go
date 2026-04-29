@@ -17,6 +17,7 @@ class CreateVehiclesTable extends Migration
             'user_id' => [  // Ajout de la relation avec l'utilisateur conducteur
                 'type'     => 'INTEGER',
                 'unsigned' => true,
+                'null'     => true, 
             ],
             'marque' => [
                 'type'       => 'VARCHAR',
