@@ -12,7 +12,14 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bigislandmdg.miarago",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Cette application a besoin d'accéder à la bibliothèque photo",
+        "NSCameraUsageDescription": "Cette application a besoin d'accéder à la caméra",
+        "NSLocationWhenInUseUsageDescription": "Cette application a besoin de votre position pour trouver des trajets"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +28,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.bigislandmdg.miarago"
+      "package": "com.bigislandmdg.miarago",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
