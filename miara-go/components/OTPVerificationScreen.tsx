@@ -19,6 +19,11 @@ import { Logo } from "./ui/logo";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../providers/LanguageProvider";
 
+// =========================================================
+// 🔓 DEV MODE - Mettre à true pour bypass l'authentification OTP
+// =========================================================
+const DEV_MODE = true;  // ← Changez à false pour désactiver le mode développement
+
 /* ================= BASE URL CONFIG ================= */
 const getBaseURL = () => {
   if (__DEV__) {
@@ -136,8 +141,147 @@ export default function OTPVerificationScreen({
     }
   };
 
+
   /* ================= VERIFY OTP ================= */
-  const handleVerify = async () => {
+const handleVerify = async () => {
+  const code = otp.join("");
+  if (code.length !== 6) return;
+  if (otpExpired) {
+    ToastMessage.show(t("otpExpired", "Code OTP expiré"));
+    animateShake();
+    return;
+  }
+
+  // 🔓 DEV MODE BYPASS - Décommentez les lignes suivantes pour bypass
+  if (DEV_MODE) {
+    console.log("🚀 DEV MODE - OTP verification bypassed");
+    setIsVerifying(true);
+    
+    // Simuler une vérification réussie
+    setTimeout(async () => {
+      const mockUserId = 1;
+      const mockToken = "dev_token_123456";
+      const mockRole = "passenger";
+      
+      await AsyncStorage.multiSet([
+        ["token", mockToken],
+        ["user", JSON.stringify({ id: mockUserId, role: mockRole, phone: phoneNumber })],
+        ["role", mockRole],
+        ["isLoggedIn", "true"],
+      ]);
+      
+      onVerified?.(mockRole as "driver" | "passenger", mockUserId, mockToken);
+      ToastMessage.show(t("loginSuccess", "Connexion réussie (DEV MODE)"));
+      setIsVerifying(false);
+    }, 500);
+    
+    return;
+  }
+
+  setIsVerifying(true);
+
+  try {
+    const res = await fetch(`${baseURL}/auth/verify-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: phoneNumber, otp_code: code }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.status) {
+      ToastMessage.show(t("otpIncorrect", "OTP incorrect"));
+      animateShake();
+      setOtp(["", "", "", "", "", ""]);
+      inputs.current[0]?.focus();
+      return;
+    }
+
+    const token = data.token;
+    const user = data.user;
+    const userRole = user.role;
+
+    await AsyncStorage.multiSet([
+      ["token", token],
+      ["user", JSON.stringify(user)],
+      ["role", userRole],
+      ["isLoggedIn", "true"],
+    ]);
+
+    onVerified?.(userRole, Number(user.id), token);
+    ToastMessage.show(t("loginSuccess", "Connexion réussie"));
+  } catch {
+    ToastMessage.show(t("networkError", "Erreur réseau"));
+    animateShake();
+  } finally {
+    setIsVerifying(false);
+  }
+  };
+
+  /* ================= RESEND OTP ================= */
+const handleResend = async () => {
+  if (isResending) return;
+  
+  // 🔓 DEV MODE BYPASS - Décommentez pour bypass
+  if (DEV_MODE) {
+    console.log("🚀 DEV MODE - Resend OTP bypassed");
+    setIsResending(true);
+    setTimeout(() => {
+      setTimer(300);
+      setOtpExpired(false);
+      setOtp(["", "", "", "", "", ""]);
+      inputs.current[0]?.focus();
+      ToastMessage.show(t("otpResent", "Nouveau code envoyé (DEV MODE)"));
+      setIsResending(false);
+    }, 500);
+    return;
+  }
+  
+  setIsResending(true);
+  
+  try {
+    const res = await fetch(`${baseURL}/auth/resend-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: phoneNumber }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (data.message?.includes("expired") || data.message?.includes("invalid")) {
+        ToastMessage.show(t("otpExpiredResend", "Code expiré, veuillez vous reconnecter"));
+        redirectToLogin();
+        return;
+      }
+      throw new Error(data.message || "Resend failed");
+    }
+
+    setTimer(300);
+    setOtpExpired(false);
+    setOtp(["", "", "", "", "", ""]);
+    inputs.current[0]?.focus();
+    ToastMessage.show(t("otpResent", "Nouveau code envoyé"));
+  } catch (error) {
+    console.log("Resend error:", error);
+    ToastMessage.show(t("networkError", "Erreur réseau"));
+    
+    Alert.alert(
+      t("error", "Erreur"),
+      t("resendFailed", "Impossible de renvoyer le code. Voulez-vous réessayer ?"),
+      [
+        { text: t("cancel", "Annuler"), style: "cancel" },
+        { text: t("retry", "Réessayer"), onPress: () => handleResend() },
+        { text: t("backToLogin", "Retour à la connexion"), onPress: redirectToLogin },
+      ]
+    );
+  } finally {
+    setIsResending(false);
+  }
+};
+
+  /* ================= VERIFY OTP ================= */
+  /*const handleVerify = async () => {
     const code = otp.join("");
     if (code.length !== 6) return;
     if (otpExpired) {
@@ -184,7 +328,9 @@ export default function OTPVerificationScreen({
     } finally {
       setIsVerifying(false);
     }
-  };
+  };*/
+
+
 
   /* ================= REDIRECTION VERS LOGIN ================= */
   const redirectToLogin = () => {
@@ -208,7 +354,7 @@ export default function OTPVerificationScreen({
   };
 
   /* ================= RESEND OTP ================= */
-  const handleResend = async () => {
+  /*const handleResend = async () => {
     if (isResending) return;
     
     setIsResending(true);
@@ -252,7 +398,7 @@ export default function OTPVerificationScreen({
     } finally {
       setIsResending(false);
     }
-  };
+  };*/
 
   /* ================= FORMAT TIMER ================= */
   const formatTimer = (seconds: number): string => {

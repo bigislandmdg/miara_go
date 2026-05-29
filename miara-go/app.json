@@ -18,7 +18,8 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Cette application a besoin d'accéder à la bibliothèque photo",
         "NSCameraUsageDescription": "Cette application a besoin d'accéder à la caméra",
-        "NSLocationWhenInUseUsageDescription": "Cette application a besoin de votre position pour trouver des trajets"
+        "NSLocationWhenInUseUsageDescription": "Cette application a besoin de votre position pour trouver des trajets",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {

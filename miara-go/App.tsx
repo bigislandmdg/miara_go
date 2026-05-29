@@ -83,7 +83,10 @@ type AuthView = "get-started" | "signup" | "login" | "otp-verification";
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  //const [isAuthenticated, setIsAuthenticated] = useState(true);
+
   const [userType, setUserType] = useState<UserType>(null);
   const [authView, setAuthView] = useState<AuthView>("get-started");
   const [currentView, setCurrentView] = useState<MainView>("home");

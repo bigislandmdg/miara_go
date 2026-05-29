@@ -22,6 +22,12 @@ import { ToastMessage } from "../components/ToastMessage";
 import { BioMetricScreen } from "./BioMetricScreen";
 import { Logo } from "./ui/logo";
 
+
+// =========================================================
+// 🔓 DEV MODE - Mettre à true pour bypass l'authentification
+// =========================================================
+const DEV_MODE = true;  // ← Changez à false pour désactiver le mode développement
+
 // =========================================================
 // 🌍 Config pays — synchronisée avec AuthController.php
 // Ajouter un pays ici ET dans $countryCodes du controller
@@ -264,6 +270,62 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
   };
 
   const autoSendOTP = async (rawPhone: string) => {
+  // 🔓 DEV MODE BYPASS - Décommentez les 4 lignes suivantes pour bypass
+  if (DEV_MODE) {
+    console.log("🚀 DEV MODE - Auto-login bypass, no API call");
+    onLoginRequest(rawPhone, "123456");
+    return;
+  }
+
+  if (isSendingOtp) return;
+
+  try {
+    setIsSendingOtp(true);
+    ToastMessage.show("⏳ Envoi du code OTP...");
+
+    const response = await fetch("http://10.0.2.2:8080/auth/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buildPhonePayload(rawPhone)),
+    });
+
+    const rawText = await response.text();
+
+    if (!rawText || rawText.trim().length === 0) {
+      ToastMessage.show("❌ Réponse vide du serveur");
+      return;
+    }
+
+    let data;
+
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      console.log("❌ Invalid JSON:", rawText);
+      ToastMessage.show("❌ Réponse serveur invalide");
+      return;
+    }
+
+    if (!response.ok) {
+      ToastMessage.show(data.message || "❌ Échec d'envoi OTP");
+      return;
+    }
+
+    ToastMessage.show("✅ Code OTP envoyé");
+
+    const realOtp = await fetchRealOtp(rawPhone);
+    if (realOtp) {
+      onLoginRequest(rawPhone, realOtp);
+    }
+  } catch (err) {
+    console.log("AUTO SEND OTP failed:", err);
+    ToastMessage.show(t("serverUnavailable"));
+  } finally {
+    setIsSendingOtp(false);
+  }
+};
+
+  /*const autoSendOTP = async (rawPhone: string) => {
     if (isSendingOtp) return;
 
     try {
@@ -311,9 +373,9 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
       setIsSendingOtp(false);
     }
   };
+  */
 
-  // ------------------- LOGIN -------------------
-  const loginUser = async () => {
+  /*const loginUser = async () => {
     if (isLoggingIn) return;
 
     try {
@@ -351,6 +413,52 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
       setIsLoggingIn(false);
     }
   };
+  */
+  const loginUser = async () => {
+  // 🔓 DEV MODE BYPASS - Décommentez les 4 lignes suivantes pour bypass
+  if (DEV_MODE) {
+    console.log("🚀 DEV MODE - Login bypass, no API call");
+    onLoginRequest(phone || "341234567", "123456");
+    return;
+  }
+
+  if (isLoggingIn) return;
+
+  try {
+    setIsLoggingIn(true);
+
+    const res = await fetch("http://10.0.2.2:8080/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buildPhonePayload(phone)),
+    });
+
+    const rawText = await res.text();
+    if (!rawText.trim()) {
+      ToastMessage.show("❌ Réponse serveur vide");
+      return;
+    }
+
+    const data = JSON.parse(rawText);
+
+    if (!res.ok) {
+      ToastMessage.show(data.message || t("userNotFound"));
+      triggerShake();
+      return;
+    }
+
+    if (data.otp_code) {
+      ToastMessage.show(t("otpMessage", { otp: data.otp_code }));
+    }
+
+    onLoginRequest(phone, data.otp_code);
+  } catch (e) {
+    console.log("LOGIN ERROR:", e);
+    ToastMessage.show(t("serverUnavailable"));
+  } finally {
+    setIsLoggingIn(false);
+  }
+};
 
   // ------------------- BIOMETRIC -------------------
   const handleBiometricLogin = async () => {

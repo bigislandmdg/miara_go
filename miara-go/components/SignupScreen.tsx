@@ -21,6 +21,12 @@ import { useTranslation } from "react-i18next";
 import { useLanguage } from "../providers/LanguageProvider";
 import { Logo } from "./ui/logo";
 
+// =========================================================
+// 🔓 DEV MODE - Mettre à true pour bypass l'inscription
+// =========================================================
+const DEV_MODE = true;  // ← Changez à false pour désactiver le mode développement
+
+
 type RootStackParamList = {
   PassengerHome: undefined;
   DriverHome: undefined;
@@ -198,7 +204,7 @@ export function SignupScreen({ onSignup, onBackToLogin }: Props) {
     (selectedCountry.code !== "MG" || operator !== "invalid");
 
   // ===================== SUBMIT =====================
-  const handleSignup = async () => {
+  /*const handleSignup = async () => {
     if (!nom || !prenom || !isPhoneValid || roles.length === 0) {
       setError(t("fillAllFields", "Veuillez remplir tous les champs."));
       triggerShake();
@@ -249,6 +255,86 @@ export function SignupScreen({ onSignup, onBackToLogin }: Props) {
 
     setLoading(false);
   };
+  */
+
+  // ===================== SUBMIT =====================
+const handleSignup = async () => {
+  // 🔓 DEV MODE - Validation simplifiée
+  if (DEV_MODE) {
+    // Validation minimale : juste nom, prénom et au moins un rôle
+    if (!nom || !prenom || roles.length === 0) {
+      setError(t("fillAllFields", "Veuillez remplir tous les champs."));
+      triggerShake();
+      return;
+    }
+    
+    console.log("🚀 DEV MODE - Signup bypassed with:", { nom, prenom, digits, roles });
+    setLoading(true);
+    
+    setTimeout(() => {
+      const mockRole: "passenger" | "driver" = roles.includes("passenger") ? "passenger" : "driver";
+      
+      // Utiliser le numéro saisi (même invalide) ou un défaut
+      const mockPhone = digits || "341234567";
+      
+      const mockSignupData: SignupData = {
+        firstName: prenom,
+        lastName: nom,
+        phone: mockPhone,
+        roles: [mockRole],
+      };
+      
+      console.log("📝 DEV MODE - Mock signup data:", mockSignupData);
+      onSignup(mockSignupData);
+      setLoading(false);
+    }, 500);
+    
+    return;
+  }
+
+  // Code original inchangé...
+  const payload = {
+    nom,
+    prenom,
+    ...buildPhonePayload(),
+    role: roles.includes("passenger") ? "user" : roles[0],
+  };
+
+  setLoading(true);
+
+  try {
+    const response = await fetch("http://10.0.2.2:8080/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const json = await response.json();
+
+    if (!response.ok) {
+      setError(json.message || t("serverUnavailable", "Serveur inaccessible."));
+      triggerShake();
+      setLoading(false);
+      return;
+    }
+
+    const frontendRole: "passenger" | "driver" =
+      roles.includes("passenger") ? "passenger" : "driver";
+
+    onSignup({
+      firstName: prenom,
+      lastName: nom,
+      phone: digits,
+      roles: [frontendRole],
+    });
+  } catch {
+    setError(t("serverUnavailable", "Serveur inaccessible."));
+    triggerShake();
+  }
+
+  setLoading(false);
+};
+
 
   const operatorColor = (
     selectedCountry.code === "MG"
@@ -307,6 +393,9 @@ export function SignupScreen({ onSignup, onBackToLogin }: Props) {
       style={{ flex: 1, backgroundColor: "#f0fdf4" }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+       
+      
+
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingVertical: 30 }}>
 
         {/* HEADER */}
