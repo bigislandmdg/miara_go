@@ -22,6 +22,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "expo": "~52.0.23",
+    "expo-asset": "~11.0.4",
     "expo-camera": "~17.0.10",
     "expo-constants": "^18.0.13",
     "expo-file-system": "~18.0.12",
