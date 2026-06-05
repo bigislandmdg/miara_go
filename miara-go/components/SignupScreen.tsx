@@ -204,7 +204,7 @@ export function SignupScreen({ onSignup, onBackToLogin }: Props) {
     (selectedCountry.code !== "MG" || operator !== "invalid");
 
   // ===================== SUBMIT =====================
-  /*const handleSignup = async () => {
+  const handleSignup = async () => {
     if (!nom || !prenom || !isPhoneValid || roles.length === 0) {
       setError(t("fillAllFields", "Veuillez remplir tous les champs."));
       triggerShake();
@@ -255,10 +255,10 @@ export function SignupScreen({ onSignup, onBackToLogin }: Props) {
 
     setLoading(false);
   };
-  */
+  
 
   // ===================== SUBMIT =====================
-const handleSignup = async () => {
+/*const handleSignup = async () => {
   // 🔓 DEV MODE - Validation simplifiée
   if (DEV_MODE) {
     // Validation minimale : juste nom, prénom et au moins un rôle
@@ -334,6 +334,7 @@ const handleSignup = async () => {
 
   setLoading(false);
 };
+*/
 
 
   const operatorColor = (

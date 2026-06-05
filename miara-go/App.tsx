@@ -84,8 +84,8 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  //const [isAuthenticated, setIsAuthenticated] = useState(true);
+  //const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   const [userType, setUserType] = useState<UserType>(null);
   const [authView, setAuthView] = useState<AuthView>("get-started");

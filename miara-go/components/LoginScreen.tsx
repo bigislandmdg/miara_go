@@ -269,7 +269,7 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
     return null;
   };
 
-  const autoSendOTP = async (rawPhone: string) => {
+  /*const autoSendOTP = async (rawPhone: string) => {
   // 🔓 DEV MODE BYPASS - Décommentez les 4 lignes suivantes pour bypass
   if (DEV_MODE) {
     console.log("🚀 DEV MODE - Auto-login bypass, no API call");
@@ -323,9 +323,9 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
   } finally {
     setIsSendingOtp(false);
   }
-};
+};*/
 
-  /*const autoSendOTP = async (rawPhone: string) => {
+  const autoSendOTP = async (rawPhone: string) => {
     if (isSendingOtp) return;
 
     try {
@@ -373,9 +373,9 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
       setIsSendingOtp(false);
     }
   };
-  */
+  
 
-  /*const loginUser = async () => {
+  const loginUser = async () => {
     if (isLoggingIn) return;
 
     try {
@@ -413,8 +413,9 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
       setIsLoggingIn(false);
     }
   };
-  */
-  const loginUser = async () => {
+  
+  
+  /*const loginUser = async () => {
   // 🔓 DEV MODE BYPASS - Décommentez les 4 lignes suivantes pour bypass
   if (DEV_MODE) {
     console.log("🚀 DEV MODE - Login bypass, no API call");
@@ -458,7 +459,7 @@ export function LoginScreen({ onLoginRequest, onBackToSignup, onGoToRegister }: 
   } finally {
     setIsLoggingIn(false);
   }
-};
+};*/
 
   // ------------------- BIOMETRIC -------------------
   const handleBiometricLogin = async () => {
