@@ -3,6 +3,12 @@ node_modules
 .git
 android
 ios
-*.log
 dist
 build
+*.apk
+*.aab
+*.gz
+*.tar.gz
+*.zip
+*.log
+coverage

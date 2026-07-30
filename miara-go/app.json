@@ -30,8 +30,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.bigislandmdg.miarago",
-      "versionCode": 1
+      "package": "com.bigislandmdg.miarago"
+      
     },
     "web": {
       "favicon": "./assets/favicon.png"
