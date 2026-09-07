@@ -143,7 +143,7 @@ export default function OTPVerificationScreen({
 
 
   /* ================= VERIFY OTP ================= */
-const handleVerify = async () => {
+/*const handleVerify = async () => {
   const code = otp.join("");
   if (code.length !== 6) return;
   if (otpExpired) {
@@ -219,7 +219,7 @@ const handleVerify = async () => {
   };
 
   /* ================= RESEND OTP ================= */
-const handleResend = async () => {
+/*const handleResend = async () => {
   if (isResending) return;
   
   // 🔓 DEV MODE BYPASS - Décommentez pour bypass
@@ -279,9 +279,10 @@ const handleResend = async () => {
     setIsResending(false);
   }
 };
+*/
 
   /* ================= VERIFY OTP ================= */
-  /*const handleVerify = async () => {
+  const handleVerify = async () => {
     const code = otp.join("");
     if (code.length !== 6) return;
     if (otpExpired) {
@@ -328,7 +329,7 @@ const handleResend = async () => {
     } finally {
       setIsVerifying(false);
     }
-  };*/
+  };
 
 
 
@@ -354,7 +355,7 @@ const handleResend = async () => {
   };
 
   /* ================= RESEND OTP ================= */
-  /*const handleResend = async () => {
+  const handleResend = async () => {
     if (isResending) return;
     
     setIsResending(true);
@@ -398,7 +399,7 @@ const handleResend = async () => {
     } finally {
       setIsResending(false);
     }
-  };*/
+  };
 
   /* ================= FORMAT TIMER ================= */
   const formatTimer = (seconds: number): string => {
