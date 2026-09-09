@@ -30,13 +30,21 @@
         "gradleCommand": ":app:assembleRelease"
       }
     },
+    "apk-only": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      },
+      "ios": {}
+    },
     "production": {
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
       },
       "ios": {}
-      
+   
     }
   },
   "submit": {
